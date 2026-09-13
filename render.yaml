@@ -1,0 +1,14 @@
+# Render Blueprint: one always-on web service serves both the built site and the Socket.IO server.
+services:
+  - type: web
+    name: toy-game
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NODE_ENV
+        value: production

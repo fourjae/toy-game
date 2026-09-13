@@ -1,0 +1,135 @@
+.board-shell {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background: #e9e7da;
+  border: 1px solid #dcd9c9;
+  border-radius: 18px;
+  isolation: isolate;
+}
+
+.board-viewport {
+  position: relative;
+  width: 100%;
+  height: clamp(390px, 48vw, 620px);
+  overflow: hidden;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  overscroll-behavior: contain;
+  background-image: radial-gradient(#b8b6a633 .8px, transparent .8px);
+  background-size: 7px 7px;
+}
+
+.board-viewport.is-dragging { cursor: grabbing; }
+
+.game-board {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  max-width: none;
+  overflow: visible;
+  transform-origin: 0 0;
+  transition: opacity .2s ease;
+  will-change: transform;
+}
+
+.board-base { outline: none; }
+.board-base.is-legal { cursor: pointer; }
+.board-base.is-occupied { cursor: pointer; }
+.board-base.is-legal:hover .board-legal-ring,
+.board-base:focus-visible .board-legal-ring { stroke: #4c6022; stroke-width: 4; fill-opacity: .3; }
+.board-base:focus-visible > circle:last-child { stroke: #243d19; stroke-width: 2; stroke-dasharray: 3 3; }
+.board-legal-ring { animation: board-legal-arrive .3s ease both; }
+.road-choice { animation: road-march 1.2s linear infinite; }
+@keyframes road-march { to { stroke-dashoffset: -28; } }
+
+.board-controls {
+  position: absolute;
+  z-index: 2;
+  right: 16px;
+  bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px;
+  background: #fffcf1f2;
+  border: 1px solid #dcd7c4;
+  border-radius: 11px;
+  box-shadow: 0 3px 10px #3f482b0d;
+}
+
+.board-controls button {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  min-height: 34px;
+  margin: 0;
+  padding: 0;
+  color: #575e43;
+  background: transparent;
+  border: 0;
+  border-radius: 7px;
+  cursor: pointer;
+}
+
+.board-controls button:hover { background: #ecebdb; }
+.board-controls button:active { background: #e1e3cd; }
+.board-controls button:focus-visible { outline: 2px solid #657542; outline-offset: 1px; }
+.board-zoom-value { min-width: 35px; text-align: center; font-family: ui-monospace, monospace; font-size: 11px; color: #747965; font-variant-numeric: tabular-nums; }
+.board-zoom-value > span { margin-left: 1px; font-size: 9px; }
+.board-control-divider { width: 1px; height: 17px; margin: 0 3px; background: #dfdccd; }
+
+.board-pan-hint {
+  position: absolute;
+  left: 19px;
+  bottom: 26px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #7f846b;
+  font-size: 10px;
+  pointer-events: none;
+}
+
+/* Standing upright, the field is tall: give it room on a desktop so the whole thing stays readable. */
+.board-shell--portrait .board-viewport { height: clamp(520px, 78vh, 900px); }
+
+.board-shell--preview {
+  border: 0;
+  border-radius: 0;
+  overflow: visible;
+  background: transparent;
+}
+.board-shell--preview .board-viewport {
+  height: 430px;
+  overflow: visible;
+  cursor: default;
+  touch-action: auto;
+  background: transparent;
+}
+.board-shell--preview .game-board { filter: drop-shadow(0 13px 12px #58543d13); }
+
+@keyframes board-legal-arrive {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (max-width: 640px) {
+  .board-shell { border-radius: 13px; }
+  /* Everything above the board plus the hand dock takes about 440px; the field gets the rest. */
+  .board-viewport, .board-shell--portrait .board-viewport { height: max(300px, calc(100dvh - 440px)); }
+  .board-pan-hint { left: 12px; bottom: 25px; font-size: 9px; gap: 5px; }
+  .board-controls { right: 10px; bottom: 12px; gap: 0; }
+  .board-controls button { width: 35px; height: 35px; }
+  .board-zoom-value { min-width: 29px; font-size: 10px; }
+  .board-shell--preview .board-viewport { height: 300px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .board-legal-ring { animation: none; }
+  .game-board { transition: none; }
+}
