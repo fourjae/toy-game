@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import { ArrowLeft, ArrowRight, Check, ChevronDown, ChevronRight, ChevronUp, Clock3, Copy, Flag, HelpCircle, History, LogOut, Medal, Plus, Shuffle, Sparkles, Timer, Users, WifiOff, X } from 'lucide-react';
 import { useGame } from './useGame';
 import Dialog from './components/Dialog';
@@ -75,6 +75,47 @@ function initialOrientation(): BoardOrientation {
 
 interface BoardEvent { id: number; troop: Troop; mine: boolean; text: string }
 
+/** "힘 3 거인병을", or "조커 꽉스를": the strength travels with the name in every notice. */
+const troopPhrase = (troop: Troop) => withObjectParticle(`${TROOPS[troop.type].power ? `힘 ${TROOPS[troop.type].power}` : '조커'} ${TROOPS[troop.type].name}`);
+
+type HandPhase = 'entering' | 'stay' | 'leaving';
+interface HandCard { troop: Troop; phase: HandPhase; order: number }
+
+/**
+ * The hand the player sees lags the real one just long enough to animate: a stolen troop stays
+ * as a ghost while it bounces and drops away, and a drawn troop slides in from the right.
+ * Troops placed on the board leave at once, since the board already shows where they went.
+ */
+function useAnimatedHand(hand: Troop[], discarded: Troop[]) {
+  const [cards, setCards] = useState<HandCard[]>([]);
+  const counter = useRef(0);
+  useEffect(() => {
+    const discardedIds = new Set(discarded.map(t => t.id));
+    setCards(previous => {
+      const handIds = new Set(hand.map(t => t.id));
+      const known = new Set(previous.map(c => c.troop.id));
+      const next: HandCard[] = [];
+      for (const card of previous) {
+        if (handIds.has(card.troop.id)) next.push(card);
+        else if (card.phase === 'leaving') next.push(card);
+        else if (discardedIds.has(card.troop.id)) next.push({ ...card, phase: 'leaving' });
+      }
+      for (const troop of hand) if (!known.has(troop.id)) next.push({ troop, phase: 'entering', order: counter.current++ });
+      return next;
+    });
+  }, [hand, discarded]);
+  // Reduced-motion users get no animationend event, so the ghosts are swept up on a timer as well.
+  useEffect(() => {
+    if (!cards.some(c => c.phase !== 'stay')) return;
+    const timer = setTimeout(() => setCards(current => current.filter(c => c.phase !== 'leaving').map(c => c.phase === 'entering' ? { ...c, phase: 'stay' } : c)), 1400);
+    return () => clearTimeout(timer);
+  }, [cards]);
+  const settle = useCallback((troopId: string) => {
+    setCards(current => current.flatMap(c => c.troop.id !== troopId ? [c] : c.phase === 'leaving' ? [] : [{ ...c, phase: 'stay' }]));
+  }, []);
+  return { cards, settle };
+}
+
 /**
  * Turns a discard into something the victim actually sees. Compares each new state with the
  * previous one: a troop that just entered the discard pile came either from a hand (XB-42) or
@@ -97,7 +138,7 @@ function useDiscardEvents(game: GameView, meId: string) {
     const cause = story.includes('폭탄이 터져') ? 'bomb' : story.includes('해체') ? 'defuse' : story.includes('상대 손에서') ? 'robot' : 'giant';
     const next = fresh.map((troop, index): BoardEvent => {
       const mine = troop.ownerId === meId;
-      const name = withObjectParticle(TROOPS[troop.type].name);
+      const name = troopPhrase(troop);
       const id = game.revision * 10 + index;
       if (cause === 'bomb') return { id, troop, mine, text: mine ? `폭탄을 밟아 ${name} 잃었어요.` : `상대가 내 폭탄을 밟았어요. ${name} 잃었네요.` };
       if (cause === 'defuse') return { id, troop, mine, text: mine ? '상대 꽉스가 내 폭탄을 해체했어요.' : '꽉스가 상대 폭탄을 해체했어요.' };
@@ -156,6 +197,8 @@ function GameScreen({ room, meId, busy, send, onLeave, onRules }: { room: RoomVi
   const other = room.players.find(p => p.id !== meId);
   const clock = useTurnClock(room.turnTimer);
   const events = useDiscardEvents(game, meId);
+  const { cards: handCards, settle: settleCard } = useAnimatedHand(game.hand, game.discarded);
+  const enteringStart = handCards.findIndex(c => c.phase === 'entering');
   const [handCollapsed, setHandCollapsed] = useState(false);
   // A folded hand opens again when it is your move, so a turn never starts with the cards hidden.
   useEffect(() => { if (mine && !finished) setHandCollapsed(false); }, [mine, finished]);
@@ -182,7 +225,7 @@ function GameScreen({ room, meId, busy, send, onLeave, onRules }: { room: RoomVi
     return <div className={`topbar-side ${p.index === 0 ? 'blue' : 'red'} ${game.currentPlayerId === id && !finished ? 'is-turn' : ''} ${person?.connected === false ? 'is-away' : ''}`}><ToyIcon type={p.index === 0 ? 'captain' : 'duck'} size={26} color={p.index === 0 ? 'blue' : 'red'} /><span className="topbar-name">{person?.name || '플레이어'}{id === meId && <small>나</small>}</span><span className="topbar-medals"><Medal size={12} />{p.medals}</span></div>;
   };
   return <main className={`game-screen page-width ${handCollapsed ? 'hand-collapsed' : ''}`} style={{ '--dock-h': `${dockHeight}px` } as React.CSSProperties}><header className="game-topbar"><button type="button" className="topbar-btn" onClick={onLeave} aria-label="방 나가기"><ArrowLeft size={18} /></button><div className="topbar-score">{topbarSide(game.players[0].id)}<span className="topbar-vs"><strong>vs</strong><small>{finished ? '종료' : `${game.turn}번째`}</small></span>{topbarSide(game.players[1].id)}</div><button type="button" className="topbar-btn" onClick={() => setShowLog(!showLog)} aria-label="지난 차례 기록"><History size={18} /></button><button type="button" className="topbar-btn" onClick={onRules} aria-label="게임 방법"><HelpCircle size={18} /></button></header><div className="game-title-row"><button className="text-button" onClick={onLeave}><ArrowLeft size={16} /> 방 나가기</button><span>{room.title}<span className="room-code-small">{room.code}</span></span><button className="text-button log-toggle" onClick={() => setShowLog(!showLog)}>지난 차례</button></div><div className="scoreboard"><ScorePlayer game={game} room={room} id={game.players[0].id} mine={game.players[0].id === meId} /><div className="versus"><span>성채 평원</span><strong>vs.</strong><span>{game.turn}번째 차례</span></div><ScorePlayer game={game} room={room} id={game.players[1].id} mine={game.players[1].id === meId} /></div><div className="game-layout"><section className="board-wrap"><div className="board-heading"><span><Flag size={15} /> 성채 평원 <small>기본맵</small><RuleBadges rules={game.rules} /></span><span><Medal size={15} /> 훈장 7개 또는 상대 본부 점령</span></div><div className="board-stage"><Board game={game} legalNodes={legal} onNodeClick={place} selectedNodeId={pending?.sourceNodeId} orientation={orientation} bottomIndex={ownPlayer.index} onToggleOrientation={toggleOrientation} highlightEdges={roadChoices} />{events.length > 0 && <div className="board-events" aria-live="assertive">{events.map(event => <div key={event.id} className={`board-event ${event.mine ? 'is-loss' : 'is-gain'}`}><span className="board-event-icon"><ToyIcon type={event.troop.type} size={46} color={game.players[0].id === event.troop.ownerId ? 'blue' : 'red'} /><X size={14} /></span><p><strong>{event.mine ? '병정을 잃었어요' : '상대 병정을 버렸어요'}</strong><span>{event.text}</span></p></div>)}</div>}</div>{turnBar('turn-bar--board')}</section><aside className={`game-sidebar ${showLog ? 'show-log' : ''}`}><div className="sidebar-title"><h3>지난 차례</h3><button className="icon-button log-close" aria-label="기록 닫기" onClick={() => setShowLog(false)}><X size={18} /></button><span>기록</span></div><div className="game-log" aria-live="polite">{[...game.log].reverse().map(entry => <div key={entry.id}><span className={game.players[0].id === entry.playerId ? 'blue-dot' : 'red-dot'} /><p><strong>{room.players.find(p => p.id === entry.playerId)?.name || '플레이어'}</strong><span>{entry.text}</span></p><small>{entry.turn}</small></div>)}</div><div className="sidebar-tip"><Flag size={22} /><p>성으로 가는 길을<br />차근차근 이어 보세요.</p><span>길이 끊기면 더 나아갈 수 없어요.</span></div></aside></div>
-    <section ref={dockRef} className={`hand-dock ${!mine ? 'waiting-turn' : ''} ${handCollapsed ? 'is-collapsed' : ''}`}>{turnBar('turn-bar--dock')}<div className="hand-topline"><h3><button type="button" className="hand-toggle" onClick={() => setHandCollapsed(!handCollapsed)} aria-expanded={!handCollapsed} aria-label={handCollapsed ? '병정 펼치기' : '병정 접기'}>{handCollapsed ? <ChevronUp size={15} /> : <ChevronDown size={15} />}</button>내 병정 <span>{game.hand.length} / 8</span>{handCollapsed && definition && <em className="hand-selected-note">{definition.name} 선택 중</em>}</h3><div className="hand-action">{pending ? <button className="button secondary compact" disabled={busy || finished} onClick={() => send('game:action', { type: 'skip' })}>능력 건너뛰기 <ChevronRight size={15} /></button> : <button className="button primary compact" disabled={!game.canDraw || busy || finished} onClick={() => send('game:action', { type: 'draw' })}><Plus size={17} /> {drawCount > 0 ? `병정 ${drawCount}개 뽑기` : ownPlayer.supplyCount ? '손이 가득 찼어요' : '뽑을 병정이 없어요'}</button>}<span className="supply-count">남은 병정 {ownPlayer.supplyCount}개</span></div></div><div className="hand-cards">{game.hand.map((t, i) => <button className={`troop-card ${ownPlayer.index === 0 ? 'blue-card' : 'red-card'} ${selected === t.id ? 'selected' : ''}`} key={t.id} aria-label={`${TROOPS[t.type].name}, 힘 ${TROOPS[t.type].power || '조커'}`} aria-pressed={selected === t.id} style={{ '--card-index': i } as React.CSSProperties} onClick={() => { setSelected(selected === t.id ? null : t.id); setUseAbility(true); }} disabled={busy || finished}><span className="troop-power">{TROOPS[t.type].power || '★'}</span><ToyIcon type={t.type} size={65} color={ownPlayer.index === 0 ? 'blue' : 'red'} /><strong>{TROOPS[t.type].name}</strong><span className="troop-skill">{SKILL_LABEL[t.type]}</span></button>)}{game.hand.length === 0 && <p className="empty-hand">손이 비었어요. 병정을 뽑아 주세요.</p>}<div className="hand-end"><span>한 수,<br />신중하게.</span><span>↙</span></div></div><div className="selected-description">{definition ? <><strong>{definition.name}</strong><span>{definition.ability}</span>{OPTIONAL_ABILITY.includes(troop!.type) && mine && <label><input type="checkbox" checked={useAbility} onChange={e => setUseAbility(e.target.checked)} /> 능력 사용</label>}</> : <span>{mine ? '병정을 누르면 능력과 놓을 수 있는 곳이 보여요.' : '내 병정을 눌러 다음 수를 미리 생각해 보세요.'}</span>}</div></section>
+    <section ref={dockRef} className={`hand-dock ${!mine ? 'waiting-turn' : ''} ${handCollapsed ? 'is-collapsed' : ''}`}>{turnBar('turn-bar--dock')}<div className="hand-topline"><h3><button type="button" className="hand-toggle" onClick={() => setHandCollapsed(!handCollapsed)} aria-expanded={!handCollapsed} aria-label={handCollapsed ? '병정 펼치기' : '병정 접기'}>{handCollapsed ? <ChevronUp size={15} /> : <ChevronDown size={15} />}</button>내 병정 <span>{game.hand.length} / 8</span>{handCollapsed && definition && <em className="hand-selected-note">{definition.name} 선택 중</em>}</h3><div className="hand-action">{pending ? <button className="button secondary compact" disabled={busy || finished} onClick={() => send('game:action', { type: 'skip' })}>능력 건너뛰기 <ChevronRight size={15} /></button> : <button className="button primary compact" disabled={!game.canDraw || busy || finished} onClick={() => send('game:action', { type: 'draw' })}><Plus size={17} /> {drawCount > 0 ? `병정 ${drawCount}개 뽑기` : ownPlayer.supplyCount ? '손이 가득 찼어요' : '뽑을 병정이 없어요'}</button>}<span className="supply-count">남은 병정 {ownPlayer.supplyCount}개</span></div></div><div className="hand-cards">{handCards.map((card, i) => { const t = card.troop; return <button className={`troop-card ${ownPlayer.index === 0 ? 'blue-card' : 'red-card'} ${selected === t.id ? 'selected' : ''} ${card.phase === 'entering' ? 'is-entering' : card.phase === 'leaving' ? 'is-leaving' : ''}`} key={t.id} aria-label={`${TROOPS[t.type].name}, 힘 ${TROOPS[t.type].power || '조커'}`} aria-pressed={selected === t.id} aria-hidden={card.phase === 'leaving' || undefined} style={{ '--card-index': i, '--enter-index': card.phase === 'entering' ? i - enteringStart : 0 } as React.CSSProperties} onAnimationEnd={e => { if (e.target === e.currentTarget && (e.animationName === 'card-deal' || e.animationName === 'card-collapse')) settleCard(t.id); }} onClick={() => { setSelected(selected === t.id ? null : t.id); setUseAbility(true); }} disabled={busy || finished || card.phase === 'leaving'}><span className="troop-power">{TROOPS[t.type].power || '★'}</span><ToyIcon type={t.type} size={65} color={ownPlayer.index === 0 ? 'blue' : 'red'} /><strong>{TROOPS[t.type].name}</strong><span className="troop-skill">{SKILL_LABEL[t.type]}</span></button>; })}{handCards.length === 0 && <p className="empty-hand">손이 비었어요. 병정을 뽑아 주세요.</p>}<div className="hand-end"><span>한 수,<br />신중하게.</span><span>↙</span></div></div><div className="selected-description">{definition ? <><strong>{definition.name}</strong><span>{definition.ability}</span>{OPTIONAL_ABILITY.includes(troop!.type) && mine && <label><input type="checkbox" checked={useAbility} onChange={e => setUseAbility(e.target.checked)} /> 능력 사용</label>}</> : <span>{mine ? '병정을 누르면 능력과 놓을 수 있는 곳이 보여요.' : '내 병정을 눌러 다음 수를 미리 생각해 보세요.'}</span>}</div></section>
     {finished && !resultHidden && <Dialog title={game.winnerId === meId ? '이번 판은, 내 승리!' : '좋은 승부였어요.'} onClose={() => setResultHidden(true)}><div className="result-content"><div className={`result-medal ${game.winnerId === meId ? '' : 'lost'}`}><Medal size={58} /></div><h3>{room.players.find(p => p.id === game.winnerId)?.name}님의 승리</h3><p>{game.winReason === 'headquarters' ? '상대 본부를 점령했어요.' : game.winReason === 'medals' ? '훈장 7개를 먼저 모았어요.' : game.winReason === 'forfeit' ? '상대가 게임을 떠났어요.' : '더는 놓을 병정이 없어 훈장으로 승부를 정했어요.'}</p><div className="result-score">{room.players.map(p => <span key={p.id}>{p.name}<strong>{game.players.find(gp => gp.id === p.id)?.medals}<small>훈장</small></strong></span>)}</div><button className="button primary full" disabled={busy || room.rematchVotes.includes(meId) || !other?.connected} onClick={() => send('game:rematch')}>{room.rematchVotes.includes(meId) ? '친구의 답을 기다리는 중' : room.rematchVotes.length ? '좋아요, 한 판 더!' : '한 판 더 하기'}<Shuffle size={17} /></button><button className="text-button result-leave" onClick={onLeave}>대기실로 나가기 <ArrowRight size={15} /></button></div></Dialog>}
     {inspect && <Dialog title="거점에 놓인 병정" onClose={() => setInspect(null)}><p className="muted">위에 있는 병정이 이 거점을 차지해요.</p><div className="stack-list">{[...(game.board[inspect] || [])].reverse().map((t, i) => <div key={t.id}><ToyIcon type={t.type} size={44} color={game.players[0].id === t.ownerId ? 'blue' : 'red'} /><span>{TROOPS[t.type].name}<small>{room.players.find(p => p.id === t.ownerId)?.name}</small></span><strong>{TROOPS[t.type].power || '★'}</strong>{i === 0 && <small>맨 위</small>}</div>)}</div></Dialog>}
   </main>;
