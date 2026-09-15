@@ -55,3 +55,23 @@ test('두 사람이 방을 만들고 들어와 첫 수를 둔다', async ({ brow
   await expect(mover.locator('.board-base.is-occupied')).toHaveCount(1);
   await watcher.screenshot({ path: testInfo.outputPath('after-move.png') });
 });
+test('방장이 대기실에서 지정 맵으로 바꾸고 양쪽에 같은 전장을 보여 준다', async ({ browser }) => {
+  const host = await browser.newPage();
+  const guest = await browser.newPage();
+  await enter(host, '전장왕');
+  await enter(guest, '탐험가');
+  await host.getByRole('button', { name: '방 만들기' }).first().click();
+  await host.getByRole('dialog').locator('.map-picker select').selectOption('random');
+  await host.getByRole('dialog').getByRole('button', { name: '방 만들기' }).click();
+  const code = (await host.locator('.invite-box strong').innerText()).trim();
+  await guest.getByRole('button', { name: '코드로 입장' }).click();
+  await guest.getByLabel('초대 코드').fill(code);
+  await guest.getByRole('button', { name: '방 들어가기' }).click();
+  await expect(guest.locator('.map-picker select')).toBeDisabled();
+  await host.locator('.waiting-panel .map-picker select').selectOption('cursed-cemetery');
+  await expect(guest.locator('.waiting-panel .map-picker select')).toHaveValue('cursed-cemetery');
+  await host.getByRole('button', { name: '게임 시작' }).click();
+  await expect(host.locator('.board-heading')).toContainText('저주받은 묘지');
+  await expect(guest.locator('.board-heading')).toContainText('저주받은 묘지');
+  await expect(host.locator('.board-theme--cemetery')).toBeVisible();
+});

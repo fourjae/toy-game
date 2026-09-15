@@ -1,6 +1,7 @@
 import type { GameRules, GameView } from '../shared/types.js';
 
 export type RoomPhase = 'waiting' | 'playing' | 'finished';
+export type MapSelection = 'random' | string;
 
 export interface RoomSummary {
   id: string;
@@ -12,6 +13,7 @@ export interface RoomSummary {
   phase: RoomPhase;
   canJoin: boolean;
   rules: GameRules;
+  mapSelection: MapSelection;
 }
 
 export interface RoomView {
@@ -25,6 +27,7 @@ export interface RoomView {
   rematchVotes: string[];
   notice: string | null;
   rules: GameRules;
+  mapSelection: MapSelection;
   /** Present while a game is running. `running` is false while a player is away. */
   turnTimer: { remainingMs: number; totalMs: number; running: boolean } | null;
 }

@@ -163,14 +163,15 @@ test('skeleton and unicorn replenish after placement with a hard hand limit', ()
   assert.equal(deploy(game, skeleton!, 'blue-top').players[0].hand.length, 8);
 });
 
-test('robot discards exactly one random hidden enemy tile, face up', () => {
+test('robot returns exactly one random hidden enemy tile to their supply', () => {
   const game = fixture();
   const [robot] = give(game, ['robot']);
   const enemy = give(game, ['dino', 'duck', 'captain'], 'bob');
   const result = deploy(game, robot!, 'blue-top');
   assert.equal(result.players[1].hand.length, 2);
-  assert.deepEqual(result.discarded, [enemy[0]]);
-  assert.equal(getGameView(result, 'alice').discarded[0]!.id, enemy[0]!.id);
+  assert.equal(result.discarded.length, 0);
+  assert.ok(result.players[1].supply.some(tile => tile.id === enemy[0]!.id));
+  assert.equal(result.events.at(-1)?.type, 'return-to-supply');
 });
 
 test('captain chains placements and all of their effects within one turn', () => {

@@ -139,6 +139,35 @@ test('name entry, private tokens, atomic two-player capacity, and host-only star
   assert.deepEqual(await health.json(), { ok: true });
 });
 
+test('host chooses a fixed or random Toy Battle map before starting', async (t) => {
+  const { client } = await fixture(t, { rng: () => 0.3 });
+  const { client: host } = await client('맵 방장');
+  const { client: guest } = await client('맵 손님');
+  await host.success('rooms:create', { title: '전장 선택', mapSelection: 'random' });
+  const room = (await host.waitFor(state => state.room !== null)).room!;
+  assert.equal(room.mapSelection, 'random');
+  await guest.success('rooms:join', { id: room.id });
+  assert.equal((await guest.emit('rooms:map', { mapSelection: 'city-of-clouds' })).ok, false);
+  assert.equal((await host.emit('rooms:map', { mapSelection: 'not-a-map' })).ok, false);
+  await host.success('rooms:map', { mapSelection: 'city-of-clouds' });
+  await guest.waitFor(state => state.room?.mapSelection === 'city-of-clouds');
+  await host.success('game:start');
+  assert.equal((await host.waitFor(state => state.room?.game?.mapId === 'city-of-clouds')).room?.game?.mapId, 'city-of-clouds');
+});
+
+test('random map selection resolves when the match starts', async (t) => {
+  const { client } = await fixture(t, { rng: () => 0.3 });
+  const { client: host } = await client('랜덤 방장');
+  const { client: guest } = await client('랜덤 손님');
+  await host.success('rooms:create', { mapSelection: 'random' });
+  const room = (await host.waitFor(state => state.room !== null)).room!;
+  await guest.success('rooms:join', { id: room.id });
+  await host.success('game:start');
+  const playing = await host.waitFor(state => state.room?.game?.mapId === 'city-of-clouds');
+  assert.equal(playing.room?.mapSelection, 'random');
+  assert.equal(playing.room?.game?.mapId, 'city-of-clouds');
+});
+
 test('authoritative actions, hidden hands, disconnect pause, token resume, and host transfer', async (t) => {
   const { client } = await fixture(t);
   const { client: host, credentials } = await client('하늘');

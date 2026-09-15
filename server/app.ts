@@ -5,8 +5,9 @@ import path from 'node:path';
 import express from 'express';
 import { Server, type Socket } from 'socket.io';
 import { applyAction, applyTimeout, createGame, DEFAULT_RULES, getGameView, TURN_SECONDS } from '../shared/engine.js';
+import { CASTLE_MAP, GAME_MAPS } from '../shared/map.js';
 import type { GameAction, GameRules, GameState } from '../shared/types.js';
-import type { AckResult, ClientState, RoomPhase, RoomSummary, RoomView } from './types.js';
+import type { AckResult, ClientState, MapSelection, RoomPhase, RoomSummary, RoomView } from './types.js';
 
 interface Session {
   id: string;
@@ -25,6 +26,7 @@ interface Room {
   hostId: string;
   playerIds: string[];
   game: GameState | null;
+  mapSelection: MapSelection;
   rules: GameRules;
   rematchVotes: Set<string>;
   notice: string | null;
@@ -69,6 +71,12 @@ function record(value: unknown): Record<string, unknown> {
 function cleanRules(value: unknown): GameRules {
   const input = value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
   return { flank: input.flank === true, depots: input.depots === true, expansion: input.expansion === true };
+}
+
+function cleanMapSelection(value: unknown): MapSelection {
+  if (value === 'random') return 'random';
+  if (typeof value === 'string' && GAME_MAPS.some(map => map.id === value)) return value;
+  return fail('맵을 랜덤 또는 목록의 지정 맵으로 선택해 주세요.');
 }
 
 function cleanText(value: unknown, label: string, maxLength: number): string {
@@ -187,6 +195,7 @@ export function createGameServer(options: GameServerOptions = {}) {
       phase: getPhase(room),
       canJoin: room.playerIds.length < 2 && !room.game,
       rules: room.rules,
+      mapSelection: room.mapSelection,
     }));
   }
 
@@ -207,6 +216,7 @@ export function createGameServer(options: GameServerOptions = {}) {
       rematchVotes: [...room.rematchVotes],
       notice: room.notice,
       rules: room.rules,
+      mapSelection: room.mapSelection,
       turnTimer: room.game?.status === 'playing'
         ? room.turnDeadline !== null
           ? { remainingMs: Math.max(0, room.turnDeadline - Date.now()), totalMs: turnMs, running: true }
@@ -309,7 +319,8 @@ export function createGameServer(options: GameServerOptions = {}) {
     if (room.playerIds.some((id) => !sessions.get(id)?.socketId)) {
       fail('상대의 연결을 기다려 주세요.', 'PLAYER_DISCONNECTED');
     }
-    room.game = createGame([room.playerIds[0]!, room.playerIds[1]!], rng, room.rules);
+    const mapId = room.mapSelection === 'random' ? GAME_MAPS[Math.floor(rng() * GAME_MAPS.length)]!.id : room.mapSelection;
+    room.game = createGame([room.playerIds[0]!, room.playerIds[1]!], rng, room.rules, mapId);
     room.rematchVotes.clear();
     room.notice = null;
     room.updatedAt = Date.now();
@@ -347,8 +358,9 @@ export function createGameServer(options: GameServerOptions = {}) {
       const session = requireSession(socket);
       if (session.roomId) fail('현재 방에서 나온 뒤 새 방을 만들어 주세요.', 'ALREADY_IN_ROOM');
       const input = record(payload ?? {});
+      const mapSelection = input.mapSelection === undefined ? CASTLE_MAP.id : cleanMapSelection(input.mapSelection);
       const title = input.title === undefined || input.title === ''
-        ? `${session.name}의 성채 평원`
+        ? `${session.name}의 토이 배틀`
         : cleanText(input.title, '방 이름', 32);
       let code: string;
       do {
@@ -356,7 +368,8 @@ export function createGameServer(options: GameServerOptions = {}) {
       } while ([...rooms.values()].some((room) => room.code === code));
       const room: Room = {
         id: randomUUID(), code, title, hostId: session.id, playerIds: [session.id],
-        game: null, rules: allowCustomRules && input.rules !== undefined ? cleanRules(input.rules) : { ...DEFAULT_RULES },
+        game: null, mapSelection,
+        rules: allowCustomRules && input.rules !== undefined ? cleanRules(input.rules) : { ...DEFAULT_RULES },
         rematchVotes: new Set(), notice: null, updatedAt: Date.now(),
         turnDeadline: null, turnTimer: null, pausedRemainingMs: null,
       };
@@ -391,6 +404,15 @@ export function createGameServer(options: GameServerOptions = {}) {
       removeFromRoom(requireSession(socket), 'left');
     });
 
+    listenEvent(socket, 'rooms:map', (payload) => {
+      const session = requireSession(socket);
+      const room = requireRoom(session);
+      if (room.hostId !== session.id) fail('방장만 맵을 바꿀 수 있어요.', 'HOST_ONLY');
+      if (room.game) fail('게임이 시작되기 전에만 맵을 바꿀 수 있어요.');
+      room.mapSelection = cleanMapSelection(record(payload).mapSelection);
+      room.updatedAt = Date.now();
+    });
+
     listenEvent(socket, 'game:start', () => {
       const session = requireSession(socket);
       const room = requireRoom(session);
@@ -407,7 +429,7 @@ export function createGameServer(options: GameServerOptions = {}) {
         fail('상대가 다시 연결되면 계속할 수 있어요.', 'PLAYER_DISCONNECTED');
       }
       const action = record(payload);
-      if (!['draw', 'place', 'choose', 'skip'].includes(String(action.type))) {
+      if (!['draw', 'place', 'choose', 'choose-card', 'skip'].includes(String(action.type))) {
         fail('알 수 없는 행동이에요.', 'INVALID_ACTION');
       }
       if (action.type === 'place' && (typeof action.troopId !== 'string' || typeof action.nodeId !== 'string')) {
@@ -418,6 +440,9 @@ export function createGameServer(options: GameServerOptions = {}) {
       }
       if (action.type === 'choose' && typeof action.nodeId !== 'string') {
         fail('대상 칸을 선택해 주세요.', 'INVALID_ACTION');
+      }
+      if (action.type === 'choose-card' && typeof action.troopId !== 'string') {
+        fail('대상 병정을 선택해 주세요.', 'INVALID_ACTION');
       }
       room.game = applyAction(room.game, session.id, action as unknown as GameAction, rng);
       room.updatedAt = Date.now();

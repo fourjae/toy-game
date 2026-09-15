@@ -32,6 +32,8 @@ export interface MapNode {
   y: number;
   kind: 'base' | 'special' | 'hq';
   ownerIndex?: 0 | 1;
+  /** Tropical Pool's marked bases accept only this printed strength (joker is wild). */
+  requiredPower?: number;
 }
 
 export interface MapRegion {
@@ -48,6 +50,9 @@ export interface GameMap {
   width: number;
   height: number;
   medalTarget: number;
+  theme: string;
+  description: string;
+  specialDescription: string;
   nodes: MapNode[];
   edges: [string, string][];
   regions: MapRegion[];
@@ -59,14 +64,27 @@ export type GameAction =
   | { type: 'draw' }
   | { type: 'place'; troopId: string; nodeId: string; useAbility?: boolean }
   | { type: 'choose'; nodeId: string }
+  | { type: 'choose-card'; troopId: string }
   | { type: 'skip' };
 
 export interface PendingEffect {
   /** edge: pick a neighbour to cut or restore the road to it. move-from/move-to: the knight's relocation. */
-  type: 'remove' | 'recover' | 'extra-place' | 'edge' | 'move-from' | 'move-to';
+  type: 'remove' | 'recover' | 'extra-place' | 'edge' | 'move-from' | 'move-to'
+    | 'map-recover-discard' | 'map-jungle-from' | 'map-jungle-to' | 'map-freeze-card';
   sourceNodeId: string;
   sourceTroopId: string;
+  originNodeId?: string;
   nodeIds: string[];
+  troopIds?: string[];
+}
+
+export interface GameEvent {
+  id: number;
+  turn: number;
+  playerId: string;
+  type: 'return-to-hand' | 'return-to-supply';
+  troop?: Troop;
+  nodeId?: string;
 }
 
 export interface GameLog {
@@ -86,6 +104,7 @@ export interface GamePlayer {
 }
 
 export interface GameState {
+  mapId: string;
   rules: GameRules;
   players: [GamePlayer, GamePlayer];
   board: Record<string, Troop[]>;
@@ -102,6 +121,9 @@ export interface GameState {
   winReason: WinReason | null;
   pending: PendingEffect | null;
   deferredSpecials: { sourceNodeId: string; sourceTroopId: string }[];
+  /** Battlefield: a facedown troop is unavailable until its owner finishes a turn. */
+  frozenTroops: { troopId: string; ownerId: string }[];
+  events: GameEvent[];
   log: GameLog[];
 }
 
@@ -124,5 +146,8 @@ export interface GameView {
   pending: PendingEffect | null;
   legalPlacements: Record<string, string[]>;
   canDraw: boolean;
+  /** Only this viewer's frozen hand cards are projected. */
+  frozenTroopIds: string[];
+  events: GameEvent[];
   log: GameLog[];
 }

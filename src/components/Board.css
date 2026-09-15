@@ -8,6 +8,21 @@
   isolation: isolate;
 }
 
+.board-theme--tropical { background: #d4ece2; border-color: #9ccfc1; }
+.board-theme--tropical .board-viewport { background-color: #d9f0e9; }
+.board-theme--cloud { background: #e2ebfa; border-color: #c2d3ed; }
+.board-theme--cloud .board-viewport { background-color: #edf4fd; }
+.board-theme--jungle { background: #ead5be; border-color: #d1ae8c; }
+.board-theme--jungle .board-viewport { background-color: #eedfc9; }
+.board-theme--cemetery { background: #e1dfe7; border-color: #bdb8cf; }
+.board-theme--cemetery .board-viewport { background-color: #eceaf1; }
+.board-theme--station { background: #dce4ea; border-color: #adbfcd; }
+.board-theme--station .board-viewport { background-color: #e9eef2; }
+.board-theme--caribbean { background: #cce7e9; border-color: #9acbd2; }
+.board-theme--caribbean .board-viewport { background-color: #e0f2ee; }
+.board-theme--battlefield { background: #ead9b9; border-color: #c9ae81; }
+.board-theme--battlefield .board-viewport { background-color: #f3e9cd; }
+
 .board-viewport {
   position: relative;
   width: 100%;
@@ -132,4 +147,62 @@
 @media (prefers-reduced-motion: reduce) {
   .board-legal-ring { animation: none; }
   .game-board { transition: none; }
+}
+
+/* Landing: a tile drops onto its base; on an enemy it thumps, and a power-7 tile slams down with dust. */
+.board-troop { transform-box: fill-box; transform-origin: center; }
+.board-troop--drop { animation: troop-drop .45s linear both; }
+.board-troop--capture { animation: troop-thump .55s linear both; }
+.board-troop--smash { animation: troop-slam .75s linear both; }
+@keyframes troop-drop {
+  0% { transform: translateY(-30px) scale(1.12); opacity: 0; animation-timing-function: ease-in; }
+  15% { opacity: 1; }
+  45% { transform: translateY(2px) scale(1.04, .95); animation-timing-function: ease-out; }
+  70% { transform: translateY(-1px) scale(.99, 1.01); }
+  100% { transform: none; opacity: 1; }
+}
+@keyframes troop-thump {
+  0% { transform: translateY(-36px) scale(1.15); opacity: 0; animation-timing-function: ease-in; }
+  15% { opacity: 1; }
+  40% { transform: translateY(4px) scale(1.06, .88); animation-timing-function: ease-out; }
+  62% { transform: translateY(-3px) scale(.98, 1.03); }
+  100% { transform: none; opacity: 1; }
+}
+@keyframes troop-slam {
+  0% { transform: translateY(-52px) scale(1.28); opacity: 0; animation-timing-function: ease-in; }
+  12% { opacity: 1; }
+  34% { transform: translateY(5px) scale(1.1, .84); animation-timing-function: ease-out; }
+  44% { transform: translate(-3px, 1px) scale(.98, 1.04); }
+  54% { transform: translate(3px, -1px) scale(1.01, .99); }
+  64% { transform: translate(-1px, 0) scale(1); }
+  100% { transform: none; opacity: 1; }
+}
+.board-impact .board-flash { transform-box: fill-box; transform-origin: center; animation: impact-flash .45s ease-out .2s both; }
+.board-impact .board-strikes path { transform-box: fill-box; transform-origin: center; animation: impact-strike .45s ease-out .22s both; }
+.board-dust-ring { transform-box: fill-box; transform-origin: center; animation: dust-ring .6s cubic-bezier(.15, .7, .3, 1) .25s both; }
+.board-dust { transform-box: fill-box; transform-origin: center; animation: dust-puff .65s cubic-bezier(.15, .7, .3, 1) .25s both; }
+@keyframes impact-flash {
+  0% { transform: scale(.3); opacity: .9; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+@keyframes impact-strike {
+  0% { opacity: 0; transform: scaleY(.4); }
+  30% { opacity: 1; transform: scaleY(1.3); }
+  100% { opacity: 0; transform: scaleY(1); }
+}
+@keyframes dust-ring {
+  0% { transform: scale(.9); opacity: 0; stroke-width: 9; }
+  12% { opacity: .95; }
+  60% { opacity: .8; }
+  100% { transform: scale(1.47); opacity: 0; stroke-width: 2; }
+}
+@keyframes dust-puff {
+  0% { transform: translate(0, 0) scale(.5); opacity: 0; }
+  12% { opacity: 1; }
+  60% { opacity: .85; }
+  100% { transform: translate(var(--dx), var(--dy)) scale(1.5); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .board-troop--drop, .board-troop--capture, .board-troop--smash, .board-impact *, .board-dust-cloud * { animation: none; }
+  .board-impact, .board-dust-cloud { display: none; }
 }

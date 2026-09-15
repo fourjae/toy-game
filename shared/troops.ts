@@ -6,7 +6,7 @@ export const TROOPS: Record<TroopType, TroopDefinition> = {
   captain: { type: 'captain', name: '캡틴', power: 2, ability: '이번 차례에 병정 하나를 더 놓아요.' },
   giant: { type: 'giant', name: '거인병', power: 3, ability: '길로 맞닿은 적 병정 하나를 제거해요.' },
   pirate: { type: 'pirate', name: '코코 선장', power: 4, ability: '본부와 이어지지 않은 거점에도 놓을 수 있어요.' },
-  robot: { type: 'robot', name: 'XB-42', power: 5, ability: '상대 손의 병정 하나를 무작위로 제거해요.' },
+  robot: { type: 'robot', name: 'XB-42', power: 5, ability: '상대 손의 병정 하나를 무작위로 상대 병정 더미에 되돌려요.' },
   unicorn: { type: 'unicorn', name: '레인보우', power: 6, ability: '내 병정 1개를 보충해요.' },
   dino: { type: 'dino', name: '렉시', power: 7, ability: '가장 강한 병정. 꽉스는 조심하세요.' },
   ninja: { type: 'ninja', name: '그림자', power: 2, ability: '본부와 이어지지 않아도 상대 본부 옆 거점에 놓을 수 있어요.', expansion: true },
