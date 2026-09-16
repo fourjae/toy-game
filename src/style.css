@@ -13,4 +13,29 @@
 
 
 .map-picker{display:flex;flex-direction:column;gap:7px;margin:13px 0;padding:13px 14px;background:#f2f3e9;border:1px solid #d8ddcc;border-radius:10px}.map-picker>span{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:800;color:#506345}.map-picker select{width:100%;padding:11px 12px;border:1px solid #cbd3bd;border-radius:8px;background:#fffdf6;color:#303b2d;font:inherit;font-size:12px;cursor:pointer}.map-picker select:disabled{opacity:.65;cursor:default}.map-picker small{font-size:9px;line-height:1.5;color:#78826b}.map-gallery{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.map-card{display:flex;flex-direction:column;gap:9px;padding:9px;border:1px solid #d9dece;border-radius:12px;background:#fffdf5}.map-card-thumb{display:block;border-radius:8px;overflow:hidden;border:1px solid #d9dece;pointer-events:none}.map-card-thumb .board-shell--preview .board-viewport{height:auto;aspect-ratio:1100/640}.map-card-thumb .board-shell--preview .game-board{filter:none}.map-card-text{display:flex;flex-direction:column;gap:4px;line-height:1.5}.map-card-text strong{display:flex;align-items:center;gap:8px;font-size:12px}.map-card-text .map-guide-number{width:26px;height:26px;font-size:10px}.map-card-text small{font-size:10px;color:#777e6c}.map-card-text em{font-style:normal;font-size:9px;color:#7b6148}@media(max-width:620px){.map-gallery{grid-template-columns:1fr}}.map-guide-number{width:33px;height:33px;flex:none;display:grid;place-items:center;border-radius:8px;color:#fff;font-size:11px;font-weight:900;background:#7c9363}.map-guide-number.theme-tropical{background:#48a78c}.map-guide-number.theme-cloud{background:#86a9d3}.map-guide-number.theme-jungle{background:#b76339}.map-guide-number.theme-cemetery{background:#6c687f}.map-guide-number.theme-station{background:#556a83}
+.map-card-text strong>b{margin-left:auto;padding:3px 7px;border-radius:99px;background:#e8eddc;color:#607348;font-size:8px;white-space:nowrap}
+
+/* Room settings stay compact, but the timer is deliberately wide enough to click or drag comfortably. */
+.turn-time-control{margin:13px 0 18px;padding:14px 16px 11px;border:1px solid #d4ddc4;border-radius:14px;background:linear-gradient(135deg,#f5f6ec,#edf2e3);box-shadow:inset 0 1px 0 #fff;transition:opacity .15s}
+.turn-time-control.is-readonly{opacity:.72}
+.turn-time-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:11px;color:#6e7865;font-size:10px}
+.turn-time-heading>span,.turn-time-heading>strong{display:flex;align-items:center;gap:6px}
+.turn-time-heading>strong{color:#3f5134;font-size:11px}
+.turn-time-heading b{font-size:16px;color:var(--blue);letter-spacing:-.5px}
+.turn-time-control input[type=range]{--range-progress:33.333%;display:block;width:100%;height:22px;margin:0;appearance:none;-webkit-appearance:none;background:transparent;cursor:pointer}
+.turn-time-control input[type=range]:disabled{cursor:default}
+.turn-time-control input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:99px;background:linear-gradient(to right,var(--blue) 0 var(--range-progress),#d7ddcb var(--range-progress) 100%);box-shadow:inset 0 1px 2px #4b543225}
+.turn-time-control input[type=range]::-moz-range-track{height:8px;border-radius:99px;background:#d7ddcb;box-shadow:inset 0 1px 2px #4b543225}
+.turn-time-control input[type=range]::-moz-range-progress{height:8px;border-radius:99px;background:var(--blue)}
+.turn-time-control input[type=range]::-webkit-slider-thumb{width:22px;height:22px;margin-top:-7px;border:3px solid #fffdf6;border-radius:50%;appearance:none;-webkit-appearance:none;background:var(--blue);box-shadow:0 1px 0 #263e99,0 2px 7px #30458255}
+.turn-time-control input[type=range]::-moz-range-thumb{width:17px;height:17px;border:3px solid #fffdf6;border-radius:50%;background:var(--blue);box-shadow:0 1px 0 #263e99,0 2px 7px #30458255}
+.turn-time-scale{display:flex;justify-content:space-between;margin-top:2px;color:#919987;font-size:8px}
+.start-area .turn-time-control{margin-top:15px}
+.preview-copy{display:flex!important;align-items:flex-start!important;flex:1;flex-direction:column;gap:6px}
+.preview-copy>span,.preview-copy>small{display:flex;align-items:flex-start;gap:7px;line-height:1.6}
+.preview-copy svg{flex:none;margin-top:1px}
+.preview-copy>small{color:#7b6148;font-size:9px}
+.troop-card.selected{transform:translateY(-14px) scale(1.025);outline-width:3px;box-shadow:0 9px 18px #4864a838}
+
+@media(max-width:640px){.turn-time-control{padding:12px 13px 9px}.turn-time-heading{font-size:9px}.turn-time-heading>strong{font-size:10px}.turn-time-heading b{font-size:14px}.preview-bottom{align-items:flex-start}.preview-copy>small{font-size:8px}.troop-card.selected{transform:translateY(-11px) scale(1.025)}}
 .map-guide-number.theme-caribbean{background:#318cb7}.map-guide-number.theme-battlefield{background:#a8814f}.facedown-hand{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:18px}.facedown-card{display:flex;min-height:112px;align-items:center;justify-content:center;flex-direction:column;gap:6px;background:#dce3e7;border:2px solid #8499a7;border-radius:9px;color:#426175;box-shadow:0 3px 0 #b4c3c7}.facedown-card:hover:not(:disabled){background:#e9f0f2;transform:translateY(-2px)}.facedown-card strong{font-size:24px}.facedown-card small{font-size:9px}.troop-card.is-frozen{filter:grayscale(.8);opacity:.7}.troop-card.is-frozen::after{content:'이번 차례 배치 불가';position:absolute;inset:auto 2px 7px;background:#3b536deb;color:#fff;font-size:8px;font-weight:800;padding:5px 2px;border-radius:5px}@media(max-width:480px){.facedown-hand{grid-template-columns:repeat(3,minmax(0,1fr))}}

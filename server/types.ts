@@ -14,6 +14,7 @@ export interface RoomSummary {
   canJoin: boolean;
   rules: GameRules;
   mapSelection: MapSelection;
+  turnSeconds: number;
 }
 
 export interface RoomView {
@@ -28,6 +29,7 @@ export interface RoomView {
   notice: string | null;
   rules: GameRules;
   mapSelection: MapSelection;
+  turnSeconds: number;
   /** Present while a game is running. `running` is false while a player is away. */
   turnTimer: { remainingMs: number; totalMs: number; running: boolean } | null;
 }

@@ -55,9 +55,10 @@
 .board-base.is-legal { cursor: pointer; }
 .board-base.is-occupied { cursor: pointer; }
 .board-base.is-legal:hover .board-legal-ring,
-.board-base:focus-visible .board-legal-ring { stroke: #4c6022; stroke-width: 4; fill-opacity: .3; }
+.board-base:focus-visible .board-legal-ring { stroke: #607638; stroke-width: 4; fill-opacity: .22; }
 .board-base:focus-visible > circle:last-child { stroke: #243d19; stroke-width: 2; stroke-dasharray: 3 3; }
-.board-legal-ring { animation: board-legal-arrive .3s ease both; }
+.board-legal-ring { animation: board-legal-arrive .3s ease both, board-legal-pulse 1.8s ease-in-out .3s infinite; filter: drop-shadow(0 0 3px #82975a66); }
+@keyframes board-legal-pulse { 50% { fill-opacity: .19; stroke-width: 3.5; } }
 .road-choice { animation: road-march 1.2s linear infinite; }
 @keyframes road-march { to { stroke-dashoffset: -28; } }
 
@@ -140,6 +141,9 @@
   .board-pan-hint { left: 12px; bottom: 25px; font-size: 9px; gap: 5px; }
   .board-controls { right: 10px; bottom: 12px; gap: 0; }
   .board-controls button { width: 35px; height: 35px; }
+  /* The phone board is intentionally portrait-only; zoom and fit controls remain. */
+  .board-controls .board-control-divider,
+  .board-controls button:last-child { display: none; }
   .board-zoom-value { min-width: 29px; font-size: 10px; }
   .board-shell--preview .board-viewport { height: 300px; }
 }

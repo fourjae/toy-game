@@ -27,6 +27,7 @@ interface Room {
   playerIds: string[];
   game: GameState | null;
   mapSelection: MapSelection;
+  turnSeconds: number;
   rules: GameRules;
   rematchVotes: Set<string>;
   notice: string | null;
@@ -43,7 +44,7 @@ export interface GameServerOptions {
   reconnectGraceMs?: number;
   roomIdleMs?: number;
   cleanupIntervalMs?: number;
-  /** Thinking time per decision; the default is the rule's 30 seconds. */
+  /** Test/development override for thinking time. Normal rooms use their chosen seconds. */
   turnMs?: number;
   /** Whether a room may switch on the expansion rules. Off unless ENABLE_EXPANSION_RULES=1. */
   allowCustomRules?: boolean;
@@ -79,6 +80,13 @@ function cleanMapSelection(value: unknown): MapSelection {
   return fail('맵을 랜덤 또는 목록의 지정 맵으로 선택해 주세요.');
 }
 
+function cleanTurnSeconds(value: unknown): number {
+  if (typeof value === 'number' && Number.isInteger(value) && value >= 30 && value <= 90 && value % 5 === 0) {
+    return value;
+  }
+  return fail('차례 시간은 30초부터 90초까지 5초 단위로 골라 주세요.');
+}
+
 function cleanText(value: unknown, label: string, maxLength: number): string {
   if (typeof value !== 'string') return fail(`${label}을 입력해 주세요.`);
   const text = value.trim().replace(/\s+/gu, ' ');
@@ -107,12 +115,13 @@ export function createGameServer(options: GameServerOptions = {}) {
   const rateLimits = new Map<string, { count: number; resetAt: number }>();
   const reconnectGraceMs = options.reconnectGraceMs ?? 90_000;
   const roomIdleMs = options.roomIdleMs ?? 6 * 60 * 60 * 1_000;
-  const turnMs = options.turnMs ?? TURN_SECONDS * 1_000;
   const allowCustomRules = options.allowCustomRules ?? process.env.ENABLE_EXPANSION_RULES === '1';
-  // Coming back from a dropped connection always leaves a moment to act.
-  const resumeFloorMs = Math.min(5_000, turnMs);
   const rng = options.rng ?? (() => randomInt(0, 0x1_0000_0000) / 0x1_0000_0000);
   let closing = false;
+
+  const roomTurnMs = (room: Room) => options.turnMs ?? room.turnSeconds * 1_000;
+  // Coming back from a dropped connection always leaves a moment to act.
+  const resumeFloorMs = (room: Room) => Math.min(5_000, roomTurnMs(room));
 
   const getPhase = (room: Room): RoomPhase =>
     room.game ? room.game.status : 'waiting';
@@ -142,7 +151,7 @@ export function createGameServer(options: GameServerOptions = {}) {
   }
 
   /** Every decision gets a fresh clock. With a player away it waits, paused, for both to be back. */
-  function startClock(room: Room, remainingMs = turnMs) {
+  function startClock(room: Room, remainingMs = roomTurnMs(room)) {
     stopClock(room);
     if (!room.game || room.game.status !== 'playing') return;
     if (!allConnected(room)) {
@@ -158,7 +167,7 @@ export function createGameServer(options: GameServerOptions = {}) {
     if (!room.turnTimer || room.turnDeadline === null) return;
     const remaining = room.turnDeadline - Date.now();
     stopClock(room);
-    room.pausedRemainingMs = Math.max(remaining, resumeFloorMs);
+    room.pausedRemainingMs = Math.max(remaining, resumeFloorMs(room));
   }
 
   function resumeClock(room: Room) {
@@ -171,7 +180,7 @@ export function createGameServer(options: GameServerOptions = {}) {
     room.turnDeadline = null;
     if (!rooms.has(room.id) || !room.game || room.game.status !== 'playing') return;
     if (!allConnected(room)) {
-      room.pausedRemainingMs = resumeFloorMs;
+      room.pausedRemainingMs = resumeFloorMs(room);
       return;
     }
     try {
@@ -196,6 +205,7 @@ export function createGameServer(options: GameServerOptions = {}) {
       canJoin: room.playerIds.length < 2 && !room.game,
       rules: room.rules,
       mapSelection: room.mapSelection,
+      turnSeconds: room.turnSeconds,
     }));
   }
 
@@ -217,10 +227,11 @@ export function createGameServer(options: GameServerOptions = {}) {
       notice: room.notice,
       rules: room.rules,
       mapSelection: room.mapSelection,
+      turnSeconds: room.turnSeconds,
       turnTimer: room.game?.status === 'playing'
         ? room.turnDeadline !== null
-          ? { remainingMs: Math.max(0, room.turnDeadline - Date.now()), totalMs: turnMs, running: true }
-          : { remainingMs: room.pausedRemainingMs ?? turnMs, totalMs: turnMs, running: false }
+          ? { remainingMs: Math.max(0, room.turnDeadline - Date.now()), totalMs: roomTurnMs(room), running: true }
+          : { remainingMs: room.pausedRemainingMs ?? roomTurnMs(room), totalMs: roomTurnMs(room), running: false }
         : null,
     };
   }
@@ -359,6 +370,7 @@ export function createGameServer(options: GameServerOptions = {}) {
       if (session.roomId) fail('현재 방에서 나온 뒤 새 방을 만들어 주세요.', 'ALREADY_IN_ROOM');
       const input = record(payload ?? {});
       const mapSelection = input.mapSelection === undefined ? CASTLE_MAP.id : cleanMapSelection(input.mapSelection);
+      const turnSeconds = input.turnSeconds === undefined ? TURN_SECONDS : cleanTurnSeconds(input.turnSeconds);
       const title = input.title === undefined || input.title === ''
         ? `${session.name}의 토이 배틀`
         : cleanText(input.title, '방 이름', 32);
@@ -368,7 +380,7 @@ export function createGameServer(options: GameServerOptions = {}) {
       } while ([...rooms.values()].some((room) => room.code === code));
       const room: Room = {
         id: randomUUID(), code, title, hostId: session.id, playerIds: [session.id],
-        game: null, mapSelection,
+        game: null, mapSelection, turnSeconds,
         rules: allowCustomRules && input.rules !== undefined ? cleanRules(input.rules) : { ...DEFAULT_RULES },
         rematchVotes: new Set(), notice: null, updatedAt: Date.now(),
         turnDeadline: null, turnTimer: null, pausedRemainingMs: null,
@@ -410,6 +422,15 @@ export function createGameServer(options: GameServerOptions = {}) {
       if (room.hostId !== session.id) fail('방장만 맵을 바꿀 수 있어요.', 'HOST_ONLY');
       if (room.game) fail('게임이 시작되기 전에만 맵을 바꿀 수 있어요.');
       room.mapSelection = cleanMapSelection(record(payload).mapSelection);
+      room.updatedAt = Date.now();
+    });
+
+    listenEvent(socket, 'rooms:turn-time', (payload) => {
+      const session = requireSession(socket);
+      const room = requireRoom(session);
+      if (room.hostId !== session.id) fail('방장만 차례 시간을 바꿀 수 있어요.', 'HOST_ONLY');
+      if (room.game) fail('게임이 시작되기 전에만 차례 시간을 바꿀 수 있어요.');
+      room.turnSeconds = cleanTurnSeconds(record(payload).turnSeconds);
       room.updatedAt = Date.now();
     });
 

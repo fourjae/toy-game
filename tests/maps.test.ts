@@ -5,6 +5,17 @@ import { CASTLE_MAP, GAME_MAPS, adjacency, getMap } from '../shared/map.js';
 import type { GameMap, GameState, Troop, TroopType } from '../shared/types.js';
 
 const rng = () => 0.2;
+const EASIER_MEDAL_MAPS = new Set(['tropical-pool', 'city-of-clouds', 'cursed-cemetery']);
+
+function pointInsideRegion(point: { x: number; y: number }, vertices: { x: number; y: number }[]): boolean {
+  let inside = false;
+  for (let index = 0, previous = vertices.length - 1; index < vertices.length; previous = index++) {
+    const a = vertices[index]!;
+    const b = vertices[previous]!;
+    if ((a.y > point.y) !== (b.y > point.y) && point.x < ((b.x - a.x) * (point.y - a.y)) / (b.y - a.y) + a.x) inside = !inside;
+  }
+  return inside;
+}
 
 /** Blue's road from headquarters up to the base just before the one each test targets. */
 function setup(mapId: string, path: string[]): GameState {
@@ -25,7 +36,12 @@ test('eight selectable maps have valid roads, unique nodes, scoring regions and 
     assert.equal(ids.size, map.nodes.length, map.name);
     const roadKeys = map.edges.map(([a, b]) => [a, b].sort().join('|'));
     assert.equal(new Set(roadKeys).size, roadKeys.length, `${map.name} lists a road twice`);
-    for (const region of map.regions) assert.ok(region.nodeIds.length >= 3 && region.medals >= 1, `${map.name} ${region.id}`);
+    for (const region of map.regions) {
+      assert.ok(region.nodeIds.length >= 3 && region.medals >= 1, `${map.name} ${region.id}`);
+      assert.equal(new Set(region.nodeIds).size, region.nodeIds.length, `${map.name} ${region.id} repeats a scoring base`);
+      const vertices = region.nodeIds.map(id => map.nodes.find(node => node.id === id)!);
+      assert.ok(pointInsideRegion(region, vertices), `${map.name} ${region.id} medal is drawn outside its scoring bases`);
+    }
     assert.ok(map.regions.reduce((sum, region) => sum + region.medals, 0) >= map.medalTarget, `${map.name} cannot reach the medal target`);
     for (const depot of map.depots) assert.ok(ids.has(depot), `${map.name} depot ${depot}`);
     assert.deepEqual(map.nodes.filter(node => node.kind === 'hq').map(node => node.ownerIndex).sort(), map.id === 'caribbean-sea' ? [0, 0, 1] : [0, 1], map.name);
@@ -36,7 +52,7 @@ test('eight selectable maps have valid roads, unique nodes, scoring regions and 
     for (let i = 0; i < queue.length; i++) for (const next of roads[queue[i]!] ?? []) if (!reachable.has(next)) { reachable.add(next); queue.push(next); }
     assert.equal(reachable.size, map.nodes.length, `${map.name} has a disconnected base`);
     for (const region of map.regions) for (const id of region.nodeIds) assert.ok(ids.has(id));
-    assert.equal(map.medalTarget, 7);
+    assert.equal(map.medalTarget, EASIER_MEDAL_MAPS.has(map.id) ? 6 : 7);
     const game = createGame(['alice', 'bob'], rng, undefined, map.id);
     assert.equal(getGameView(game, 'alice').mapId, map.id);
     assert.equal(Object.keys(game.board).length, map.nodes.length);
@@ -84,11 +100,15 @@ test('Battlefield freezes a blind opponent hand slot for exactly their next turn
   assert.deepEqual(placed.pending?.troopIds, game.players[1].hand.map((_, index) => `slot-${index}`));
   const selected = applyAction(placed, 'alice', { type: 'choose-card', troopId: 'slot-1' }, rng);
   const frozen = selected.players[1].hand[1]!;
+  const attackerView = getGameView(selected, 'alice');
+  assert.deepEqual(attackerView.opponentHand.filter(card => card.frozen), [{ slot: 'slot-1', frozen: true }]);
+  for (const hidden of selected.players[1].hand) assert.ok(!JSON.stringify(attackerView).includes(`"${hidden.id}"`), 'frozen card identity stays private');
   assert.ok(getGameView(selected, 'bob').frozenTroopIds.includes(frozen.id));
   assert.equal(getGameView(selected, 'alice').frozenTroopIds.length, 0);
   assert.equal(canPlaceTroop(selected, 'bob', frozen, 'line-e-top'), false);
   const afterBob = applyAction(selected, 'bob', { type: 'draw' }, rng);
   assert.equal(afterBob.frozenTroops.length, 0);
+  assert.ok(getGameView(afterBob, 'alice').opponentHand.every(card => !card.frozen));
 });
 
 test('Tropical Pool checks printed strength on marked island bases', () => {

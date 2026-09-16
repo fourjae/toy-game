@@ -2,7 +2,7 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from 'react'
 import { Expand, Minus, Move, Plus, RectangleHorizontal, RectangleVertical } from 'lucide-react'
 import { CASTLE_MAP, GAME_MAPS, edgeKey, getMap } from '../../shared/map'
-import { TROOPS } from '../../shared/troops'
+import { BASE_TROOP_TYPES, TROOPS } from '../../shared/troops'
 import type { GameView, Troop } from '../../shared/types'
 import { ToyIcon } from './ToyIcon'
 import './Board.css'
@@ -257,8 +257,18 @@ export function Board({ game, legalNodes = [], onNodeClick, selectedNodeId, prev
   const previewBoard = useMemo(() => {
     const bases = map.nodes.filter(node => node.kind !== 'hq')
     const chosen = [bases[0], bases[2], bases[4], bases[bases.length - 3], bases[bases.length - 1]].filter(Boolean)
-    const types: Troop['type'][] = ['captain', 'duck', 'unicorn', 'dino', 'robot']
-    return Object.fromEntries(chosen.map((node, index) => [node.id, [{ id: `preview-${index}`, type: types[index], ownerId: index < 3 ? 'preview-blue' : 'preview-red' }]])) as Record<string, Troop[]>
+    // The third preview slot lands on Tropical Pool's power-1 island. Keep its
+    // fallback legal as well, so an intermediate/stale map object can never
+    // paint a power-6 troop on a power-1-only base.
+    const types: Troop['type'][] = ['captain', 'duck', 'skeleton', 'dino', 'robot']
+    return Object.fromEntries(chosen.map((node, index) => {
+      // Preview pieces obey power-locked terrain too; this keeps the sample board from teaching an illegal move.
+      const requiredType = node.requiredPower === undefined
+        ? undefined
+        : BASE_TROOP_TYPES.find(type => TROOPS[type].power === node.requiredPower)
+      const type = requiredType ?? (node.requiredPower === undefined ? types[index]! : 'duck')
+      return [node.id, [{ id: `preview-${index}`, type, ownerId: index < 3 ? 'preview-blue' : 'preview-red' }]]
+    })) as Record<string, Troop[]>
   }, [map])
 
   const placements = game?.board ?? (preview ? previewBoard : {})
@@ -287,6 +297,12 @@ export function Board({ game, legalNodes = [], onNodeClick, selectedNodeId, prev
   }, [map, placements, preview])
   const landingByNode = useMemo(() => Object.fromEntries(landings.map(landing => [landing.nodeId, landing])), [landings])
   const playerColor = (playerId: string | null | undefined) => playerId === 'preview-red' || game?.players.find(player => player.id === playerId)?.index === 1 ? RED : BLUE
+  const regionOwners = Object.fromEntries(map.regions.map(region => {
+    const firstStack = placements[region.nodeIds[0]!] ?? []
+    const candidate = firstStack[firstStack.length - 1]?.ownerId
+    const owner = candidate && region.nodeIds.every(nodeId => placements[nodeId]?.at(-1)?.ownerId === candidate) ? candidate : undefined
+    return [region.id, owner]
+  })) as Record<string, string | undefined>
   const riverPath = `M${map.width / 2} 28C${map.width / 2 - 29} 97 ${map.width / 2 + 24} 145 ${map.width / 2} 220S${map.width / 2 - 19} 337 ${map.width / 2} 410s25 122 0 ${map.height - 447}`
 
   return (
@@ -344,8 +360,21 @@ export function Board({ game, legalNodes = [], onNodeClick, selectedNodeId, prev
             {map.theme === 'battlefield' && [[130, 100], [970, 100], [130, 540], [970, 540]].map(([x, y], i) => <g key={i} fill="none" stroke="#957b56" opacity=".65"><path d={`M${x - 48} ${y - 10}h96M${x - 42} ${y}h84M${x - 35} ${y + 10}h70`} strokeWidth="7" strokeLinecap="round" /><path d={`M${x - 55} ${y - 26}l20 14m70 0 20-14`} strokeWidth="3" /></g>)}
           </g>
           {map.regions.map(region => {
-            const owner = game?.claimedRegions[region.id]
-            return <polygon key={region.id} points={region.nodeIds.map(id => `${positions[id].x},${positions[id].y}`).join(' ')} fill={owner ? playerColor(owner) : '#d7dcbc'} fillOpacity=".13" stroke="none" />
+            const claimedOwner = game?.claimedRegions[region.id]
+            const currentOwner = regionOwners[region.id]
+            const active = Boolean(claimedOwner && currentOwner === claimedOwner)
+            const outlineOwner = currentOwner ?? claimedOwner
+            return <polygon
+              key={region.id}
+              className={`board-region ${active ? 'is-active' : claimedOwner ? 'is-claimed' : ''}`}
+              points={region.nodeIds.map(id => `${positions[id].x},${positions[id].y}`).join(' ')}
+              fill={active ? playerColor(claimedOwner) : '#d7dcbc'}
+              fillOpacity={active ? '.18' : claimedOwner ? '.025' : '.045'}
+              stroke={outlineOwner ? playerColor(outlineOwner) : '#989b78'}
+              strokeOpacity={active ? '.8' : claimedOwner ? '.55' : '.25'}
+              strokeWidth={active ? '3' : '1.5'}
+              strokeDasharray={active ? undefined : claimedOwner ? '8 6' : '3 7'}
+            />
           })}
           <g className="board-landscaping" aria-hidden="true">
             {['castle', 'tropical', 'jungle', 'caribbean'].includes(map.theme) && TREES.map((tree, index) => { const point = project(map.width * tree.fx, map.height * tree.fy); return <Tree key={index} x={point.x} y={point.y} size={tree.size} tone={tree.tone} /> })}
@@ -382,10 +411,14 @@ export function Board({ game, legalNodes = [], onNodeClick, selectedNodeId, prev
           <g className="board-medals">
             {map.regions.map(region => {
               const owner = game?.claimedRegions[region.id]
+              const active = Boolean(owner && regionOwners[region.id] === owner)
               const point = project(region.x, region.y)
-              return <g key={region.id} transform={`translate(${point.x} ${point.y})`} aria-label={`${region.medals}개 훈장${owner ? ', 점령됨' : ''}`}>
-                <circle r="20" fill={owner ? playerColor(owner) : '#eee4bc'} stroke={owner ? playerColor(owner) : '#c8b77b'} strokeWidth="1.4" strokeDasharray={owner ? undefined : '3 3'} />
-                <path d={STAR} transform="translate(0 -1)" fill={owner ? '#f7eccb' : '#c49c43'} stroke={owner ? '#f7eccb' : '#b48b36'} strokeWidth="1" strokeLinejoin="round" />
+              const state = !owner ? '아직 획득하지 않음' : active ? '획득 완료, 현재도 점령 중' : '획득 완료, 현재는 점령 해제됐지만 훈장은 유지됨'
+              return <g key={region.id} transform={`translate(${point.x} ${point.y})`} aria-label={`${region.medals}개 훈장, ${state}`}>
+                <title>{`${region.medals}개 훈장 · ${state}`}</title>
+                <circle r="20" fill={active ? playerColor(owner) : '#eee4bc'} stroke={owner ? playerColor(owner) : '#c8b77b'} strokeWidth={owner && !active ? '3' : '1.4'} strokeDasharray={!owner ? '3 3' : active ? undefined : '7 4'} />
+                <path d={STAR} transform="translate(0 -1)" fill={active ? '#f7eccb' : owner ? playerColor(owner) : '#c49c43'} stroke={active ? '#f7eccb' : owner ? playerColor(owner) : '#b48b36'} strokeWidth="1" strokeLinejoin="round" />
+                {owner && !active && <g transform="translate(-14 -14)"><circle r="7" fill={playerColor(owner)} stroke="#f8f1df" strokeWidth="1.5" /><path d="m-3 0 2 2 4-5" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></g>}
                 {region.medals > 1 && <g><circle cx="15" cy="14" r="9" fill="#faf5e4" stroke="#c8b77b" /><text x="15" y="18" textAnchor="middle" fontSize="11" fontWeight="800" fill="#8c7541">{region.medals}</text></g>}
               </g>
             })}
@@ -405,6 +438,8 @@ export function Board({ game, legalNodes = [], onNodeClick, selectedNodeId, prev
               return <g
                 key={node.id}
                 data-node-id={node.id}
+                data-troop-power={troop ? power : undefined}
+                data-troop-type={troop?.type}
                 data-legal={isLegal ? 'true' : 'false'}
                 className={`board-base ${isLegal ? 'is-legal' : ''} ${selected ? 'is-selected' : ''} ${troop ? 'is-occupied' : ''}`}
                 role={preview ? undefined : 'button'}
@@ -440,7 +475,7 @@ export function Board({ game, legalNodes = [], onNodeClick, selectedNodeId, prev
                       : <g><path d="M7-6a10 10 0 1 0 2 11M7-12v7H0" /><path d="M-4 1h8M0-3v8" /></g>}
                   </g> : <circle cx={x} cy={y} r="3" fill="#c9c0a0" />)}
                 </>}
-                {(isLegal || selected) && <circle className="board-legal-ring" cx={x} cy={y} r={node.kind === 'hq' ? 45 : 36} fill={isLegal ? '#a1ae56' : 'none'} fillOpacity=".14" stroke={isLegal ? '#6e823a' : '#d0a64c'} strokeWidth="3" strokeDasharray={isLegal ? '5 5' : undefined} />}
+                {(isLegal || selected) && <circle className="board-legal-ring" cx={x} cy={y} r={node.kind === 'hq' ? 46 : 37} fill={isLegal ? '#a7b96d' : 'none'} fillOpacity=".12" stroke={isLegal ? '#718747' : '#d0a64c'} strokeWidth="3" strokeDasharray={isLegal ? '7 6' : undefined} />}
                 {landingByNode[node.id]?.kind === 'smash' && <Dust key={`dust-${landingByNode[node.id]!.id}`} x={x} y={y} />}
                 {troop && <g key={troop.id} transform={`translate(${x} ${y})`} filter={`url(#${boardId}-tile-shadow)`}><g className={landingByNode[node.id]?.troopId === troop.id ? `board-troop board-troop--${landingByNode[node.id]!.kind}` : 'board-troop'}>
                   {stack.length > 1 && <rect x="-28" y="-30" width="58" height="67" rx="10" fill="#d8cfb7" stroke="#a9a185" strokeWidth="1.5" />}

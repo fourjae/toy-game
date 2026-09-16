@@ -71,6 +71,7 @@ test('a private view contains no opponent hand, reserve, or mutable references',
     assert.ok(!serialized.includes(`"${hidden.id}"`));
   }
   assert.equal(view.players[1]!.handCount, 4);
+  assert.deepEqual(view.opponentHand, Array.from({ length: 4 }, (_, index) => ({ slot: `slot-${index}`, frozen: false })));
   view.hand.pop();
   assert.equal(game.players[0].hand.length, 3);
   assert.deepEqual(getGameView(game, 'bob').legalPlacements, {});
@@ -163,14 +164,19 @@ test('skeleton and unicorn replenish after placement with a hard hand limit', ()
   assert.equal(deploy(game, skeleton!, 'blue-top').players[0].hand.length, 8);
 });
 
-test('robot returns exactly one random hidden enemy tile to their supply', () => {
+test('robot lets its owner choose one hidden enemy tile to return to supply', () => {
   const game = fixture();
   const [robot] = give(game, ['robot']);
   const enemy = give(game, ['dino', 'duck', 'captain'], 'bob');
-  const result = deploy(game, robot!, 'blue-top');
+  const pending = deploy(game, robot!, 'blue-top');
+  assert.equal(pending.pending?.type, 'map-freeze-card');
+  assert.equal(pending.pending?.cardEffect, 'return-to-supply');
+  assert.deepEqual(pending.pending?.troopIds, ['slot-0', 'slot-1', 'slot-2']);
+  assert.equal(pending.players[1].hand.length, 3);
+  const result = applyAction(pending, 'alice', { type: 'choose-card', troopId: 'slot-1' }, () => 0.2);
   assert.equal(result.players[1].hand.length, 2);
   assert.equal(result.discarded.length, 0);
-  assert.ok(result.players[1].supply.some(tile => tile.id === enemy[0]!.id));
+  assert.ok(result.players[1].supply.some(tile => tile.id === enemy[1]!.id));
   assert.equal(result.events.at(-1)?.type, 'return-to-supply');
 });
 
@@ -365,8 +371,14 @@ test('many deterministic full games preserve tile counts, hidden state and turn 
     while (game.status === 'playing' && moves++ < 400) {
       const view = getGameView(game, game.currentPlayerId);
       if (view.pending && view.pending.type !== 'extra-place') {
-        const nodeId = view.pending.nodeIds[Math.floor(rng() * view.pending.nodeIds.length)]!;
-        game = applyAction(game, game.currentPlayerId, rng() > 0.1 ? { type: 'choose', nodeId } : { type: 'skip' }, rng);
+        const skip = rng() <= 0.1;
+        if (!skip && view.pending.troopIds?.length) {
+          const troopId = view.pending.troopIds[Math.floor(rng() * view.pending.troopIds.length)]!;
+          game = applyAction(game, game.currentPlayerId, { type: 'choose-card', troopId }, rng);
+        } else {
+          const nodeId = view.pending.nodeIds[Math.floor(rng() * view.pending.nodeIds.length)]!;
+          game = applyAction(game, game.currentPlayerId, skip ? { type: 'skip' } : { type: 'choose', nodeId }, rng);
+        }
       } else {
         const legal = Object.entries(view.legalPlacements).flatMap(([troopId, nodes]) => nodes.map((nodeId) => ({ troopId, nodeId })));
         if (view.canDraw && (!legal.length || rng() < 0.32)) {

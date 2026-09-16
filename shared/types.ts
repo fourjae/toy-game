@@ -76,6 +76,8 @@ export interface PendingEffect {
   originNodeId?: string;
   nodeIds: string[];
   troopIds?: string[];
+  /** The opponent's hidden hand stays anonymous; this tells the server what the chosen back does. */
+  cardEffect?: 'freeze' | 'return-to-supply';
 }
 
 export interface GameEvent {
@@ -134,6 +136,8 @@ export interface GameView {
   players: { id: string; index: 0 | 1; handCount: number; supplyCount: number; medals: number }[];
   hand: Troop[];
   board: Record<string, Troop[]>;
+  /** Public hand positions only: never send an opponent's troop identity or type. */
+  opponentHand: { slot: string; frozen: boolean }[];
   claimedRegions: Record<string, string | null>;
   discarded: Troop[];
   currentPlayerId: string;

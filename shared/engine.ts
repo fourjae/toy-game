@@ -195,7 +195,7 @@ function finish(game: GameState, winnerId: string, reason: WinReason): void {
   game.pending = null;
   game.deferredSpecials = [];
   addLog(game, winnerId, reason === 'headquarters' ? '상대 본부를 점령했습니다!'
-    : reason === 'medals' ? '훈장 7개를 모아 승리했습니다!'
+    : reason === 'medals' ? `훈장 ${mapOf(game).medalTarget}개를 모아 승리했습니다!`
       : '더 진행할 수 없어 훈장 수로 승부를 결정했습니다.');
 }
 
@@ -249,8 +249,15 @@ function chooseMapCard(game: GameState, playerId: string, troopId: string, rng: 
     const victim = opponent(game, playerId);
     const target = victim.hand[index];
     if (!target) throw new Error('그 손패는 더는 선택할 수 없습니다.');
-    game.frozenTroops.push({ troopId: target.id, ownerId: victim.id });
-    addLog(game, playerId, '참호에서 상대 손패 한 장을 다음 차례까지 묶었습니다.');
+    if (pending.cardEffect === 'return-to-supply') {
+      const removed = victim.hand.splice(index, 1)[0]!;
+      victim.supply.splice(randomIndex(victim.supply.length + 1, rng), 0, removed);
+      addEvent(game, victim.id, { type: 'return-to-supply', troop: removed });
+      addLog(game, playerId, `상대 손에서 고른 ${withObjectParticle(TROOPS[removed.type].name)} 병정 더미로 돌려보냈습니다.`);
+    } else {
+      game.frozenTroops.push({ troopId: target.id, ownerId: victim.id });
+      addLog(game, playerId, '참호에서 상대 손패 한 장을 다음 차례까지 묶었습니다.');
+    }
     game.pending = null;
     settle(game, rng);
     return;
@@ -332,10 +339,8 @@ function placeTroop(game: GameState, playerId: string, action: Extract<GameActio
       case 'robot': {
         const enemy = opponent(game, playerId);
         if (enemy.hand.length) {
-          const removed = enemy.hand.splice(randomIndex(enemy.hand.length, rng), 1)[0]!;
-          enemy.supply.splice(randomIndex(enemy.supply.length + 1, rng), 0, removed);
-          addEvent(game, enemy.id, { type: 'return-to-supply', troop: removed });
-          addLog(game, playerId, `상대 손의 ${withObjectParticle(TROOPS[removed.type].name)} 병정 더미로 돌려보냈습니다.`);
+          const troopIds = enemy.hand.map((_, index) => `slot-${index}`);
+          game.pending = { type: 'map-freeze-card', cardEffect: 'return-to-supply', ...source, nodeIds: [], troopIds };
         }
         break;
       }
@@ -527,6 +532,10 @@ export function getGameView(game: GameState, playerId: string): GameView {
       supplyCount: candidate.supply.length, medals: candidate.medals,
     })),
     hand: current.hand,
+    opponentHand: opponent(game, playerId).hand.map((troop, index) => ({
+      slot: `slot-${index}`,
+      frozen: game.frozenTroops.some(frozen => frozen.troopId === troop.id),
+    })),
     board: game.board,
     claimedRegions: game.claimedRegions,
     discarded: game.discarded,

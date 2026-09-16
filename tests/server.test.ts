@@ -149,10 +149,16 @@ test('host chooses a fixed or random Toy Battle map before starting', async (t) 
   await guest.success('rooms:join', { id: room.id });
   assert.equal((await guest.emit('rooms:map', { mapSelection: 'city-of-clouds' })).ok, false);
   assert.equal((await host.emit('rooms:map', { mapSelection: 'not-a-map' })).ok, false);
+  assert.equal((await guest.emit('rooms:turn-time', { turnSeconds: 65 })).ok, false);
+  assert.equal((await host.emit('rooms:turn-time', { turnSeconds: 32 })).ok, false);
   await host.success('rooms:map', { mapSelection: 'city-of-clouds' });
-  await guest.waitFor(state => state.room?.mapSelection === 'city-of-clouds');
+  await host.success('rooms:turn-time', { turnSeconds: 65 });
+  const synced = await guest.waitFor(state => state.room?.mapSelection === 'city-of-clouds' && state.room?.turnSeconds === 65);
+  assert.equal(synced.room?.turnSeconds, 65);
   await host.success('game:start');
-  assert.equal((await host.waitFor(state => state.room?.game?.mapId === 'city-of-clouds')).room?.game?.mapId, 'city-of-clouds');
+  const started = await host.waitFor(state => state.room?.game?.mapId === 'city-of-clouds');
+  assert.equal(started.room?.game?.mapId, 'city-of-clouds');
+  assert.equal(started.room?.turnTimer?.totalMs, 65_000);
 });
 
 test('random map selection resolves when the match starts', async (t) => {
