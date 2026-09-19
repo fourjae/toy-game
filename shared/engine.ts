@@ -79,8 +79,9 @@ export function createGame(playerIds: [string, string], rng: Random = secureRand
     const troops = roster.flatMap(([type, copies]) => Array.from({ length: copies }, (_, copy) => ({
       id: `${index}-${type}-${copy}`, type, ownerId: id,
     })));
-    // Four unseen tiles never enter the state or a player's view.
-    const supply = shuffled(troops, rng).slice(4);
+    // All eight printed troop types have three copies: every player starts with
+    // the full 24-tile army, then draws their opening hand from that supply.
+    const supply = shuffled(troops, rng);
     const hand = supply.splice(0, index === firstIndex ? 3 : 4);
     return { id, hand, supply, medals: 0 };
   }) as [GamePlayer, GamePlayer];
@@ -101,6 +102,8 @@ export function createGame(playerIds: [string, string], rng: Random = secureRand
     winReason: null,
     pending: null,
     deferredSpecials: [],
+    turnPlacements: [],
+    lastTurnPlacements: null,
     frozenTroops: [],
     events: [],
     log: [],
@@ -218,6 +221,8 @@ function awardMedals(game: GameState): void {
 function nextTurn(game: GameState, rng: Random): void {
   if (game.status === 'finished') return;
   const endingPlayerId = game.currentPlayerId;
+  game.lastTurnPlacements = { playerId: endingPlayerId, troopIds: [...game.turnPlacements] };
+  game.turnPlacements = [];
   game.frozenTroops = game.frozenTroops.filter(frozen => frozen.ownerId !== endingPlayerId);
   game.currentPlayerId = opponent(game, endingPlayerId).id;
   game.turn += 1;
@@ -249,11 +254,10 @@ function chooseMapCard(game: GameState, playerId: string, troopId: string, rng: 
     const victim = opponent(game, playerId);
     const target = victim.hand[index];
     if (!target) throw new Error('그 손패는 더는 선택할 수 없습니다.');
-    if (pending.cardEffect === 'return-to-supply') {
+    if (pending.cardEffect === 'discard') {
       const removed = victim.hand.splice(index, 1)[0]!;
-      victim.supply.splice(randomIndex(victim.supply.length + 1, rng), 0, removed);
-      addEvent(game, victim.id, { type: 'return-to-supply', troop: removed });
-      addLog(game, playerId, `상대 손에서 고른 ${withObjectParticle(TROOPS[removed.type].name)} 병정 더미로 돌려보냈습니다.`);
+      game.discarded.push(removed);
+      addLog(game, playerId, `상대 손에서 고른 ${withObjectParticle(TROOPS[removed.type].name)} 공용 버림 더미로 보냈습니다.`);
     } else {
       game.frozenTroops.push({ troopId: target.id, ownerId: victim.id });
       addLog(game, playerId, '참호에서 상대 손패 한 장을 다음 차례까지 묶었습니다.');
@@ -323,6 +327,7 @@ function placeTroop(game: GameState, playerId: string, action: Extract<GameActio
     }
   }
   game.board[action.nodeId]!.push(troop);
+  game.turnPlacements.push(troop.id);
   addLog(game, playerId, `${node.label}에 ${withObjectParticle(TROOPS[troop.type].name)} 놓았습니다.`);
   if (node.kind === 'hq') {
     finish(game, playerId, 'headquarters');
@@ -340,7 +345,7 @@ function placeTroop(game: GameState, playerId: string, action: Extract<GameActio
         const enemy = opponent(game, playerId);
         if (enemy.hand.length) {
           const troopIds = enemy.hand.map((_, index) => `slot-${index}`);
-          game.pending = { type: 'map-freeze-card', cardEffect: 'return-to-supply', ...source, nodeIds: [], troopIds };
+          game.pending = { type: 'map-freeze-card', cardEffect: 'discard', ...source, nodeIds: [], troopIds };
         }
         break;
       }
@@ -521,7 +526,7 @@ export function getGameView(game: GameState, playerId: string): GameView {
   const current = player(game, playerId);
   const myTurn = game.status === 'playing' && game.currentPlayerId === playerId;
   const mayPlace = myTurn && (!game.pending || game.pending.type === 'extra-place');
-  // Explicit projection prevents reserves, excluded tiles, or opponent hands from
+  // Explicit projection prevents reserve identities or opponent hands from
   // accidentally becoming public when the internal state changes in the future.
   return structuredClone({
     mapId: game.mapId,
@@ -549,6 +554,7 @@ export function getGameView(game: GameState, playerId: string): GameView {
     pending: game.pending,
     legalPlacements: mayPlace ? placements(game, playerId) : {},
     canDraw: myTurn && !game.pending && canDraw(game, playerId),
+    recentOpponentTroopIds: game.lastTurnPlacements?.playerId !== playerId ? game.lastTurnPlacements?.troopIds ?? [] : [],
     frozenTroopIds: game.frozenTroops.filter(frozen => frozen.ownerId === playerId).map(frozen => frozen.troopId),
     events: game.events,
     log: game.log,

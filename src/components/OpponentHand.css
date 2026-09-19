@@ -1,8 +1,16 @@
 .opponent-hand{--back-color:#456c91;--back-edge:#2d4b67;--back-light:#c6d9e5;padding:10px 18px 7px;background:#f6f3e8;border-bottom:1px solid #dcd9c9;height:112px}
 .opponent-hand--red{--back-color:#ac604a;--back-edge:#824530;--back-light:#edd0b9}
-.opponent-hand-label{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:10px;color:#89917d;line-height:18px}
+.opponent-hand-label{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:10px;color:#89917d;line-height:18px}
 .opponent-hand-label strong{font-size:11px;color:#536049}
 .opponent-hand-label strong span{margin-left:7px;font-size:10px;font-weight:400;color:#89917d}
+.opponent-hand-label>span[role="status"]{flex:1;text-align:center}
+.discard-hud{display:inline-flex;align-items:center;gap:5px;flex-shrink:0;line-height:1;color:#7b806f}
+.discard-hud-card{display:grid;place-items:center;width:21px;height:24px;border:1px dashed #aaa58f;border-radius:4px;background:#e9e4d5;color:#aaa58f;overflow:hidden}
+.discard-hud.has-card .discard-hud-card{border-style:solid;border-color:#496b88;background:#dce6e4}
+.discard-hud.has-card.red .discard-hud-card{border-color:#9a5945;background:#f2dfca}
+.discard-hud>span:last-child{display:flex;align-items:center;gap:4px}
+.discard-hud small{font-size:7px;white-space:nowrap}
+.discard-hud b{font-size:11px;color:#4d5549}
 .opponent-hand-rack{display:flex;align-items:flex-end;justify-content:center;gap:7px;height:75px;padding:6px 4px 5px;border-bottom:3px solid #c8bea5;border-radius:0 0 7px 7px;box-shadow:0 3px 0 #e3dbc8}
 .opponent-card{position:relative;display:grid;place-items:center;flex:0 1 43px;min-width:0;height:61px;border:2px solid var(--back-edge);border-radius:7px 7px 4px 4px;background:repeating-linear-gradient(45deg,transparent 0 5px,#fff1 5px 6px),var(--back-color);color:var(--back-light);box-shadow:inset 0 0 0 2px var(--back-light),0 3px 0 var(--back-edge);transform:perspective(240px) rotateX(-9deg);transition:transform .18s,box-shadow .18s}
 .opponent-card-number{position:absolute;bottom:3px;right:5px;font-size:8px;opacity:.8}
@@ -14,6 +22,26 @@
 .opponent-card-lock{position:absolute;bottom:9px;left:0;right:0;display:flex;align-items:center;justify-content:center;gap:2px;padding:3px 0;background:#243849ed;color:#fff;font-size:8px;font-weight:700}
 .opponent-hand-empty{align-self:center;font-size:11px;color:#939984}
 /* Keep the rack below the phone's fixed player bar when the trench effect focuses it. */
-@media(max-width:640px){.opponent-hand{scroll-margin-top:calc(54px + env(safe-area-inset-top))}}
-@media(max-width:640px){.opponent-hand{padding-inline:12px}.opponent-hand-label{font-size:8px}.opponent-hand-label strong{font-size:10px}.opponent-hand-rack{gap:5px}.opponent-card{flex-basis:34px}.game-screen .board-stage .board-shell .board-viewport{height:max(180px,calc(100dvh - 54px - env(safe-area-inset-top) - var(--dock-h,240px) - 112px))}.board-stage .board-events{top:124px}}
+@media(max-width:640px){
+  .opponent-hand{height:74px;padding:4px 10px 0;scroll-margin-top:calc(54px + env(safe-area-inset-top));overflow:hidden}
+  .opponent-hand-label{height:19px;gap:7px;font-size:8px;line-height:16px}
+  .opponent-hand-label strong{font-size:10px;white-space:nowrap}
+  .opponent-hand-label>span[role="status"]{display:none}
+  .discard-hud{margin-left:auto}
+  .discard-hud-card{width:17px;height:19px}
+  .discard-hud-card svg.toy-icon{width:17px;height:17px}
+  .discard-hud small{font-size:6px}
+  .discard-hud b{font-size:10px}
+  .opponent-hand-rack{align-items:flex-start;gap:0;height:51px;padding:0 4px;border-bottom-width:3px;overflow:hidden}
+  .opponent-card{flex:0 0 40px;height:61px;margin:0 -2px;transform:translateY(var(--fan-drop)) rotate(var(--fan-angle)) perspective(240px) rotateX(-9deg);transform-origin:50% 110%;z-index:1}
+  .opponent-card:hover{z-index:2}
+  .opponent-hand.is-choosing{height:112px;padding-top:7px;overflow:visible}
+  .opponent-hand.is-choosing .opponent-hand-label{height:22px}
+  .opponent-hand.is-choosing .opponent-hand-label>span[role="status"]{display:block;font-size:8px;line-height:1.2}
+  .opponent-hand.is-choosing .opponent-hand-rack{height:79px;padding-top:6px;overflow:visible}
+  .opponent-hand.is-choosing .opponent-card{transform:perspective(240px) rotateX(-9deg)}
+  .game-screen .board-stage .board-shell .board-viewport{height:max(180px,calc(100dvh - 54px - env(safe-area-inset-top) - var(--dock-h,240px) - 74px))}
+  .board-stage .board-events{top:86px}
+  .opponent-hand.is-choosing~.board-shell .board-viewport{height:max(180px,calc(100dvh - 54px - env(safe-area-inset-top) - var(--dock-h,240px) - 112px))}
+}
 @media(prefers-reduced-motion:reduce){.opponent-card{transition:none}}

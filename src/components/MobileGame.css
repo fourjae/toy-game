@@ -1,0 +1,33 @@
+.hand-mobile-toggle{display:none}
+@media(max-width:640px){
+  .hand-mobile-toggle{display:flex;width:max-content;min-height:28px;margin:-3px auto 5px;padding:4px 13px;align-items:center;justify-content:center;gap:5px;border:1px solid #d2d8c5;border-radius:0 0 9px 9px;background:#eef1e5;color:#64705c;font-size:8px;font-weight:700;box-shadow:0 2px 0 #dde2d2}
+  .hand-mobile-toggle:active{transform:translateY(1px);box-shadow:none}
+  .hand-dock.is-collapsed .hand-mobile-toggle{background:#e7edfa;border-color:#c4d0e8;color:#31519b}
+  .hand-topline .hand-toggle{display:none}
+  .topbar-hand svg{display:none}
+  .topbar-hand::before{content:'패';font-size:7px;font-weight:600;color:#8a927f;margin-right:1px}
+  /* The icon already reads as a facedown pile; its full label remains in aria-label/title. */
+  .supply-pile--compact .supply-pile-copy small{display:none!important}
+  .supply-pile--compact .supply-pile-copy strong{font-size:10px;line-height:1;margin:0}
+  .game-topbar{gap:2px;padding-left:4px;padding-right:4px}
+  .topbar-btn{width:32px;height:36px}
+  .topbar-score{gap:2px}
+  .topbar-score,.topbar-side{overflow:hidden}
+  .topbar-side{gap:2px;padding:3px 2px;max-width:none;justify-content:center}
+  .topbar-side svg.toy-icon{width:24px;height:24px}
+  .topbar-name{display:none}
+  .topbar-hand{gap:1px;margin-left:1px;font-size:10px}
+  .topbar-medals{gap:1px;margin-left:1px;font-size:10px}
+  .topbar-medals svg{width:10px;height:10px}
+  .topbar-vs{min-width:25px}
+  .topbar-vs strong{font-size:12px}
+  .topbar-vs small{font-size:6px;margin-top:2px}
+  .supply-pile--compact{gap:2px}
+  .supply-pile--compact .supply-pile-cards{width:12px;height:15px}
+}
+@media(max-width:390px){
+  .game-topbar{gap:1px;padding-left:2px;padding-right:2px}
+  .topbar-btn{width:29px}
+  .topbar-side svg.toy-icon{width:22px;height:22px}
+  .topbar-vs{display:none}
+}

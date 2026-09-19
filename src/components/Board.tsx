@@ -117,6 +117,7 @@ export function Board({ game, legalNodes = [], onNodeClick, selectedNodeId, prev
   const fieldTransform = !portrait ? undefined : bottomIndex === 1 ? `matrix(0 1 -1 0 ${map.height} 0)` : `matrix(0 -1 1 0 0 ${map.width})`
   const positions = useMemo(() => Object.fromEntries(map.nodes.map(node => [node.id, project(node.x, node.y)])), [map, project])
   const legalSet = useMemo(() => new Set(legalNodes), [legalNodes])
+  const recentOpponentSet = useMemo(() => new Set(game?.recentOpponentTroopIds ?? []), [game?.recentOpponentTroopIds])
   const cutSet = useMemo(() => new Set(game?.cutEdges ?? []), [game?.cutEdges])
   const highlightSet = useMemo(() => new Set(highlightEdges.map(([a, b]) => edgeKey(a, b, map))), [highlightEdges, map])
   const depotSet = useMemo(() => new Set(game?.rules.depots ? map.depots : []), [game?.rules.depots, map.depots])
@@ -154,9 +155,9 @@ export function Board({ game, legalNodes = [], onNodeClick, selectedNodeId, prev
       if (!phone) {
         applyCamera({ x: (width - w * fit) / 2, y: (height - h * fit) / 2, scale: fit })
       } else if (portrait) {
-        // On a phone the field fills the width and opens on the player's own headquarters; the rest is a swipe away.
-        const scale = Math.max(fit, Math.min(.8, width / w))
-        applyCamera({ x: (width - w * scale) / 2, y: height - h * scale - 32, scale })
+        // Phones open on the complete upright field. Players can zoom in afterwards,
+        // but no headquarters or scoring edge starts off-screen.
+        applyCamera({ x: (width - w * fit) / 2, y: (height - h * fit) / 2, scale: fit })
       } else {
         // Sideways on a phone, the bases keep a useful tap size and the field pans left and right.
         const scale = Math.max(fit, Math.min(.8, height / h))
@@ -433,6 +434,7 @@ export function Board({ game, legalNodes = [], onNodeClick, selectedNodeId, prev
               const hqColor = node.ownerIndex === 1 ? RED : BLUE
               const troopColor = troop ? playerColor(troop.ownerId) : null
               const power = troop ? TROOPS[troop.type].power : 0
+              const recentOpponent = Boolean(troop && recentOpponentSet.has(troop.id))
               const colorName = troopColor === RED ? 'red' : 'blue'
               const { x, y } = positions[node.id]
               return <g
@@ -440,12 +442,13 @@ export function Board({ game, legalNodes = [], onNodeClick, selectedNodeId, prev
                 data-node-id={node.id}
                 data-troop-power={troop ? power : undefined}
                 data-troop-type={troop?.type}
+                data-recent-opponent={recentOpponent ? 'true' : undefined}
                 data-legal={isLegal ? 'true' : 'false'}
                 className={`board-base ${isLegal ? 'is-legal' : ''} ${selected ? 'is-selected' : ''} ${troop ? 'is-occupied' : ''}`}
                 role={preview ? undefined : 'button'}
                 tabIndex={interactive ? 0 : undefined}
                 aria-disabled={preview ? undefined : !interactive}
-                aria-label={`${node.label}${troop ? `, ${troopColor === BLUE ? '파랑' : '빨강'} ${TROOPS[troop.type].name}, 힘 ${power}` : ', 비어 있음'}${isLegal ? ', 여기에 놓기' : ''}`}
+                aria-label={`${node.label}${troop ? `, ${troopColor === BLUE ? '파랑' : '빨강'} ${TROOPS[troop.type].name}, 힘 ${power}${recentOpponent ? ', 상대가 직전 차례에 놓음' : ''}` : ', 비어 있음'}${isLegal ? ', 여기에 놓기' : ''}`}
                 onKeyDown={event => { if (interactive && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); onNodeClick?.(node.id) } }}
               >
                 <title>{node.label}{node.kind === 'special' ? ` · ${map.specialDescription}` : ''}{troop ? ` · ${TROOPS[troop.type].name} (${power})` : ''}</title>
@@ -478,6 +481,7 @@ export function Board({ game, legalNodes = [], onNodeClick, selectedNodeId, prev
                 {(isLegal || selected) && <circle className="board-legal-ring" cx={x} cy={y} r={node.kind === 'hq' ? 46 : 37} fill={isLegal ? '#a7b96d' : 'none'} fillOpacity=".12" stroke={isLegal ? '#718747' : '#d0a64c'} strokeWidth="3" strokeDasharray={isLegal ? '7 6' : undefined} />}
                 {landingByNode[node.id]?.kind === 'smash' && <Dust key={`dust-${landingByNode[node.id]!.id}`} x={x} y={y} />}
                 {troop && <g key={troop.id} transform={`translate(${x} ${y})`} filter={`url(#${boardId}-tile-shadow)`}><g className={landingByNode[node.id]?.troopId === troop.id ? `board-troop board-troop--${landingByNode[node.id]!.kind}` : 'board-troop'}>
+                  {recentOpponent && <circle className="board-recent-opponent-ring" cx="0" cy="-3" r="42" />}
                   {stack.length > 1 && <rect x="-28" y="-30" width="58" height="67" rx="10" fill="#d8cfb7" stroke="#a9a185" strokeWidth="1.5" />}
                   <rect x="-29" y="-37" width="58" height="67" rx="10" fill={troopColor!} stroke={colorName === 'blue' ? '#2e4e69' : '#944b38'} strokeWidth="1.5" />
                   <rect x="-25" y="-33" width="50" height="59" rx="7" fill={colorName === 'blue' ? '#dce6e4' : '#f2dfca'} />

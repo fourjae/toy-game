@@ -77,7 +77,7 @@ export interface PendingEffect {
   nodeIds: string[];
   troopIds?: string[];
   /** The opponent's hidden hand stays anonymous; this tells the server what the chosen back does. */
-  cardEffect?: 'freeze' | 'return-to-supply';
+  cardEffect?: 'freeze' | 'discard';
 }
 
 export interface GameEvent {
@@ -123,6 +123,10 @@ export interface GameState {
   winReason: WinReason | null;
   pending: PendingEffect | null;
   deferredSpecials: { sourceNodeId: string; sourceTroopId: string }[];
+  /** Troops placed during the active turn; committed together when that turn ends. */
+  turnPlacements: string[];
+  /** The completed turn's placements, so the opponent can briefly identify the last move. */
+  lastTurnPlacements: { playerId: string; troopIds: string[] } | null;
   /** Battlefield: a facedown troop is unavailable until its owner finishes a turn. */
   frozenTroops: { troopId: string; ownerId: string }[];
   events: GameEvent[];
@@ -150,6 +154,8 @@ export interface GameView {
   pending: PendingEffect | null;
   legalPlacements: Record<string, string[]>;
   canDraw: boolean;
+  /** Public board troop ids placed by the opponent on the immediately preceding turn. */
+  recentOpponentTroopIds: string[];
   /** Only this viewer's frozen hand cards are projected. */
   frozenTroopIds: string[];
   events: GameEvent[];

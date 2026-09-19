@@ -46,17 +46,17 @@ test('Castle Field graph has symmetric paths and closed scoring regions', () => 
   assert.equal(CASTLE_MAP.medalTarget, 7);
 });
 
-test('setup excludes four tiles per side and gives first3 / second4', () => {
+test('setup uses all 24 tiles per side and gives first3 / second4', () => {
   const game = createGame(['alice', 'bob'], () => 0.2);
   assert.equal(game.currentPlayerId, 'alice');
   assert.equal(game.players[0].hand.length, 3);
   assert.equal(game.players[1].hand.length, 4);
-  assert.equal(game.players[0].supply.length, 17);
-  assert.equal(game.players[1].supply.length, 16);
+  assert.equal(game.players[0].supply.length, 21);
+  assert.equal(game.players[1].supply.length, 20);
   const all = game.players.flatMap((p) => [...p.hand, ...p.supply]);
-  assert.equal(new Set(all.map((tile) => tile.id)).size, 40);
+  assert.equal(new Set(all.map((tile) => tile.id)).size, 48);
   for (const p of game.players) {
-    for (const type of TROOP_TYPES) assert.ok([...p.hand, ...p.supply].filter((tile) => tile.type === type).length <= 3);
+    for (const type of BASE_TROOP_TYPES) assert.equal([...p.hand, ...p.supply].filter((tile) => tile.type === type).length, 3);
     assert.ok([...p.hand, ...p.supply].every((tile) => BASE_TROOP_TYPES.includes(tile.type)), 'the printed game deals no expansion troops');
   }
   assert.equal(createGame(['alice', 'bob'], () => 0.9).currentPlayerId, 'bob');
@@ -164,20 +164,20 @@ test('skeleton and unicorn replenish after placement with a hard hand limit', ()
   assert.equal(deploy(game, skeleton!, 'blue-top').players[0].hand.length, 8);
 });
 
-test('robot lets its owner choose one hidden enemy tile to return to supply', () => {
+test('robot lets its owner choose one hidden enemy tile for the shared discard pile', () => {
   const game = fixture();
   const [robot] = give(game, ['robot']);
   const enemy = give(game, ['dino', 'duck', 'captain'], 'bob');
   const pending = deploy(game, robot!, 'blue-top');
   assert.equal(pending.pending?.type, 'map-freeze-card');
-  assert.equal(pending.pending?.cardEffect, 'return-to-supply');
+  assert.equal(pending.pending?.cardEffect, 'discard');
   assert.deepEqual(pending.pending?.troopIds, ['slot-0', 'slot-1', 'slot-2']);
   assert.equal(pending.players[1].hand.length, 3);
   const result = applyAction(pending, 'alice', { type: 'choose-card', troopId: 'slot-1' }, () => 0.2);
   assert.equal(result.players[1].hand.length, 2);
-  assert.equal(result.discarded.length, 0);
-  assert.ok(result.players[1].supply.some(tile => tile.id === enemy[1]!.id));
-  assert.equal(result.events.at(-1)?.type, 'return-to-supply');
+  assert.deepEqual(result.discarded.map(tile => tile.id), [enemy[1]!.id]);
+  assert.ok(!result.players[1].supply.some(tile => tile.id === enemy[1]!.id));
+  assert.match(result.log.at(-1)!.text, /공용 버림 더미/u);
 });
 
 test('captain chains placements and all of their effects within one turn', () => {
@@ -204,6 +204,22 @@ test('captain may skip its extra placement and auto-finishes with an empty hand'
   const empty = fixture();
   const [lone] = give(empty, ['captain']);
   assert.equal(deploy(empty, lone!, 'blue-top').currentPlayerId, 'bob');
+});
+
+test('the opponent sees every troop from the previous turn until their own turn ends', () => {
+  const game = fixture();
+  const [captain, dino] = give(game, ['captain', 'dino']);
+  let result = deploy(game, captain!, 'blue-top');
+  assert.deepEqual(result.turnPlacements, [captain!.id]);
+  result = deploy(result, dino!, 'west-top');
+  assert.deepEqual(result.lastTurnPlacements, { playerId: 'alice', troopIds: [captain!.id, dino!.id] });
+  assert.deepEqual(result.turnPlacements, []);
+  assert.deepEqual(getGameView(result, 'bob').recentOpponentTroopIds, [captain!.id, dino!.id]);
+  assert.deepEqual(getGameView(result, 'alice').recentOpponentTroopIds, []);
+
+  result = applyAction(result, 'bob', { type: 'draw' }, () => 0.2);
+  assert.deepEqual(result.lastTurnPlacements, { playerId: 'bob', troopIds: [] });
+  assert.deepEqual(getGameView(result, 'alice').recentOpponentTroopIds, []);
 });
 
 test('giant removes only an adjacent visible enemy, exposing the tile below', () => {
@@ -365,8 +381,8 @@ test('many deterministic full games preserve tile counts, hidden state and turn 
     const rng = () => ((value = (Math.imul(value, 1664525) + 1013904223) >>> 0) / 0x100000000);
     const expansion = seed > 16;
     let game = createGame(['alice', 'bob'], rng, expansion ? ALL_RULES : undefined);
-    // 8 printed types x3 plus 4 expansion types x2, minus the four unseen tiles, per player.
-    const total = expansion ? 56 : 40;
+    // 8 printed types x3 plus 4 expansion types x2, for both players.
+    const total = expansion ? 64 : 48;
     let moves = 0;
     while (game.status === 'playing' && moves++ < 400) {
       const view = getGameView(game, game.currentPlayerId);
@@ -437,8 +453,8 @@ test('a timed-out turn skips pending effects, draws when possible, or places the
 test('expansion rooms deal two copies of each new troop and expose the rules in the view', () => {
   const game = createGame(['alice', 'bob'], () => 0.2, ALL_RULES);
   const tiles = [...game.players[0].hand, ...game.players[0].supply];
-  assert.equal(tiles.length + 4, 32);
-  for (const type of ['ninja', 'sapper', 'knight', 'bomb'] as const) assert.ok(tiles.filter((t) => t.type === type).length <= 2);
+  assert.equal(tiles.length, 32);
+  for (const type of ['ninja', 'sapper', 'knight', 'bomb'] as const) assert.equal(tiles.filter((t) => t.type === type).length, 2);
   assert.deepEqual(getGameView(game, 'alice').rules, ALL_RULES);
   assert.deepEqual(getGameView(fixture(), 'alice').rules, { flank: false, depots: false, expansion: false });
 });

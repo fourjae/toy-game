@@ -54,6 +54,7 @@
 .board-base { outline: none; }
 .board-base.is-legal { cursor: pointer; }
 .board-base.is-occupied { cursor: pointer; }
+.board-recent-opponent-ring { fill: none; stroke: #e58c2d; stroke-width: 1.8; vector-effect: non-scaling-stroke; pointer-events: none; }
 .board-base.is-legal:hover .board-legal-ring,
 .board-base:focus-visible .board-legal-ring { stroke: #607638; stroke-width: 4; fill-opacity: .22; }
 .board-base:focus-visible > circle:last-child { stroke: #243d19; stroke-width: 2; stroke-dasharray: 3 3; }
