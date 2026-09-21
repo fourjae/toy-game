@@ -120,7 +120,7 @@ type HandPhase = 'entering' | 'returned' | 'stay' | 'leaving' | 'decking';
 interface HandCard { troop: Troop; phase: HandPhase; order: number }
 
 /**
- * The hand the player sees lags the real one just long enough to animate: a stolen troop stays
+ * The hand the player sees lags the real one just long enough to animate: a discarded troop stays
  * as a ghost while it bounces and drops away, and a drawn troop slides in from the right.
  * Troops placed on the board leave at once, since the board already shows where they went.
  */
@@ -183,7 +183,7 @@ function useDiscardEvents(game: GameView, meId: string) {
       const id = game.revision * 10 + index;
       if (cause === 'bomb') return { id, troop, mine, text: mine ? `폭탄을 밟아 ${name} 잃었어요.` : `상대가 내 폭탄을 밟았어요. ${name} 잃었네요.` };
       if (cause === 'defuse') return { id, troop, mine, text: mine ? '상대 꽉스가 내 폭탄을 해체했어요.' : '꽉스가 상대 폭탄을 해체했어요.' };
-      if (cause === 'robot' || handIds.has(troop.id)) return { id, troop, mine, text: mine ? `상대의 XB-42가 내 손에서 ${name} 뺏어 갔어요.` : `상대 손에서 ${name} 버리게 했어요.` };
+      if (cause === 'robot' || handIds.has(troop.id)) return { id, troop, mine, text: mine ? `상대의 XB-42가 내 손에서 ${name} 공용 버림 더미로 보냈어요.` : `상대 손에서 고른 ${name} 공용 버림 더미로 보냈어요.` };
       const base = Object.entries(before.board).find(([, stack]) => stack.some(t => t.id === troop.id))?.[0];
       return { id, troop, mine, text: mine ? `상대 거인병이 ${base ? nodeIndex(getMap(game.mapId))[base]!.label + '의 ' : ''}내 ${name} 밀어냈어요.` : `상대의 ${name} 판에서 치웠어요.` };
     });

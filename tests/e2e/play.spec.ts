@@ -56,11 +56,15 @@ test('두 사람이 방을 만들고 들어와 첫 수를 둔다', async ({ brow
   const supplyLabels = await visibleSupplyPiles.evaluateAll(elements => elements.map(element => element.getAttribute('aria-label') ?? ''));
   expect(supplyLabels.some(label => label.endsWith('21장 남음'))).toBe(true);
   expect(supplyLabels.some(label => label.endsWith('20장 남음'))).toBe(true);
-  await expect(mover.getByLabel('공용 버림 더미 0장')).toBeVisible();
+  const discardPile = mover.getByRole('button', { name: '공용 버림 더미 0장, 내용 보기' });
+  await expect(discardPile).toBeVisible();
   await expect(mover.locator('.board-shell [aria-label^="공용 버림 더미"]')).toHaveCount(0);
   await expect(mover.locator('.opponent-card')).toHaveCount(4);
   await expect(watcher.locator('.opponent-card')).toHaveCount(3);
-  await expect(mover.locator('.opponent-hand button')).toHaveCount(0);
+  await expect(mover.locator('.opponent-hand button.opponent-card')).toHaveCount(0);
+  await discardPile.click();
+  await expect(mover.getByRole('dialog')).toContainText('아직 공용 버림 더미에 병정이 없어요.');
+  await mover.getByRole('dialog').getByRole('button', { name: '닫기' }).click();
 
   if (await mover.evaluate(() => matchMedia('(max-width: 640px)').matches)) {
     const topbarLayout = await mover.locator('.game-topbar').evaluate(element => {

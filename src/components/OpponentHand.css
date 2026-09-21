@@ -5,6 +5,8 @@
 .opponent-hand-label strong span{margin-left:7px;font-size:10px;font-weight:400;color:#89917d}
 .opponent-hand-label>span[role="status"]{flex:1;text-align:center}
 .discard-hud{display:inline-flex;align-items:center;gap:5px;flex-shrink:0;line-height:1;color:#7b806f}
+button.discard-hud{margin:-2px -3px;padding:2px 3px;border-radius:5px;text-align:left}
+button.discard-hud:hover{background:#e9eadf;color:#5f6a53}
 .discard-hud-card{display:grid;place-items:center;width:21px;height:24px;border:1px dashed #aaa58f;border-radius:4px;background:#e9e4d5;color:#aaa58f;overflow:hidden}
 .discard-hud.has-card .discard-hud-card{border-style:solid;border-color:#496b88;background:#dce6e4}
 .discard-hud.has-card.red .discard-hud-card{border-color:#9a5945;background:#f2dfca}
