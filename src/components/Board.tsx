@@ -13,6 +13,8 @@ export interface BoardProps {
   game?: GameView | null
   legalNodes?: string[]
   onNodeClick?: (nodeId: string) => void
+  /** Fires on a click that lands on empty field rather than any base — used to cancel a pending choice. */
+  onBackgroundClick?: () => void
   selectedNodeId?: string | null
   preview?: boolean
   previewMapId?: string
@@ -90,7 +92,7 @@ function Grass({ x, y }: Point) {
   return <path d={`m${x - 5} ${y} -2 -5m7 5 1 -8m3 8 4 -4`} stroke="#849663" strokeWidth="1.8" strokeLinecap="round" opacity=".58" />
 }
 
-export function Board({ game, legalNodes = [], onNodeClick, selectedNodeId, preview = false, previewMapId, className = '', orientation = 'landscape', bottomIndex = 0, onToggleOrientation, highlightEdges = [] }: BoardProps) {
+export function Board({ game, legalNodes = [], onNodeClick, onBackgroundClick, selectedNodeId, preview = false, previewMapId, className = '', orientation = 'landscape', bottomIndex = 0, onToggleOrientation, highlightEdges = [] }: BoardProps) {
   const viewportRef = useRef<HTMLDivElement>(null)
   const cameraRef = useRef<Camera>({ x: 0, y: 0, scale: 1 })
   const sizeRef = useRef({ width: 0, height: 0 })
@@ -242,7 +244,10 @@ export function Board({ game, legalNodes = [], onNodeClick, selectedNodeId, prev
   const finishPointer = (event: ReactPointerEvent<HTMLDivElement>, cancelled = false) => {
     if (!pointersRef.current.has(event.pointerId)) return
     const nodeId = gestureRef.current?.nodeId
-    if (!cancelled && !movedRef.current && pointersRef.current.size === 1 && nodeId) onNodeClick?.(nodeId)
+    if (!cancelled && !movedRef.current && pointersRef.current.size === 1) {
+      if (nodeId) onNodeClick?.(nodeId)
+      else onBackgroundClick?.()
+    }
     pointersRef.current.delete(event.pointerId)
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId)
     if (pointersRef.current.size) beginGesture()
@@ -360,23 +365,6 @@ export function Board({ game, legalNodes = [], onNodeClick, selectedNodeId, prev
             {map.theme === 'caribbean' && [[400, 320], [720, 320], [960, 110], [960, 530]].map(([x, y], i) => <g key={i}><ellipse cx={x} cy={y} rx="50" ry="20" fill="#f6e6ae" opacity=".8" /><path d={`M${x - 30} ${y + 6}q30 -25 60 0`} fill="none" stroke="#5db5c8" strokeWidth="6" opacity=".55" /></g>)}
             {map.theme === 'battlefield' && [[130, 100], [970, 100], [130, 540], [970, 540]].map(([x, y], i) => <g key={i} fill="none" stroke="#957b56" opacity=".65"><path d={`M${x - 48} ${y - 10}h96M${x - 42} ${y}h84M${x - 35} ${y + 10}h70`} strokeWidth="7" strokeLinecap="round" /><path d={`M${x - 55} ${y - 26}l20 14m70 0 20-14`} strokeWidth="3" /></g>)}
           </g>
-          {map.regions.map(region => {
-            const claimedOwner = game?.claimedRegions[region.id]
-            const currentOwner = regionOwners[region.id]
-            const active = Boolean(claimedOwner && currentOwner === claimedOwner)
-            const outlineOwner = currentOwner ?? claimedOwner
-            return <polygon
-              key={region.id}
-              className={`board-region ${active ? 'is-active' : claimedOwner ? 'is-claimed' : ''}`}
-              points={region.nodeIds.map(id => `${positions[id].x},${positions[id].y}`).join(' ')}
-              fill={active ? playerColor(claimedOwner) : '#d7dcbc'}
-              fillOpacity={active ? '.18' : claimedOwner ? '.025' : '.045'}
-              stroke={outlineOwner ? playerColor(outlineOwner) : '#989b78'}
-              strokeOpacity={active ? '.8' : claimedOwner ? '.55' : '.25'}
-              strokeWidth={active ? '3' : '1.5'}
-              strokeDasharray={active ? undefined : claimedOwner ? '8 6' : '3 7'}
-            />
-          })}
           <g className="board-landscaping" aria-hidden="true">
             {['castle', 'tropical', 'jungle', 'caribbean'].includes(map.theme) && TREES.map((tree, index) => { const point = project(map.width * tree.fx, map.height * tree.fy); return <Tree key={index} x={point.x} y={point.y} size={tree.size} tone={tree.tone} /> })}
             {['castle', 'tropical', 'jungle', 'caribbean'].includes(map.theme) && GRASS.map(([fx, fy], index) => <Grass key={index} {...project(map.width * fx, map.height * fy)} />)}
@@ -407,6 +395,25 @@ export function Board({ game, legalNodes = [], onNodeClick, selectedNodeId, prev
                 </g>}
                 {highlighted && <line className="road-choice" x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={cut ? '#6e823a' : '#c25b3c'} strokeWidth="5" strokeDasharray="8 6" strokeLinecap="round" />}
               </g>
+            })}
+          </g>
+          <g className="board-region-outlines" aria-hidden="true" pointerEvents="none">
+            {map.regions.map(region => {
+              const claimedOwner = game?.claimedRegions[region.id]
+              const currentOwner = regionOwners[region.id]
+              const active = Boolean(claimedOwner && currentOwner === claimedOwner)
+              const outlineOwner = currentOwner ?? claimedOwner
+              return <polygon
+                key={region.id}
+                className={`board-region ${active ? 'is-active' : claimedOwner ? 'is-claimed' : ''}`}
+                points={region.nodeIds.map(id => `${positions[id].x},${positions[id].y}`).join(' ')}
+                fill="none"
+                stroke={outlineOwner ? playerColor(outlineOwner) : '#6b5a35'}
+                strokeOpacity={active ? '.9' : claimedOwner ? '.75' : '.65'}
+                strokeWidth={active ? '3.5' : '2.5'}
+                strokeLinejoin="round"
+                strokeDasharray={active ? undefined : claimedOwner ? '9 5' : '6 6'}
+              />
             })}
           </g>
           <g className="board-medals">
