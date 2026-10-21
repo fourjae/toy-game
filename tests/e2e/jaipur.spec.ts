@@ -19,6 +19,8 @@ test('자이푸르: 시장의 낙타를 모두 데려오고 차례가 넘어간�
   await expect(guest.getByText('둘 다 모였네요')).toBeVisible();
   await host.getByRole('button', { name: '장사 시작' }).click();
   await expect(host.locator('.jp-slot')).toHaveCount(5);
+  await expect(host.locator('.jp-stall')).toHaveCount(2);
+  await expect(host.locator('.jp-stall.is-mine')).toContainText('아직 판 물건이 없어요');
   await expect.poll(async () => (await host.locator('.jp-action.is-mine').count()) + (await guest.locator('.jp-action.is-mine').count())).toBe(1);
   const mover = (await host.locator('.jp-action.is-mine').count()) ? host : guest;
   const other = mover === host ? guest : host;

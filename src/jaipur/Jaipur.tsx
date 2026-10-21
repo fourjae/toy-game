@@ -132,6 +132,30 @@ function Table({ room, meId, client }: Props) {
     </div>;
   };
 
+  // 판 물건의 토큰을 가판대처럼 늘어놓는다. 방금 판 토큰은 살짝 튀어 들어온다.
+  const stall = (id: string) => {
+    const own = id === meId;
+    const goods = view.earnedGoods[id]!;
+    const bonus: Array<{ size: 3 | 4 | 5; value: number | null }> = own ? view.myBonus : view.opponentBonus;
+    const last = view.lastAction?.type === 'sell' && view.lastAction.playerId === id ? view.lastAction : null;
+    let freshGoods = 0;
+    if (last) {
+      const kind = last.cards[0]!.kind;
+      while (freshGoods < last.cards.length && goods[goods.length - 1 - freshGoods]?.good === kind) freshGoods += 1;
+    }
+    const freshBonus = last && last.cards.length >= 3 ? 1 : 0;
+    const label = own ? '내 가판대' : `${names[id] ?? '상대'}님의 가판대`;
+    return <section className={`jp-stall ${own ? 'is-mine' : 'is-opp'}`} aria-label={label}>
+      <span className="jp-stall-label">{own ? '내 가판대' : '상대 가판대'}</span>
+      {goods.length === 0 && bonus.length === 0
+        ? <span className="jp-stall-empty">아직 판 물건이 없어요</span>
+        : <span className="jp-stall-coins">
+          {goods.map((t, i) => <i key={`g${i}`} className={`jp-coin jp-${t.good} ${i >= goods.length - freshGoods ? 'is-fresh' : ''}`} title={`${GOOD_INFO[t.good].name} ${t.value}`}>{t.value}</i>)}
+          {bonus.map((b, i) => <i key={`b${i}`} className={`jp-coin is-bonus ${i >= bonus.length - freshBonus ? 'is-fresh' : ''}`} title={`보너스(${b.size}장)${b.value === null ? '' : ` ${b.value}`}`}>{b.value ?? '?'}<small>{b.size}</small></i>)}
+        </span>}
+    </section>;
+  };
+
   return <main className="jp-game">
     <header className="jp-topbar">
       <button className="duel-icon-btn" onClick={() => setLeaving(true)} aria-label="방 나가기"><ArrowLeft size={17} /></button>
@@ -153,6 +177,7 @@ function Table({ room, meId, client }: Props) {
       <div className="jp-bonus-piles" title="남은 보너스 토큰">{([3, 4, 5] as const).map(n => <span key={n}><i>{n}</i>{view.bonusLeft[n]}</span>)}</div>
     </section>
 
+    {stall(oppId)}
     <section className="jp-market" aria-label="시장">
       <div className="jp-deck" aria-label={`더미 ${view.deckCount}장`}><span className="jp-back" /><b>{view.deckCount}</b></div>
       {view.market.map(c => <button key={c.id} type="button" className="jp-slot" disabled={busy || !mine} aria-pressed={marketSel.includes(c.id)} onClick={() => tapMarket(c)} aria-label={`시장 ${GOOD_INFO[c.kind].name}`}>
@@ -160,6 +185,7 @@ function Table({ room, meId, client }: Props) {
       </button>)}
     </section>
 
+    {stall(meId)}
     <section className={`jp-action ${mine ? 'is-mine' : ''}`}>
       <div className="jp-hint"><span className="duel-dot" /><strong>{view.status !== 'playing' ? '라운드 끝' : mine ? '내 차례' : '상대 차례'}</strong><span>{hint}</span></div>
       {mine && <div className="jp-buttons">

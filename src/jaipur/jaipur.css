@@ -61,11 +61,25 @@
 .jp-bonus-piles span{display:flex;flex-direction:column;align-items:center}
 .jp-bonus-piles i{display:grid;place-items:center;width:18px;height:18px;border-radius:50%;background:#f2c14e;color:#5a3a00;font-style:normal;font-size:10px}
 
-.jp-market{--cw:clamp(50px,calc((min(100vw,720px) - 70px) / 6.2),104px);display:flex;align-items:flex-end;justify-content:center;gap:6px;margin-block:auto;padding:22px 6px 12px;border-radius:18px;background:linear-gradient(180deg,#fff6f0aa,#f9dcd2cc);box-shadow:inset 0 0 0 2px #ffffff88}
+.jp-market{--cw:clamp(50px,calc((min(100vw,720px) - 70px) / 6.2),104px);display:flex;align-items:flex-end;justify-content:center;gap:6px;flex:none;padding:22px 6px 12px;border-radius:18px;background:linear-gradient(180deg,#fff6f0aa,#f9dcd2cc);box-shadow:inset 0 0 0 2px #ffffff88}
 .jp-market::before{content:'시장';position:absolute;top:5px;left:50%;transform:translateX(-50%);font-size:10px;font-weight:900;letter-spacing:4px;color:var(--d-soft)}
 .jp-market{position:relative;align-items:center}
 .jp-deck{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;margin-right:4px;color:var(--d-soft);font-size:11px;font-weight:900}
 .jp-deck .jp-back{width:calc(var(--cw) * .7)}
+.jp-stall{position:relative;display:flex;align-items:center;gap:8px;min-height:34px;padding:5px 10px;border-radius:12px;background:#fff6f080;border:1.5px dashed #ffffffaa}
+.jp-stall.is-opp{margin-top:auto}
+.jp-stall.is-mine{margin-bottom:auto}
+.jp-stall-label{flex:none;font-size:10px;font-weight:900;letter-spacing:1px;color:var(--d-soft)}
+.jp-stall-empty{font-size:11px;color:var(--d-soft);opacity:.75}
+.jp-stall-coins{display:flex;flex-wrap:wrap;gap:3px;min-width:0}
+.jp-coin{position:relative;display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffffff55,transparent 55%),linear-gradient(160deg,var(--c),var(--c2));color:#fff;font-style:normal;font-size:11px;font-weight:900;box-shadow:0 1px 2px #0004,inset 0 0 0 1.5px #ffffff66;text-shadow:0 1px 0 #0004}
+.jp-coin.is-bonus{--c:#f2c14e;--c2:#b8830f;border-radius:6px;color:#4a2e00;text-shadow:none}
+.jp-coin.is-bonus small{position:absolute;right:-3px;bottom:-3px;display:grid;place-items:center;width:11px;height:11px;border-radius:50%;background:#5a2a2a;color:#ffe1c4;font-size:7px}
+.jp-coin.is-fresh{animation:jp-coin-in .5s cubic-bezier(.3,1.6,.5,1) both}
+.jp-stall-coins .jp-coin.is-fresh:nth-last-child(2){animation-delay:.06s}
+.jp-stall-coins .jp-coin.is-fresh:nth-last-child(3){animation-delay:.12s}
+@keyframes jp-coin-in{from{transform:translateY(-14px) scale(.4);opacity:0}}
+@media(prefers-reduced-motion:reduce){.jp-coin.is-fresh{animation:none}}
 .jp-slot,.jp-hand-card{padding:0;border:0;background:none;cursor:pointer}
 .jp-slot:disabled,.jp-hand-card:disabled{cursor:default;opacity:1}
 
