@@ -35,6 +35,10 @@ button.hub-card:active{transform:translateY(0)}
 .hub-card--squadro .hub-card-art{background:linear-gradient(160deg,#cfeadf,#7fbcae)}
 .hub-card--squadro .hub-card-body strong{color:#1f7f78}
 .hub-card--squadro .hub-card-go{color:#135750}
+.hub-card--jaipur{border-color:#efc0b6}
+.hub-card--jaipur .hub-card-art{background:linear-gradient(180deg,#f7b267,#f4978e)}
+.hub-card--jaipur .hub-card-body strong{color:#c8434f}
+.hub-card--jaipur .hub-card-go{color:#8f2834}
 .hub-loading{display:grid;place-items:center;min-height:100vh;color:var(--muted)}
 .hub-card--empty{align-items:center;justify-content:center;gap:8px;border:1.5px dashed #d3d4c8;background:transparent;color:#b0b2a6;font-size:11px}
 .hub-link{margin-right:2px}

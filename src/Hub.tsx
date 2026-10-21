@@ -2,7 +2,7 @@ import { ArrowRight, Clock3, Lock, Users } from 'lucide-react';
 import ToyIcon from './components/ToyIcon';
 import type { GameId } from './Root';
 
-const EMPTY_SLOTS = 4;
+const EMPTY_SLOTS = 3;
 
 function LostCitiesArt() {
   return <svg viewBox="0 0 120 80" aria-hidden="true" className="hub-art-lc">
@@ -44,6 +44,16 @@ function SquadroArt() {
     <path d="M48 30c4 4 5 9 5 15 0 3-2 5-5 5s-5-2-5-5c0-6 1-11 5-15z" fill="#f2b632" stroke="#a8740c" />
     <path d="M70 50c-4 4-5 9-5 15" stroke="none" />
     <g transform="translate(74 40) rotate(90)"><path d="M0 -10c4 4 5 9 5 15 0 3-2 5-5 5s-5-2-5-5c0-6 1-11 5-15z" fill="#e0533d" stroke="#9e2f1f" /></g>
+  </svg>;
+}
+
+function JaipurArt() {
+  return <svg viewBox="0 0 120 80" aria-hidden="true">
+    <circle cx="60" cy="30" r="14" fill="#ffe0a0" />
+    <path d="M0 80V44l15-8 15 8 15-12 15 12 15-14 15 14 15-12 15 12v36z" fill="#e47f86" />
+    {Array.from({ length: 4 }, (_, r) => Array.from({ length: 10 }, (_, c) => <path key={`${r}${c}`} d={`M${5 + c * 12} ${58 + r * 6}v-3a2.5 2.5 0 0 1 5 0v3z`} fill="#fbe1d4" opacity=".85" />))}
+    <g transform="translate(26 18) rotate(-12)"><rect width="16" height="22" rx="3" fill="#d23f4a" stroke="#fff6e8" strokeWidth="1.5" /><path d="M4 9l2-3h4l2 3-4 6z" fill="#fff" /></g>
+    <g transform="translate(78 14) rotate(12)"><rect width="16" height="22" rx="3" fill="#e7ac2a" stroke="#fff6e8" strokeWidth="1.5" /><path d="M3 15l2-4h6l2 4z" fill="#fff" /></g>
   </svg>;
 }
 
@@ -101,6 +111,15 @@ export default function Hub({ onOpen }: { onOpen: (game: GameId) => void }) {
             <strong>스쿼드로</strong>
             <small>엇갈리는 물길에서 배 네 척을 먼저 왕복시켜요</small>
             <span className="hub-card-meta"><span><Users size={13} /> 2인</span><span><Clock3 size={13} /> 약 10분</span></span>
+          </span>
+          <ArrowRight className="hub-card-go" size={18} />
+        </button>
+        <button type="button" className="hub-card hub-card--jaipur" onClick={() => onOpen('jaipur')}>
+          <span className="hub-card-art"><JaipurArt /></span>
+          <span className="hub-card-body">
+            <strong>자이푸르</strong>
+            <small>분홍 도시 시장에서 사고팔아 인장 두 개를 모아요</small>
+            <span className="hub-card-meta"><span><Users size={13} /> 2인</span><span><Clock3 size={13} /> 약 25분</span></span>
           </span>
           <ArrowRight className="hub-card-go" size={18} />
         </button>
