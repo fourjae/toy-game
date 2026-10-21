@@ -23,6 +23,10 @@ button.hub-card:active{transform:translateY(0)}
 .hub-card--lost .hub-card-art{background:linear-gradient(160deg,#f7c58a,#e5683a 55%,#a82f1f)}
 .hub-card--lost .hub-card-body strong{color:#8f2a17}
 .hub-card--lost .hub-card-go{color:#fff}
+.hub-card--hanamikoji{border-color:#d9b3c4}
+.hub-card--hanamikoji .hub-card-art{background:linear-gradient(180deg,#2b2140,#5a2c3a)}
+.hub-card--hanamikoji .hub-card-body strong{color:#8e2b3d}
+.hub-card--hanamikoji .hub-card-go{color:#ffd78a}
 .hub-card--empty{align-items:center;justify-content:center;gap:8px;border:1.5px dashed #d3d4c8;background:transparent;color:#b0b2a6;font-size:11px}
 .hub-link{margin-right:2px}
 

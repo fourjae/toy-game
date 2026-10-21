@@ -40,6 +40,14 @@ npm run test:e2e   # Playwright (처음 한 번 npx playwright install chromium)
 | 테스트 | `tests/lostCities*.test.ts`, `tests/e2e/lost-cities.spec.ts` | 엔진 + 서버 테스트 필수, e2e는 가능하면 |
 | 문서 | `README.md` "게임 고르기" | 한 줄 설명 추가 |
 
+### 하나미코지부터는 공용 뼈대를 쓴다
+
+- 서버: `server/duel.ts`의 `attachDuel(io, game, opts)`가 방/세션/초대 코드/재접속/재대전 투표를 다 처리한다. 게임은 `server/games/<game>.ts`에 `DuelGame`(create/cleanAction/apply/view/status/nextRound)만 정의하고 `server/app.ts`의 `duels` 배열에 넣는다. 이벤트: `rooms:options`(방 설정), `game:action`, `game:ready`.
+- 엔진 공용: `shared/duel.ts`(RuleError, shuffle, pushLog).
+- 화면: `src/duel/DuelShell.tsx`가 첫 화면/대기실/방을 그린다. 게임은 `src/<game>/`에 테마(`DuelTheme`: 문구, Art, Backdrop, Rules, Table)를 넘긴다. 색은 `.theme-<key>`에서 `--d-*` 변수로.
+- 테스트: `tests/helpers/duelClient.ts`의 `duelFixture`, `roomLifecycleTests`를 쓴다.
+- e2e: 이 환경에선 `pw.local.config.ts`(로컬 전용, git 제외)로 `/opt/pw-browsers/chromium`을 지정해서 돌렸다.
+
 ## 규칙
 
 - UI 문구, 주석의 사용자 대상 텍스트, 커밋 메시지는 한국어.
