@@ -1,3 +1,4 @@
+import './lostCities.css';
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent } from 'react';
 import {
   ArrowLeft, ArrowRight, Check, ChevronRight, Clock3, Copy, HelpCircle, History, Layers,

@@ -96,6 +96,8 @@ test('로스트 시티 규칙 창에 점수 계산과 예시가 있다', async (
 });
 
 test('로스트 시티: 방을 만들고 들어와 1판을 끝까지 둔다', async ({ browser }) => {
+  // 한 판을 끝까지 두는 데 느린 환경에서는 1분 가까이 걸린다.
+  test.setTimeout(120_000);
   const { host, guest } = await startGame(browser);
   await expect(host.locator('.lc-deck b')).toHaveText('44');
   await playRound(host, guest);
