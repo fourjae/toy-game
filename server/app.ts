@@ -12,6 +12,7 @@ import { attachDuel } from './duel.js';
 import { hanamikojiGame } from './games/hanamikoji.js';
 import { santoriniGame } from './games/santorini.js';
 import { squadroGame } from './games/squadro.js';
+import { jaipurGame } from './games/jaipur.js';
 import type { AckResult, ClientState, MapSelection, RoomPhase, RoomSummary, RoomView } from './types.js';
 
 interface Session {
@@ -128,7 +129,7 @@ export function createGameServer(options: GameServerOptions = {}) {
   const rng = options.rng ?? (() => randomInt(0, 0x1_0000_0000) / 0x1_0000_0000);
   let closing = false;
   const lostCities = attachLostCities(io, { rng, ...options.lostCities });
-  const duels = [hanamikojiGame, santoriniGame, squadroGame].map(game => attachDuel(io, game as never, { rng, ...options.duels }));
+  const duels = [hanamikojiGame, santoriniGame, squadroGame, jaipurGame].map(game => attachDuel(io, game as never, { rng, ...options.duels }));
 
   const roomTurnMs = (room: Room) => options.turnMs ?? room.turnSeconds * 1_000;
   // Coming back from a dropped connection always leaves a moment to act.
