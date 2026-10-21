@@ -2,7 +2,7 @@ import { ArrowRight, Clock3, Lock, Users } from 'lucide-react';
 import ToyIcon from './components/ToyIcon';
 import type { GameId } from './Root';
 
-const EMPTY_SLOTS = 6;
+const EMPTY_SLOTS = 5;
 
 function LostCitiesArt() {
   return <svg viewBox="0 0 120 80" aria-hidden="true" className="hub-art-lc">
@@ -20,6 +20,18 @@ function HanamikojiArt() {
     <path d="M0 80V50l18-10 18 10v30zM40 80V44l22-12 22 12v36zM86 80V52l17-9 17 9v28z" fill="#3a2843" />
     {[14, 52, 70, 100].map((x, i) => <g key={x}><path d={`M${x} ${20 + (i % 2) * 6}v6`} stroke="#2a1d1a" strokeWidth="1" /><ellipse cx={x} cy={33 + (i % 2) * 6} rx="6" ry="8" fill="#f0603c" /><ellipse cx={x} cy={33 + (i % 2) * 6} rx="3" ry="5" fill="#ffd58a" opacity=".7" /></g>)}
     <path d="M30 22c3-1 5 1 4 4-3 1-5-1-4-4zM80 12c3-1 5 1 4 4-3 1-5-1-4-4z" fill="#f6b7c8" />
+  </svg>;
+}
+
+function SantoriniArt() {
+  return <svg viewBox="0 0 120 80" aria-hidden="true">
+    <circle cx="22" cy="18" r="9" fill="#ffd77a" />
+    <rect y="56" width="120" height="24" fill="#2f8fc9" />
+    <path d="M16 60c10-16 78-16 88 0z" fill="#f4f0e7" />
+    <rect x="40" y="36" width="16" height="16" fill="#fff" /><rect x="58" y="26" width="18" height="26" fill="#fff" /><rect x="78" y="38" width="14" height="14" fill="#fff" />
+    <path d="M58 26a9 9 0 0 1 18 0z" fill="#2b5cad" /><path d="M78 38a7 7 0 0 1 14 0z" fill="#2b5cad" />
+    <rect x="45" y="28" width="6" height="8" rx="3" fill="#e2703a" /><circle cx="48" cy="26" r="3" fill="#e2703a" />
+    <path d="M10 68q6-3 12 0t12 0M70 72q6-3 12 0t12 0" stroke="#fff9" strokeWidth="1.4" fill="none" />
   </svg>;
 }
 
@@ -58,6 +70,15 @@ export default function Hub({ onOpen }: { onOpen: (game: GameId) => void }) {
           <span className="hub-card-body">
             <strong>하나미코지</strong>
             <small>네 가지 행동으로 일곱 게이샤의 호감을 얻어요</small>
+            <span className="hub-card-meta"><span><Users size={13} /> 2인</span><span><Clock3 size={13} /> 약 15분</span></span>
+          </span>
+          <ArrowRight className="hub-card-go" size={18} />
+        </button>
+        <button type="button" className="hub-card hub-card--santorini" onClick={() => onOpen('santorini')}>
+          <span className="hub-card-art"><SantoriniArt /></span>
+          <span className="hub-card-body">
+            <strong>산토리니</strong>
+            <small>움직이고 지어서 3층에 먼저 올라서는 3D 수싸움</small>
             <span className="hub-card-meta"><span><Users size={13} /> 2인</span><span><Clock3 size={13} /> 약 15분</span></span>
           </span>
           <ArrowRight className="hub-card-go" size={18} />
