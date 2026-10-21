@@ -97,10 +97,19 @@ export class IslandScene {
   resetCamera(seat: number, top = false) {
     const z = seat === 0 ? 1 : -1;
     const { clientWidth: w, clientHeight: h } = this.host;
-    // A tall phone screen sees the board through a narrow slot, so the camera backs off.
-    const d = h && w / h < 0.8 ? 10.5 / Math.max(0.5, w / h) * 0.62 : 13;
-    if (top) this.camera.position.set(0, d * 1.05, 0.5 * z);
-    else this.camera.position.set(0, d * 0.6, d * 0.8 * z);
+    const aspect = h ? w / h : 1;
+    if (aspect < 0.8) {
+      // Tall phone screen: fit the board centre to about 74% of the width (the near edge then fills ~85%) and look down more steeply,
+      // so the board fills the tall slot instead of leaving an empty sky above it.
+      const halfFov = THREE.MathUtils.degToRad(this.camera.fov / 2);
+      const d = THREE.MathUtils.clamp((SIZE / 2 / 0.74) / (Math.tan(halfFov) * aspect), 7, 18);
+      if (top) this.camera.position.set(0, d, 0.5 * z);
+      else this.camera.position.set(0, d * 0.84, d * 0.54 * z);
+    } else {
+      const d = 13;
+      if (top) this.camera.position.set(0, d * 1.05, 0.5 * z);
+      else this.camera.position.set(0, d * 0.6, d * 0.8 * z);
+    }
     this.seat = seat;
     this.controls.target.set(0, 0.3, 0);
     this.controls.update();

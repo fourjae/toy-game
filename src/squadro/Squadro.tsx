@@ -164,6 +164,12 @@ function Table({ room, meId, client }: Props) {
           const b = toScreen(squareOf(seat, view.lastMove.lane, view.lastMove.to.pos));
           return { '--x': Math.min(a.x, b.x), '--y': Math.min(a.y, b.y), '--w': Math.abs(a.x - b.x) + 1, '--h': Math.abs(a.y - b.y) + 1 } as CSSProperties;
         })()} />}
+        {preview && selected !== null && (() => {
+          // Dashed route from the chosen boat to where it would stop.
+          const a = toScreen(squareOf(mySeat, selected, view.pieces[meId]![selected]!.pos));
+          const b = toScreen(squareOf(mySeat, selected, preview.to.pos));
+          return <span key={`route-${selected}`} className={`sq-route ${SEAT_CLASS[mySeat]}`} style={{ '--x': Math.min(a.x, b.x), '--y': Math.min(a.y, b.y), '--w': Math.abs(a.x - b.x) + 1, '--h': Math.abs(a.y - b.y) + 1 } as CSSProperties} />;
+        })()}
         {preview && selected !== null && !preview.to.done && <button type="button" className={`sq-piece sq-ghost`} style={place(mySeat, selected, preview.to)} onClick={() => void go(selected)} aria-label="여기로 출발"><Boat seat={mySeat} /></button>}
         {view.playerIds.map((id, seat) => view.pieces[id]!.map((piece, lane) => {
           if (piece.done) return null;
