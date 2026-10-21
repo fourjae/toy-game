@@ -42,7 +42,6 @@ function SquadroArt() {
     {[0, 1, 2, 3].map(i => <line key={i} x1={42 + i * 12} x2={42 + i * 12} y1="16" y2="64" stroke="#ffffff33" />)}
     {[0, 1, 2].map(i => <line key={i} y1={28 + i * 12} y2={28 + i * 12} x1="30" x2="90" stroke="#ffffff33" />)}
     <path d="M48 30c4 4 5 9 5 15 0 3-2 5-5 5s-5-2-5-5c0-6 1-11 5-15z" fill="#f2b632" stroke="#a8740c" />
-    <path d="M70 50c-4 4-5 9-5 15" stroke="none" />
     <g transform="translate(74 40) rotate(90)"><path d="M0 -10c4 4 5 9 5 15 0 3-2 5-5 5s-5-2-5-5c0-6 1-11 5-15z" fill="#e0533d" stroke="#9e2f1f" /></g>
   </svg>;
 }

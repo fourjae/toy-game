@@ -175,6 +175,8 @@ test('로스트 시티: 기둥을 누르면 양쪽 탐험과 버린 더미를 �
 });
 
 test('로스트 시티: 3라운드는 라운드마다 둘 다 눌러야 넘어가고 합계가 이어진다', async ({ browser }) => {
+  // 한 라운드를 끝까지 두는 데만 50초 넘게 걸려 기본 60초 제한에 자주 걸린다.
+  test.setTimeout(150_000);
   const { host, guest } = await startGame(browser, '3라운드 합산');
   await expect(host.locator('.lc-round')).toContainText('1 / 3');
   await playRound(host, guest);

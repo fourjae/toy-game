@@ -130,7 +130,7 @@ function Table({ room, meId, client }: Props) {
     const mine = view.placed[meId]![g]!;
     const info = GEISHAS[g]!;
     return <div key={g} className="hm-col" style={geishaStyle(g)}>
-      <div className="hm-stack is-opp" aria-label={`${info.name} 상대 쪽 ${theirs.length}장`}>{theirs.map(c => <ItemCard key={c.id} card={c} small />)}</div>
+      <div className="hm-stack is-opp" aria-label={`${info.name} 상대 쪽 ${theirs.length}장`}>{theirs.length ? theirs.map(c => <ItemCard key={c.id} card={c} small />) : <span className="hm-stack-ghost"><ItemGlyph geisha={g} size="60%" /></span>}</div>
       <div className={`hm-geisha favor-${holder === meId ? 'me' : holder === oppId ? 'opp' : 'none'}`} aria-label={`${info.name}, 매력 ${info.charm}, 호감 ${holder === meId ? '내 쪽' : holder === oppId ? '상대 쪽' : '아직 없음'}`}>
         <span className="hm-favor" aria-hidden="true" />
         <GeishaPortrait geisha={g} />
@@ -138,7 +138,7 @@ function Table({ room, meId, client }: Props) {
         <span className="hm-geisha-charm">{info.charm}</span>
         <span className="hm-geisha-count"><b>{theirs.length}</b><i>:</i><b>{mine.length}</b></span>
       </div>
-      <div className="hm-stack is-mine" aria-label={`${info.name} 내 쪽 ${mine.length}장`}>{mine.map(c => <ItemCard key={c.id} card={c} small />)}</div>
+      <div className="hm-stack is-mine" aria-label={`${info.name} 내 쪽 ${mine.length}장`}>{mine.length ? mine.map(c => <ItemCard key={c.id} card={c} small />) : <span className="hm-stack-ghost"><ItemGlyph geisha={g} size="60%" /></span>}</div>
     </div>;
   };
 

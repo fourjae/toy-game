@@ -86,6 +86,7 @@ button.hm-token:not(:disabled):hover{transform:translateY(-1px)}
 .hm-col{display:grid;grid-template-rows:minmax(0,1fr) auto minmax(0,1fr);min-width:0;min-height:0;border-radius:12px;background:linear-gradient(180deg,color-mix(in srgb,var(--g) 18%,transparent),color-mix(in srgb,var(--g) 6%,transparent) 50%,color-mix(in srgb,var(--g) 18%,transparent))}
 .hm-stack{display:flex;flex-direction:column;gap:3px;min-height:0;padding:4px;overflow:hidden}
 .hm-stack.is-opp{justify-content:flex-end}
+.hm-stack-ghost{display:grid;place-items:center;width:100%;aspect-ratio:1.55;border:1.5px dashed color-mix(in srgb,var(--g) 50%,transparent);border-radius:5px;color:var(--g);opacity:.35}
 .hm-stack .hm-card{flex:none;animation:hm-land .35s ease-out}
 @keyframes hm-land{from{transform:scale(.6);opacity:0}to{transform:none;opacity:1}}
 .hm-geisha{position:relative;display:flex;flex-direction:column;align-items:center;padding:4px 2px 5px;border-radius:10px;background:linear-gradient(180deg,var(--gs),color-mix(in srgb,var(--g) 35%,#fff));color:#2a1a24;box-shadow:0 3px 10px #0006}

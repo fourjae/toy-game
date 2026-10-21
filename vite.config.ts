@@ -3,6 +3,12 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
+  build: {
+    rollupOptions: {
+      // Libraries change less often than the games, so they get their own cacheable files.
+      output: { manualChunks: { react: ['react', 'react-dom'], socket: ['socket.io-client'], three: ['three'] } },
+    },
+  },
   server: {
     host: '0.0.0.0',
     port: 5173,
