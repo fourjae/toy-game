@@ -7,7 +7,8 @@
 1. `git fetch origin main && git merge origin/main` 으로 main을 현재 브랜치에 역머지한다. 충돌 나면 해결하고, 판단이 애매하면 멈추고 사용자에게 알린다.
 2. `TODO.md`를 읽고, 체크 안 된 항목 중 맨 위부터 이어서 진행한다.
 3. 항목 하나를 끝낼 때마다 `npm test`(+ 가능하면 `npm run build`)를 돌리고, 통과하면 TODO.md에 체크하고 커밋한다.
-4. 세션이 끊길 수 있으니 작업은 작게 쪼개서 자주 커밋/푸시한다. 다음 세션이 이어받을 수 있게 TODO.md에 "진행 중 메모"를 남긴다.
+4. 게임은 하나씩 브랜치를 나눈다: `claude/<game>`(예: `claude/hanamikoji`). 이미 원격에 있으면 그 브랜치를 받아서 이어서 하고, 시작 전에 main을 역머지한다. 게임 하나가 끝나면 PR을 연다. `gh pr create`는 막혀 있으니 `gh api repos/fourjae/toy-game/pulls -f base=main -f head=<branch> -f title=... -f body=...`를 쓴다. 이미 열린 PR이 있으면 새로 열지 않는다.
+5. 세션이 끊길 수 있으니 작업은 작게 쪼개서 자주 커밋/푸시한다. 다음 세션이 이어받을 수 있게 TODO.md에 "진행 중 메모"를 남긴다.
 
 ## 명령어
 
