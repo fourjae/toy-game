@@ -1,0 +1,64 @@
+/* Game picker: a 3x3 shelf that fits one landscape screen. */
+.hub{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;background:var(--paper)}
+.hub-header{display:flex;align-items:center;justify-content:space-between;height:72px;flex:none}
+.hub-header p{margin:0;color:var(--muted);font-size:11px}
+.hub-main{flex:1;display:flex;flex-direction:column;padding-bottom:26px;min-height:0}
+.hub-heading{margin:0 0 18px}
+.hub-heading h1{margin:8px 0 0;font-size:38px;line-height:1.1;letter-spacing:-2.5px;font-weight:800}
+.hub-grid{flex:1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:minmax(118px,1fr);gap:14px;min-height:0}
+.hub-card{position:relative;display:flex;flex-direction:column;min-height:0;padding:0;overflow:hidden;border:1px solid var(--line);border-radius:18px;background:#fffdf7;text-align:left;font-family:inherit;transition:transform .16s ease,box-shadow .16s ease}
+button.hub-card:hover{transform:translateY(-3px);box-shadow:0 12px 26px #2d2f2a1c}
+button.hub-card:active{transform:translateY(0)}
+.hub-card-art{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;gap:8px;overflow:hidden}
+.hub-card-art svg{height:100%;max-height:92px;width:auto}
+.hub-card-body{display:flex;flex-direction:column;gap:3px;padding:12px 18px 15px;background:#fffdf7;border-top:1px solid #0000000d}
+.hub-card-body strong{font-size:19px;font-weight:800;letter-spacing:-.8px}
+.hub-card-body small{color:#74766d;font-size:11px;line-height:1.5}
+.hub-card-meta{display:flex;gap:12px;margin-top:5px;color:#8b8d83;font-size:10px}
+.hub-card-meta span{display:flex;align-items:center;gap:4px}
+.hub-card-go{position:absolute;top:14px;right:14px;opacity:.55}
+.hub-card--toy .hub-card-art{background:linear-gradient(135deg,#e6edff,#f1f5e3)}
+.hub-card--toy .hub-card-go{color:var(--blue)}
+.hub-card--lost{border-color:#e4b9a4}
+.hub-card--lost .hub-card-art{background:linear-gradient(160deg,#f7c58a,#e5683a 55%,#a82f1f)}
+.hub-card--lost .hub-card-body strong{color:#8f2a17}
+.hub-card--lost .hub-card-go{color:#fff}
+.hub-card--empty{align-items:center;justify-content:center;gap:8px;border:1.5px dashed #d3d4c8;background:transparent;color:#b0b2a6;font-size:11px}
+.hub-link{margin-right:2px}
+
+@media(max-width:850px){
+  .hub-header{height:62px}
+  .hub-heading{margin:0 0 14px}
+  .hub-heading h1{font-size:30px;letter-spacing:-1.8px}
+  .hub-main{padding-bottom:18px}
+  .hub-grid{gap:10px;grid-auto-rows:minmax(110px,1fr)}
+  .hub-card{border-radius:14px}
+  .hub-card-body{padding:8px 12px 10px}
+  .hub-card-body strong{font-size:15px}
+  .hub-card-body small{font-size:10px}
+  .hub-card-meta{margin-top:2px}
+  .hub-link span{display:none}
+}
+/* Phone held sideways: every pixel of height counts, so the heading sits beside the shelf's top edge. */
+@media(max-height:480px) and (orientation:landscape){
+  .hub{height:100vh;height:100dvh;overflow:hidden}
+  .hub-header{height:52px}
+  .hub-header p{display:none}
+  .hub-header .brand{font-size:16px;gap:8px}
+  .hub-header .brand-mark{width:28px;height:30px;padding:6px 5px}
+  .hub-header .brand-caption{display:none}
+  .hub-main{padding-bottom:10px}
+  .hub-heading{display:flex;align-items:baseline;gap:12px;margin:0 0 8px}
+  .hub-heading h1{margin:0;font-size:20px;letter-spacing:-1px}
+  .hub-grid{gap:8px;grid-auto-rows:minmax(0,1fr)}
+  .hub-card-art svg{max-height:56px}
+  .hub-card-art .toy-icon,.hub-card-art>svg{transform:scale(.8)}
+  .hub-card-body{padding:5px 10px 6px;gap:1px}
+  .hub-card-body strong{font-size:13px}
+  .hub-card-body small{display:none}
+  .hub-card-meta{margin-top:0;font-size:9px}
+  .hub-card-go{top:7px;right:8px}
+}
+@media(max-width:640px) and (orientation:portrait){
+  .hub-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}

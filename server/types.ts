@@ -1,4 +1,5 @@
 import type { GameRules, GameView } from '../shared/types.js';
+import type { LCView } from '../shared/lostCities.js';
 
 export type RoomPhase = 'waiting' | 'playing' | 'finished';
 export type MapSelection = 'random' | string;
@@ -43,3 +44,35 @@ export interface ClientState {
 export type AckResult =
   | { ok: true; token?: string; playerId?: string }
   | { ok: false; error: string; code: string };
+
+/** Lost Cities shares the socket server but keeps its own rooms and sessions. */
+export interface LCRoomSummary {
+  id: string;
+  code: string;
+  title: string;
+  hostName: string;
+  playerCount: number;
+  phase: 'waiting' | 'playing' | 'finished';
+  canJoin: boolean;
+  rounds: number;
+}
+
+export interface LCRoomView {
+  id: string;
+  code: string;
+  title: string;
+  hostId: string;
+  players: Array<{ id: string; name: string; connected: boolean; isHost: boolean }>;
+  phase: 'waiting' | 'playing' | 'finished';
+  rounds: number;
+  game: LCView | null;
+  /** Players who asked for the next round or a rematch. */
+  readyVotes: string[];
+  notice: string | null;
+}
+
+export interface LCClientState {
+  me: { id: string; name: string } | null;
+  rooms: LCRoomSummary[];
+  room: LCRoomView | null;
+}

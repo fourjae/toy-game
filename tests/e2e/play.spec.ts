@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
 async function enter(page: Page, name: string) {
-  await page.goto('/');
+  await page.goto('/toy-battle');
   await page.getByLabel('어떤 이름으로 불러드릴까요?').fill(name);
   await page.getByRole('button', { name: '놀러 가기' }).click();
   await expect(page.getByRole('heading', { name: `반가워요, ${name}님.` })).toBeVisible();

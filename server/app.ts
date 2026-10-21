@@ -7,6 +7,7 @@ import { Server, type Socket } from 'socket.io';
 import { applyAction, applyTimeout, createGame, DEFAULT_RULES, getGameView, TURN_SECONDS } from '../shared/engine.js';
 import { CASTLE_MAP, GAME_MAPS } from '../shared/map.js';
 import type { GameAction, GameRules, GameState } from '../shared/types.js';
+import { attachLostCities } from './lostCities.js';
 import type { AckResult, ClientState, MapSelection, RoomPhase, RoomSummary, RoomView } from './types.js';
 
 interface Session {
@@ -49,6 +50,8 @@ export interface GameServerOptions {
   /** Whether a room may switch on the expansion rules. Off unless ENABLE_EXPANSION_RULES=1. */
   allowCustomRules?: boolean;
   rng?: () => number;
+  /** Timing overrides for the Lost Cities namespace (tests shorten the reconnect grace). */
+  lostCities?: { reconnectGraceMs?: number; roomIdleMs?: number; cleanupIntervalMs?: number; actionLimit?: number };
 }
 
 class RequestError extends Error {
@@ -118,6 +121,7 @@ export function createGameServer(options: GameServerOptions = {}) {
   const allowCustomRules = options.allowCustomRules ?? process.env.ENABLE_EXPANSION_RULES === '1';
   const rng = options.rng ?? (() => randomInt(0, 0x1_0000_0000) / 0x1_0000_0000);
   let closing = false;
+  const lostCities = attachLostCities(io, { rng, ...options.lostCities });
 
   const roomTurnMs = (room: Room) => options.turnMs ?? room.turnSeconds * 1_000;
   // Coming back from a dropped connection always leaves a moment to act.
@@ -557,6 +561,7 @@ export function createGameServer(options: GameServerOptions = {}) {
     async close() {
       closing = true;
       clearInterval(cleanupTimer);
+      lostCities.stop();
       for (const room of rooms.values()) stopClock(room);
       await new Promise<void>((resolve) => io.close(() => resolve()));
     },
