@@ -79,7 +79,10 @@ function Table({ room, meId, client }: Props) {
     if (!mine) return;
     if (card.kind === 'camel') { setMarketSel(marketSel.some(id => marketCamels.some(c => c.id === id)) ? [] : marketCamels.map(c => c.id)); setHandSel([]); setCamels(0); return; }
     const withoutCamels = marketSel.filter(id => !marketCamels.some(c => c.id === id));
-    setMarketSel(withoutCamels.includes(card.id) ? withoutCamels.filter(id => id !== card.id) : [...withoutCamels, card.id]);
+    const next = withoutCamels.includes(card.id) ? withoutCamels.filter(id => id !== card.id) : [...withoutCamels, card.id];
+    setMarketSel(next);
+    // The camel stepper only shows with 2+ market goods picked; drop its count once it is hidden.
+    if (next.length < 2) setCamels(0);
   }
   function tapHand(card: JPCard) {
     if (!mine) return;

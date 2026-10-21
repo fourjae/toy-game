@@ -151,7 +151,10 @@ function Table({ room, meId, client }: Props) {
   };
 
   const winnerName = view.winnerId ? names[view.winnerId] ?? '플레이어' : '';
-  const reason = view.winReason === 'climb' ? '3층에 먼저 올라섰어요' : view.winReason === 'stuck' ? '상대가 움직일 곳이 없어요' : '상대가 지을 곳이 없었어요';
+  // Both players read this line, so name the stuck player instead of saying "상대".
+  const loserName = view.winnerId ? (view.winnerId === meId ? '상대' : '내') : '';
+  const reason = view.winReason === 'climb' ? '3층에 먼저 올라섰어요'
+    : view.winReason === 'stuck' ? `${loserName} 일꾼이 움직일 곳이 없었어요` : `${loserName} 일꾼이 지을 곳이 없었어요`;
   return <main className="st-game">
     <div className="st-canvas" ref={hostRef} />
     {/* The same board as buttons, for screen readers and keyboards (and the e2e test). */}
