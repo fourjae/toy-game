@@ -3,12 +3,13 @@ import App from './App';
 import Hub from './Hub';
 import LostCities from './LostCities';
 import Hanamikoji from './hanamikoji/Hanamikoji';
+import Squadro from './squadro/Squadro';
 import { lazy, Suspense } from 'react';
 // three.js is big; only the 3D game pulls it in.
 const Santorini = lazy(() => import('./santorini/Santorini'));
 
-export type GameId = 'toy-battle' | 'lost-cities' | 'hanamikoji' | 'santorini';
-const PATHS: Record<GameId, string> = { 'toy-battle': '/toy-battle', 'lost-cities': '/lost-cities', hanamikoji: '/hanamikoji', santorini: '/santorini' };
+export type GameId = 'toy-battle' | 'lost-cities' | 'hanamikoji' | 'santorini' | 'squadro';
+const PATHS: Record<GameId, string> = { 'toy-battle': '/toy-battle', 'lost-cities': '/lost-cities', hanamikoji: '/hanamikoji', santorini: '/santorini', squadro: '/squadro' };
 
 function routeFromLocation(): GameId | null {
   const path = window.location.pathname.replace(/\/+$/u, '');
@@ -35,6 +36,7 @@ export default function Root() {
   if (game === 'toy-battle') return <App onHome={() => open(null)} />;
   if (game === 'lost-cities') return <LostCities onHome={() => open(null)} />;
   if (game === 'hanamikoji') return <Hanamikoji onHome={() => open(null)} />;
+  if (game === 'squadro') return <Squadro onHome={() => open(null)} />;
   if (game === 'santorini') return <Suspense fallback={<div className="hub-loading">섬으로 가는 중…</div>}><Santorini onHome={() => open(null)} /></Suspense>;
   return <Hub onOpen={open} />;
 }
