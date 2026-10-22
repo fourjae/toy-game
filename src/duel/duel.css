@@ -187,3 +187,17 @@
 @keyframes duel-reveal{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:none}}
 .duel-count{font-variant-numeric:tabular-nums}
 @media(prefers-reduced-motion:reduce){.duel-reveal{animation:none}}
+
+/* Win screens of the one-off games (Santorini, Squadro): the trophy pops in, then a two-column stat table. */
+.duel-trophy{animation:duel-trophy .7s cubic-bezier(.2,.9,.3,1.4) both}
+@keyframes duel-trophy{0%{opacity:0;transform:scale(.3) rotate(-25deg)}60%{opacity:1;transform:scale(1.15) rotate(6deg)}100%{transform:none}}
+.duel-stats{width:100%;border-collapse:collapse;font-size:13px;margin:2px 0 4px}
+.duel-stats th,.duel-stats td{padding:7px 8px;border-bottom:1px solid #0000000f;text-align:center}
+.duel-stats thead th{font-size:12px;font-weight:700}
+.duel-stats thead small{margin-left:4px;color:#c8434f;font-size:10px}
+.duel-stats tbody th{text-align:left;font-weight:600;white-space:nowrap}
+.duel-stats tbody th svg{vertical-align:-2px;margin-right:5px;opacity:.7}
+.duel-stats td{font-weight:900;font-size:15px}
+.duel-stats td.is-lead{color:#c47a12}
+.duel-stats td.is-lead::after{content:'★';font-size:10px;margin-left:3px;vertical-align:2px}
+@media(prefers-reduced-motion:reduce){.duel-trophy{animation:none}}

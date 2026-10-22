@@ -423,3 +423,9 @@
   .lc-deck{padding:2px 5px 2px 2px;font-size:12px}
   .lc-round{font-size:8px}
 }
+
+/* Result table: site rows slide in one after another (--i), the totals count up. */
+.lc-reveal{animation:lc-reveal .45s cubic-bezier(.2,.8,.3,1.2) both;animation-delay:calc(var(--i,0) * 80ms + 120ms)}
+@keyframes lc-reveal{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.lc-count{font-variant-numeric:tabular-nums}
+@media(prefers-reduced-motion:reduce){.lc-reveal{animation:none}}

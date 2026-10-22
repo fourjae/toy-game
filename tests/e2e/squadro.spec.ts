@@ -32,3 +32,38 @@ test('스쿼드로: 배를 골라 두 번 눌러 출발시키고 차례가 넘�
   await expect(other.locator('.sq-status.is-mine')).toBeVisible();
   await expect(mover.locator('.sq-turn')).toContainText('2');
 });
+
+test('스쿼드로: 끝까지 두면 결과창에 귀환한 배와 되돌려 보낸 배가 나온다', async ({ browser }) => {
+  test.setTimeout(150_000);
+  // 움직임 줄이기: 배 이동·결과창 숫자 연출을 건너뛰어 한 판을 빨리 끝낸다.
+  const host = await (await browser.newContext({ reducedMotion: 'reduce' })).newPage();
+  const guest = await (await browser.newContext({ reducedMotion: 'reduce' })).newPage();
+  host.setDefaultTimeout(8_000);
+  guest.setDefaultTimeout(8_000);
+  await enter(host, '민수', '/squadro');
+  await host.getByRole('button', { name: '방 만들기' }).first().click();
+  await host.getByRole('dialog').getByRole('button', { name: '방 만들기' }).click();
+  const code = (await host.locator('.duel-invite strong').innerText()).trim();
+  await enter(guest, '지수', `/squadro?room=${code}`);
+  await host.getByRole('button', { name: '출발 신호' }).click();
+  await expect(host.locator('.sq-piece.is-mine')).toHaveCount(5);
+  for (let i = 0; i < 300 && !(await host.locator('.sq-result').count()); i++) {
+    await expect.poll(async () => (await host.locator('.sq-status.is-mine').count()) + (await guest.locator('.sq-status.is-mine').count()) + (await host.locator('.sq-result').count())).toBeGreaterThan(0);
+    if (await host.locator('.sq-result').count()) break;
+    const mover = (await host.locator('.sq-status.is-mine').count()) ? host : guest;
+    const turn = await mover.locator('.sq-turn').innerText();
+    // 차례마다 다른 배를 고르도록 돌아가며 누른다.
+    const boats = mover.locator('.sq-piece.is-movable');
+    const boat = boats.nth(i % (await boats.count()));
+    await boat.click();
+    await boat.click();
+    await expect.poll(async () => (await mover.locator('.sq-turn').innerText()) !== turn || (await mover.locator('.sq-result').count()) > 0).toBe(true);
+  }
+  for (const page of [host, guest]) {
+    await expect(page.locator('.sq-result')).toBeVisible();
+    await expect(page.locator('.sq-result .duel-stats tbody tr')).toHaveCount(2);
+    await expect(page.locator('.sq-result .duel-stats td.is-lead').first()).toBeVisible();
+  }
+  // 이긴 쪽 칸에는 귀환한 배 네 척이 모두 찬다.
+  await expect(host.locator('.sq-result .is-lead .is-home')).toHaveCount(4);
+});

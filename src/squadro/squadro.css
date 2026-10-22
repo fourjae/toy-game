@@ -73,3 +73,9 @@
 .sq-result p{color:#557a70;font-size:13px;margin-bottom:6px}
 .sq-result .duel-button{align-self:stretch}
 .sq-show-result{position:fixed;left:50%;bottom:90px;transform:translateX(-50%)}
+
+/* Result: the home dock again, each boat that made it pops in after the other. */
+.sq-result-boats{display:inline-flex;gap:4px;justify-content:center}
+.sq-result-boats i{width:12px;height:18px;border-radius:50% 50% 40% 40%/70% 70% 30% 30%;border:1.5px dashed var(--hull2);opacity:.5}
+.sq-result-boats i.is-home{opacity:1;background:var(--hull);border-style:solid;animation:duel-reveal .4s cubic-bezier(.2,.8,.3,1.4) both;animation-delay:calc(var(--i) * 140ms + 450ms)}
+@media(prefers-reduced-motion:reduce){.sq-result-boats i.is-home{animation:none}}

@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 const reduceMotion = () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
 /** 결과창 숫자를 0부터 차오르게 보여 준다. 움직임 줄이기를 켠 사람에게는 바로 최종값. */
-export default function CountUp({ value, delayMs = 0, durationMs = 700 }: { value: number; delayMs?: number; durationMs?: number }) {
+export default function CountUp({ value, delayMs = 0, durationMs = 700, format = String, className = 'duel-count' }: { value: number; delayMs?: number; durationMs?: number; format?: (n: number) => string; className?: string }) {
   const [shown, setShown] = useState(() => (reduceMotion() ? value : 0));
   useEffect(() => {
     if (reduceMotion() || value === 0) { setShown(value); return; }
@@ -18,5 +18,5 @@ export default function CountUp({ value, delayMs = 0, durationMs = 700 }: { valu
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
   }, [value, delayMs, durationMs]);
-  return <span className="duel-count" aria-label={String(value)}>{shown}</span>;
+  return <span className={className} aria-label={format(value)}>{format(shown)}</span>;
 }

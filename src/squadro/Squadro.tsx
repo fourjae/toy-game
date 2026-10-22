@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { Anchor, ArrowLeft, Flag, Gauge, HelpCircle, History, Sailboat, Trophy, Undo2, Users, Waves } from 'lucide-react';
 import Dialog from '../components/Dialog';
+import CountUp from '../duel/CountUp';
 import DuelShell, { LeaveDialog, LogDialog, ReadyButtons, type DuelTheme, type TableProps } from '../duel/DuelShell';
 import { EDGE, LANES, speedOf, squareOf, WIN_PIECES, type SQPiece, type SQView } from '../../shared/squadro';
 import './squadro.css';
@@ -190,9 +191,25 @@ function Table({ room, meId, client }: Props) {
     </section>
     {view.status === 'finished' && !resultHidden && <Dialog title={view.winnerId === meId ? '결승선 통과!' : '아깝게 졌어요'} onClose={() => setResultHidden(true)}>
       <div className="sq-result">
-        <Trophy size={40} />
+        <Trophy size={40} className="duel-trophy" />
         <h3>{names[view.winnerId!] ?? '플레이어'}님이 먼저 네 척을 돌려보냈어요</h3>
-        <p>{view.turn}턴 · {names[meId]} {view.homeCount[meId]}척, {names[oppId]} {view.homeCount[oppId]}척 귀환</p>
+        <p><CountUp value={view.turn} delayMs={300} />턴 만에 끝난 경주</p>
+        <table className="duel-stats">
+          <thead><tr><th /><th>{names[meId] ?? '나'}<small>나</small></th><th>{names[oppId] ?? '상대'}</th></tr></thead>
+          <tbody>
+            <tr className="duel-reveal" style={{ '--i': 2 } as CSSProperties}>
+              <th><Anchor size={13} />돌아온 배</th>
+              {[meId, oppId].map(id => <td key={id} className={view.winnerId === id ? 'is-lead' : ''}><span className="sq-result-boats">
+                {Array.from({ length: WIN_PIECES }, (_, i) => <i key={i} className={`${SEAT_CLASS[view.playerIds.indexOf(id)]} ${i < view.homeCount[id]! ? 'is-home' : ''}`} style={{ '--i': i } as CSSProperties} />)}
+              </span></td>)}
+            </tr>
+            <tr className="duel-reveal" style={{ '--i': 3 } as CSSProperties}>
+              <th><Undo2 size={13} />되돌려 보낸 배</th>
+              <td className={(view.sentBack[meId] ?? 0) > (view.sentBack[oppId] ?? 0) ? 'is-lead' : ''}><CountUp value={view.sentBack[meId] ?? 0} delayMs={600} /></td>
+              <td className={(view.sentBack[oppId] ?? 0) > (view.sentBack[meId] ?? 0) ? 'is-lead' : ''}><CountUp value={view.sentBack[oppId] ?? 0} delayMs={600} /></td>
+            </tr>
+          </tbody>
+        </table>
         <ReadyButtons room={room as never} meId={meId} client={client as never} finished nextLabel="" />
       </div>
     </Dialog>}

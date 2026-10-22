@@ -8,6 +8,7 @@ import { useGame } from './useGame';
 import { useCardFlight } from './useCardFlight';
 import { CardBack, CardFace, SITE_ICON } from './lostCitiesCards';
 import Dialog from './components/Dialog';
+import CountUp from './duel/CountUp';
 import {
   HAND_SIZE, SITES, SITE_INFO, scoreExpedition,
   type DrawSource, type LCCard, type LCView, type Site,
@@ -379,18 +380,18 @@ function ResultDialog({ room, view, meId, client, onHide }: { room: LCRoomView; 
       <table className="lc-result-table">
         <thead><tr><th>유적지</th><th>{name(meId)}<small>나</small></th><th>{name(oppId)}</th></tr></thead>
         <tbody>
-          {SITES.map(site => {
+          {SITES.map((site, i) => {
             const Icon = SITE_ICON[site];
             const mineCards = view.expeditions[meId]![site];
             const oppCards = view.expeditions[oppId]![site];
-            return <tr key={site}>
+            return <tr key={site} className="lc-reveal" style={{ '--i': i } as CSSProperties}>
               <th className={`site-${site}`}><Icon size={13} />{SITE_INFO[site].name}</th>
               <td className={scoreTone(scoreExpedition(mineCards))}>{mineCards.length ? <>{signed(scoreExpedition(mineCards))}<small>{mineCards.length}장</small></> : '–'}</td>
               <td className={scoreTone(scoreExpedition(oppCards))}>{oppCards.length ? <>{signed(scoreExpedition(oppCards))}<small>{oppCards.length}장</small></> : '–'}</td>
             </tr>;
           })}
-          <tr className="total"><th>이번 라운드</th><td className={scoreTone(myRound)}>{signed(myRound)}</td><td className={scoreTone(oppRound)}>{signed(oppRound)}</td></tr>
-          {view.rounds > 1 && <tr className="match"><th>전체 합계</th><td>{view.matchTotals[myIndex]}</td><td>{view.matchTotals[1 - myIndex]}</td></tr>}
+          <tr className="total lc-reveal" style={{ '--i': SITES.length } as CSSProperties}><th>이번 라운드</th><td className={scoreTone(myRound)}><CountUp value={myRound} format={signed} delayMs={650} className="lc-count" /></td><td className={scoreTone(oppRound)}><CountUp value={oppRound} format={signed} delayMs={650} className="lc-count" /></td></tr>
+          {view.rounds > 1 && <tr className="match lc-reveal" style={{ '--i': SITES.length + 1 } as CSSProperties}><th>전체 합계</th><td><CountUp value={view.matchTotals[myIndex]!} delayMs={850} className="lc-count" /></td><td><CountUp value={view.matchTotals[1 - myIndex]!} delayMs={850} className="lc-count" /></td></tr>}
         </tbody>
       </table>
       {view.rounds > 1 && view.roundScores.length > 1 && <p className="lc-result-rounds">{view.roundScores.map((r, i) => `${i + 1}R ${signed(r[myIndex]!)} : ${signed(r[1 - myIndex]!)}`).join('  ·  ')}</p>}
