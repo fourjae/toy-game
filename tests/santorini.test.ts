@@ -128,3 +128,15 @@ test('view: legal moves only on my turn; everything else is public', () => {
   assert.deepEqual(b.myMoves, []);
   assert.deepEqual(a.levels, b.levels);
 });
+
+test('stats: blocks, domes and the highest level reached are counted per player for the result screen', () => {
+  let s = placed();
+  s.levels[5] = 1; s.levels[1] = 3;
+  s = applySantoriniAction(s, 'a', { type: 'move', worker: 0, to: 5 });
+  s = applySantoriniAction(s, 'a', { type: 'build', cell: 1 });
+  s = applySantoriniAction(s, 'b', { type: 'move', worker: 0, to: 15 });
+  s = applySantoriniAction(s, 'b', { type: 'build', cell: 10 });
+  assert.deepEqual(s.stats.a, { blocks: 0, domes: 1, peak: 1 });
+  assert.deepEqual(s.stats.b, { blocks: 1, domes: 0, peak: 0 });
+  assert.deepEqual(getSantoriniView(s, 'b').stats, s.stats);
+});

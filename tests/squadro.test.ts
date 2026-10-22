@@ -93,3 +93,12 @@ test('automatic play always finishes, and previews match real moves', () => {
   assert.equal(s.status, 'finished');
   assert.ok(s.winnerId);
 });
+
+test('sentBack counts the opposing pieces each player has sent back', () => {
+  const s = fresh();
+  s.pieces.b![4] = { pos: 3, returning: false, done: false };
+  s.pieces.b![3] = { pos: 3, returning: true, done: false };
+  const next = applySquadroAction(s, 'a', { type: 'move', lane: 2 });
+  assert.deepEqual(next.sentBack, { a: 2, b: 0 });
+  assert.deepEqual(getSquadroView(next, 'b').sentBack, { a: 2, b: 0 });
+});

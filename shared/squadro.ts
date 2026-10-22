@@ -40,6 +40,8 @@ export interface SQState {
   currentPlayerId: string;
   pieces: Record<string, SQPiece[]>;
   lastMove: SQLastMove | null;
+  /** How many opposing pieces each player has sent back over the game, for the result screen. */
+  sentBack: Record<string, number>;
   turn: number;
   log: LogEntry[];
   revision: number;
@@ -56,7 +58,7 @@ export function createSquadro(playerIds: [string, string], rng: () => number): S
   return {
     playerIds, status: 'playing', currentPlayerId: playerIds[Math.floor(rng() * 2)]!,
     pieces: { [playerIds[0]]: fresh(), [playerIds[1]]: fresh() },
-    lastMove: null, turn: 1, log: [], revision: 0, winnerId: null,
+    lastMove: null, sentBack: { [playerIds[0]]: 0, [playerIds[1]]: 0 }, turn: 1, log: [], revision: 0, winnerId: null,
   };
 }
 
@@ -115,6 +117,7 @@ export function applySquadroAction(previous: SQState, playerId: string, action: 
     return { lane, from };
   });
   state.lastMove = { playerId, lane: action.lane, from: before, to: preview.to, sent };
+  state.sentBack[playerId] = (state.sentBack[playerId] ?? 0) + sent.length;
   const name = `${action.lane + 1}번 배`;
   pushLog(state, playerId, `${name}를 ${Math.abs(preview.to.pos - before.pos)}칸 움직였어요${preview.to.done ? ' — 돌아왔어요!' : preview.to.returning && !before.returning ? ' — 반환점을 돌았어요.' : '.'}${sent.length ? ` 상대 배 ${sent.length}척을 되돌려 보냈어요.` : ''}`);
   const home = state.pieces[playerId]!.filter(p => p.done).length;
@@ -140,6 +143,7 @@ export interface SQView {
   /** On my turn: where each of my lanes would end up. */
   previews: Array<{ to: SQPiece; sent: number[] } | null>;
   lastMove: SQLastMove | null;
+  sentBack: Record<string, number>;
   turn: number;
   log: LogEntry[];
   revision: number;
@@ -153,6 +157,6 @@ export function getSquadroView(state: SQState, viewerId: string): SQView {
     status: state.status, currentPlayerId: state.currentPlayerId, pieces: state.pieces,
     homeCount: Object.fromEntries(state.playerIds.map(id => [id, state.pieces[id]!.filter(p => p.done).length])),
     previews: mine ? Array.from({ length: LANES }, (_, lane) => previewMove(state, viewerId, lane)) : [],
-    lastMove: state.lastMove, turn: state.turn, log: state.log.slice(-40), revision: state.revision, winnerId: state.winnerId,
+    lastMove: state.lastMove, sentBack: state.sentBack, turn: state.turn, log: state.log.slice(-40), revision: state.revision, winnerId: state.winnerId,
   };
 }
