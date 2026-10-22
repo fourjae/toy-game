@@ -229,3 +229,32 @@ test('방장이 대기실에서 맵과 차례 시간을 바꾸면 양쪽에 바�
   await expect(guest.locator('.board-heading')).toContainText('저주받은 묘지');
   await expect(host.locator('.board-theme--cemetery')).toBeVisible();
 });
+
+test('대기실: 모든 방이 게임 중이면 빈 목록 대신 그렇게 알려 준다', async ({ browser }, testInfo) => {
+  const title = `이미 시작한 판 ${testInfo.project.name}`;
+  const host = await browser.newPage();
+  const guest = await browser.newPage();
+  const visitor = await browser.newPage();
+  await enter(host, '가득방장');
+  await enter(guest, '가득손님');
+  await host.getByRole('button', { name: '방 만들기' }).first().click();
+  await host.getByRole('dialog').getByLabel('방 이름').fill(title);
+  await host.getByRole('dialog').getByRole('button', { name: '방 만들기' }).click();
+  const code = (await host.locator('.invite-box strong').innerText()).trim();
+  await guest.getByRole('button', { name: '코드로 입장' }).click();
+  await guest.getByLabel('초대 코드').fill(code);
+  await guest.getByRole('button', { name: '방 들어가기' }).click();
+  await host.getByRole('button', { name: '게임 시작' }).click();
+  await expect(host.locator('.turn-bar:visible')).toBeVisible();
+
+  await enter(visitor, '구경꾼');
+  // 기다리는 방 목록에는 게임 중인 방이 없어야 한다. 다른 테스트가 남긴 빈 방이 없을 때만 안내 문구를 확인한다.
+  await expect(visitor.locator('.room-row', { hasText: title })).toHaveCount(0);
+  if (await visitor.locator('.room-row').count() === 0) {
+    await expect(visitor.getByRole('heading', { name: '모든 방이 게임 중이에요' })).toBeVisible();
+    await visitor.getByRole('button', { name: '모든 방 보기' }).click();
+  } else {
+    await visitor.getByRole('button', { name: '모든 방', exact: true }).click();
+  }
+  await expect(visitor.locator('.room-row', { hasText: title })).toContainText('게임 중');
+});
