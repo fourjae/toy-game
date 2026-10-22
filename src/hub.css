@@ -79,3 +79,16 @@ button.hub-card:active{transform:translateY(0)}
 @media(max-width:640px) and (orientation:portrait){
   .hub-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+/* 첫 화면: 게임 카드가 왼쪽 위부터 차례로 올라온다. fill-mode는 backwards만 써서 끝난 뒤 hover 이동을 막지 않는다. */
+.hub-card{animation:hub-card-in .5s cubic-bezier(.2,.8,.25,1) backwards}
+.hub-card:nth-child(2){animation-delay:.05s}.hub-card:nth-child(3){animation-delay:.1s}
+.hub-card:nth-child(4){animation-delay:.15s}.hub-card:nth-child(5){animation-delay:.2s}
+.hub-card:nth-child(6){animation-delay:.25s}.hub-card:nth-child(7){animation-delay:.3s}
+.hub-card:nth-child(8){animation-delay:.35s}.hub-card:nth-child(9){animation-delay:.4s}
+.hub-card-art svg{transition:transform .35s cubic-bezier(.3,1.6,.5,1)}
+button.hub-card:hover .hub-card-art svg,button.hub-card:focus-visible .hub-card-art svg{transform:scale(1.06) rotate(-1.5deg)}
+.hub-card-go{transition:transform .2s ease}
+button.hub-card:hover .hub-card-go{transform:translateX(3px)}
+@keyframes hub-card-in{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.hub-card{animation:none}.hub-card-art svg,.hub-card-go{transition:none}}

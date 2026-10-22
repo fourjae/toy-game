@@ -408,6 +408,7 @@
 /* ---- a card on its way: lives on top of the table until it lands ---- */
 .lc-ghost{position:fixed!important;margin:0!important;z-index:40;pointer-events:none;will-change:transform;transform-origin:50% 50%;filter:drop-shadow(0 10px 12px #3b1c1466)}
 .lc-ghost.is-back{filter:drop-shadow(0 8px 10px #3b1c1466)}
+.lc-puff{position:fixed;z-index:39;pointer-events:none;border-radius:14%;box-shadow:0 0 0 2px #f6e3bd,0 0 14px 4px #e9c98a90}
 
 .lc-opp-count{display:none}
 @media(max-width:520px){
