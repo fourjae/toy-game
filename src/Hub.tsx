@@ -2,7 +2,7 @@ import { ArrowRight, Clock3, Lock, Users } from 'lucide-react';
 import ToyIcon from './components/ToyIcon';
 import type { GameId } from './Root';
 
-const EMPTY_SLOTS = 5;
+const EMPTY_SLOTS = 4;
 
 function LostCitiesArt() {
   return <svg viewBox="0 0 120 80" aria-hidden="true" className="hub-art-lc">
@@ -32,6 +32,18 @@ function SantoriniArt() {
     <path d="M58 26a9 9 0 0 1 18 0z" fill="#2b5cad" /><path d="M78 38a7 7 0 0 1 14 0z" fill="#2b5cad" />
     <rect x="45" y="28" width="6" height="8" rx="3" fill="#e2703a" /><circle cx="48" cy="26" r="3" fill="#e2703a" />
     <path d="M10 68q6-3 12 0t12 0M70 72q6-3 12 0t12 0" stroke="#fff9" strokeWidth="1.4" fill="none" />
+  </svg>;
+}
+
+function SquadroArt() {
+  return <svg viewBox="0 0 120 80" aria-hidden="true">
+    <rect x="18" y="6" width="84" height="68" rx="8" fill="#b58552" />
+    <rect x="30" y="16" width="60" height="48" rx="3" fill="#2f8e92" />
+    {[0, 1, 2, 3].map(i => <line key={i} x1={42 + i * 12} x2={42 + i * 12} y1="16" y2="64" stroke="#ffffff33" />)}
+    {[0, 1, 2].map(i => <line key={i} y1={28 + i * 12} y2={28 + i * 12} x1="30" x2="90" stroke="#ffffff33" />)}
+    <path d="M48 30c4 4 5 9 5 15 0 3-2 5-5 5s-5-2-5-5c0-6 1-11 5-15z" fill="#f2b632" stroke="#a8740c" />
+    <path d="M70 50c-4 4-5 9-5 15" stroke="none" />
+    <g transform="translate(74 40) rotate(90)"><path d="M0 -10c4 4 5 9 5 15 0 3-2 5-5 5s-5-2-5-5c0-6 1-11 5-15z" fill="#e0533d" stroke="#9e2f1f" /></g>
   </svg>;
 }
 
@@ -80,6 +92,15 @@ export default function Hub({ onOpen }: { onOpen: (game: GameId) => void }) {
             <strong>산토리니</strong>
             <small>움직이고 지어서 3층에 먼저 올라서는 3D 수싸움</small>
             <span className="hub-card-meta"><span><Users size={13} /> 2인</span><span><Clock3 size={13} /> 약 15분</span></span>
+          </span>
+          <ArrowRight className="hub-card-go" size={18} />
+        </button>
+        <button type="button" className="hub-card hub-card--squadro" onClick={() => onOpen('squadro')}>
+          <span className="hub-card-art"><SquadroArt /></span>
+          <span className="hub-card-body">
+            <strong>스쿼드로</strong>
+            <small>엇갈리는 물길에서 배 네 척을 먼저 왕복시켜요</small>
+            <span className="hub-card-meta"><span><Users size={13} /> 2인</span><span><Clock3 size={13} /> 약 10분</span></span>
           </span>
           <ArrowRight className="hub-card-go" size={18} />
         </button>
