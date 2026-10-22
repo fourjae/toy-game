@@ -125,3 +125,7 @@
   .jp-action{flex-wrap:wrap}
   .jp-buttons{width:100%;justify-content:flex-end}
 }
+.jp-result-table td.is-lead{color:#c8434f}
+.jp-seals i.is-new{animation:jp-stamp .55s cubic-bezier(.3,1.6,.5,1) 1.1s both}
+@keyframes jp-stamp{0%{transform:scale(2.4) rotate(-25deg);opacity:0}60%{transform:scale(.9) rotate(4deg);opacity:1}100%{transform:none}}
+@media(prefers-reduced-motion:reduce){.jp-seals i.is-new{animation:none}}

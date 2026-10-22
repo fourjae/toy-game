@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, Award, Coins, HelpCircle, History, Layers, Minus, Plus, ShoppingBasket, Store, Users, X } from 'lucide-react';
 import Dialog from '../components/Dialog';
+import CountUp from '../duel/CountUp';
 import DuelShell, { LeaveDialog, LogDialog, ReadyButtons, type DuelTheme, type TableProps } from '../duel/DuelShell';
 import {
   BONUS, CAMEL_BONUS, GOOD_INFO, GOODS, HAND_LIMIT, PRECIOUS, SEALS_TO_WIN, TOKENS,
@@ -20,8 +21,9 @@ function Card({ card, selected = false, small = false, fresh = false }: { card: 
   </span>;
 }
 
-function Seals({ n }: { n: number }) {
-  return <span className="jp-seals" aria-label={`인장 ${n}개`}>{Array.from({ length: SEALS_TO_WIN }, (_, i) => <i key={i} className={i < n ? 'is-won' : ''} />)}</span>;
+/** `fresh`: 이번 라운드에 받은 인장이라 결과창에서 도장 찍히듯 내려온다. */
+function Seals({ n, fresh = false }: { n: number; fresh?: boolean }) {
+  return <span className="jp-seals" aria-label={`인장 ${n}개`}>{Array.from({ length: SEALS_TO_WIN }, (_, i) => <i key={i} className={`${i < n ? 'is-won' : ''} ${fresh && i === n - 1 ? 'is-new' : ''}`} />)}</span>;
 }
 
 function RulesDialog({ onClose }: { onClose: () => void }) {
@@ -247,9 +249,13 @@ function ResultDialog({ room, meId, client, onHide }: { room: Props['room']; meI
       <table className="jp-result-table">
         <thead><tr><th /><th>{name(meId)}<small>나</small></th><th>{name(oppId)}</th></tr></thead>
         <tbody>
-          {rows.map(([label, a, b]) => <tr key={label}><th>{label}</th><td>{a}</td><td>{b}</td></tr>)}
-          <tr className="total"><th>합계</th><td>{r.totals[me]}</td><td>{r.totals[o]}</td></tr>
-          <tr><th>인장</th><td><Seals n={view.seals[meId]!} /></td><td><Seals n={view.seals[oppId]!} /></td></tr>
+          {rows.map(([label, a, b], i) => <tr key={label} className="duel-reveal" style={{ '--i': i } as React.CSSProperties}><th>{label}</th><td>{a}</td><td>{b}</td></tr>)}
+          <tr className="total duel-reveal" style={{ '--i': rows.length } as React.CSSProperties}>
+            <th>합계</th>
+            <td className={r.sealTo === meId ? 'is-lead' : ''}><CountUp value={r.totals[me]!} delayMs={500} /></td>
+            <td className={r.sealTo === oppId ? 'is-lead' : ''}><CountUp value={r.totals[o]!} delayMs={500} /></td>
+          </tr>
+          <tr><th>인장</th><td><Seals n={view.seals[meId]!} fresh={r.sealTo === meId} /></td><td><Seals n={view.seals[oppId]!} fresh={r.sealTo === oppId} /></td></tr>
         </tbody>
       </table>
       {!finished && <p className="jp-result-note">진 쪽이 다음 라운드를 먼저 시작해요.</p>}

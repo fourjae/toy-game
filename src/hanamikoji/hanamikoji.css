@@ -169,3 +169,7 @@ button.hm-token:not(:disabled):hover{transform:translateY(-1px)}
   .hm-geisha .hm-portrait{max-width:44px}
   .hm-hand-cards{--cw:clamp(40px,calc((min(100vw,820px) - 40px) / 7.4),62px)}
 }
+/* 이번 라운드에 편을 바꾼 게이샤는 결과창에서 한 번 더 반짝인다. */
+.hm-result-geisha.is-moved{box-shadow:0 0 0 0 #e5573f80;animation:duel-reveal .45s cubic-bezier(.2,.8,.3,1.2) both,hm-moved 1.2s ease-out both;animation-delay:calc(var(--i) * 90ms + 120ms),calc(var(--i) * 90ms + 600ms)}
+@keyframes hm-moved{0%{box-shadow:0 0 0 0 #e5573f90}100%{box-shadow:0 0 0 12px #e5573f00}}
+@media(prefers-reduced-motion:reduce){.hm-result-geisha.is-moved{animation:none}}

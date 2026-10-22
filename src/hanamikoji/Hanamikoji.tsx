@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, Check, Coffee, Flower2, Gift, HelpCircle, History, Lock, Medal, RotateCw, Swords, Trash2, Users, X } from 'lucide-react';
 import Dialog from '../components/Dialog';
+import CountUp from '../duel/CountUp';
 import DuelShell, { LeaveDialog, LogDialog, ReadyButtons, type DuelTheme, type TableProps } from '../duel/DuelShell';
 import {
   ACTION_INFO, ACTIONS, GEISHAS, WIN_CHARM, WIN_GEISHAS,
@@ -236,7 +237,7 @@ function ResultDialog({ room, meId, client, onHide }: { room: Props['room']; meI
           const theirs = me === 0 ? b : a;
           const after = result.after[i];
           const moved = result.before[i] !== after;
-          return <div key={i} className={`hm-result-geisha ${after === meId ? 'is-me' : after === oppId ? 'is-opp' : ''}`} style={geishaStyle(i)}>
+          return <div key={i} className={`hm-result-geisha duel-reveal ${after === meId ? 'is-me' : after === oppId ? 'is-opp' : ''} ${moved ? 'is-moved' : ''}`} style={{ ...geishaStyle(i), '--i': i } as React.CSSProperties}>
             <GeishaPortrait geisha={i} />
             <strong>{g.name}<small>{g.charm}</small></strong>
             <span>{theirs} : {mine}</span>
@@ -247,8 +248,8 @@ function ResultDialog({ room, meId, client, onHide }: { room: Props['room']; meI
       <table className="hm-result-table">
         <thead><tr><th /><th>{name(meId)}<small>나</small></th><th>{name(oppId)}</th></tr></thead>
         <tbody>
-          <tr><th><Flower2 size={13} /> 매력</th><td>{result.charm[me]}</td><td>{result.charm[1 - me]}</td></tr>
-          <tr><th><Users size={13} /> 게이샤</th><td>{result.geishas[me]}</td><td>{result.geishas[1 - me]}</td></tr>
+          <tr className="duel-reveal" style={{ '--i': GEISHAS.length } as React.CSSProperties}><th><Flower2 size={13} /> 매력</th><td><CountUp value={result.charm[me]!} delayMs={800} /></td><td><CountUp value={result.charm[1 - me]!} delayMs={800} /></td></tr>
+          <tr className="duel-reveal" style={{ '--i': GEISHAS.length + 1 } as React.CSSProperties}><th><Users size={13} /> 게이샤</th><td><CountUp value={result.geishas[me]!} delayMs={900} /></td><td><CountUp value={result.geishas[1 - me]!} delayMs={900} /></td></tr>
         </tbody>
       </table>
       {view.removed && <p className="hm-result-note"><Coffee size={13} /> 이번 라운드에 빼 둔 카드: {GEISHAS[view.removed.geisha]!.name}의 {GEISHAS[view.removed.geisha]!.item}</p>}
