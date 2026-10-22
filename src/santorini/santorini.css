@@ -1,0 +1,73 @@
+/* 산토리니: bright Aegean sky, whitewashed panels, a 3D island in the middle of the sea. */
+.theme-st{
+  --d-bg:#e9f5fb;--d-ink:#1c2b3c;--d-soft:#5f7487;--d-line:#cfe1ec;--d-panel:#ffffffd9;--d-field:#fff;
+  --d-accent:#2b5cad;--d-accent2:#1b3f80;--d-accent-ink:#fff;--d-chip:#e3eef7;--d-shadow:#1b3f8018;
+  background:linear-gradient(180deg,#8fd0ef 0%,#cdebf7 42%,#f3faf9 62%,#e9f5fb 100%);
+}
+.st-backdrop{overflow:hidden}
+.st-sun{position:absolute;top:6%;left:8%;width:110px;height:110px;border-radius:50%;background:radial-gradient(circle,#fff6cf,#ffd77a 60%,#ffd77a00 72%);filter:blur(.5px)}
+.st-cloud{position:absolute;height:38px;border-radius:40px;background:#fff;opacity:.85;animation:st-drift linear infinite}
+.st-cloud::before,.st-cloud::after{content:'';position:absolute;bottom:10px;border-radius:50%;background:#fff}
+.st-cloud::before{left:18%;width:56px;height:56px}
+.st-cloud::after{left:50%;width:40px;height:40px}
+.st-cloud.c1{top:12%;width:160px;animation-duration:90s;animation-delay:-20s}
+.st-cloud.c2{top:24%;width:110px;animation-duration:120s;animation-delay:-70s;opacity:.7}
+.st-cloud.c3{top:6%;width:130px;animation-duration:150s;animation-delay:-110s;opacity:.6}
+@keyframes st-drift{from{transform:translateX(-220px)}to{transform:translateX(110vw)}}
+.st-sea{position:absolute;left:0;right:0;bottom:0;height:30%;background:linear-gradient(180deg,#5bb4e0,#2b7fb8)}
+.st-sea i{position:absolute;left:-10%;right:-10%;height:2px;background:repeating-linear-gradient(90deg,#ffffff99 0 40px,transparent 40px 110px);animation:st-wave 9s linear infinite}
+.st-sea i:nth-child(1){top:20%}.st-sea i:nth-child(2){top:50%;animation-duration:13s;opacity:.6}.st-sea i:nth-child(3){top:78%;animation-duration:7s;opacity:.5}
+@keyframes st-wave{to{transform:translateX(110px)}}
+.st-gulls{position:absolute;top:18%;right:16%;display:flex;gap:26px}
+.st-gulls svg{width:30px;animation:st-gull 5s ease-in-out infinite}
+.st-gulls svg:nth-child(2){animation-delay:-1.6s;width:22px;margin-top:20px}
+.st-gulls svg:nth-child(3){animation-delay:-3.1s;width:18px;margin-top:6px}
+@keyframes st-gull{50%{transform:translateY(-10px)}}
+@media(prefers-reduced-motion:reduce){.st-cloud,.st-sea i,.st-gulls svg{animation:none}}
+.st-art{max-width:380px}
+
+/* ---- 3D table ---- */
+.st-game{position:relative;height:100vh;height:100dvh;overflow:hidden}
+.st-canvas{position:absolute;inset:0;touch-action:none}
+.st-canvas canvas{display:block;width:100%!important;height:100%!important}
+.st-nogl{position:absolute;inset:40% 20px auto;padding:16px;border-radius:14px;background:#fff;text-align:center}
+.st-topbar{position:absolute;top:0;left:0;right:0;display:flex;justify-content:center;align-items:center;gap:6px;padding:calc(8px + env(safe-area-inset-top)) 10px 8px;pointer-events:none}
+.st-topbar>*{pointer-events:auto}
+.st-topbar .duel-icon-btn,.st-side .duel-icon-btn{background:#ffffffd9;backdrop-filter:blur(6px)}
+.st-player{display:flex;flex:1;max-width:280px;align-items:center;gap:6px;min-width:0;padding:6px 11px;border:1.5px solid #ffffff;border-radius:99px;background:#ffffffcc;backdrop-filter:blur(6px);font-size:12px;box-shadow:0 4px 14px #1b3f8018}
+.st-player strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.st-player small{color:var(--d-soft);font-size:9px}
+.st-player em{margin-left:auto;padding:1px 6px;border-radius:99px;background:#ffd77a;color:#5a3a00;font-style:normal;font-size:9px;font-weight:800}
+.st-player.is-turn{border-color:var(--d-accent);box-shadow:0 0 0 3px #2b5cad33,0 4px 14px #1b3f8018}
+.st-swatch{width:14px;height:14px;flex:none;border-radius:50%;box-shadow:inset 0 -2px 0 #0003}
+.st-turn{display:flex;flex-direction:column;align-items:center;flex:none;padding:3px 9px;border-radius:12px;background:#ffffffcc;font-weight:900;font-size:15px;line-height:1.1}
+.st-turn small{font-size:9px;color:var(--d-soft);font-weight:600}
+.st-side{position:absolute;right:10px;top:calc(62px + env(safe-area-inset-top));display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.st-supply{display:flex;flex-direction:column;gap:3px;padding:7px 9px;border-radius:12px;background:#ffffffcc;backdrop-filter:blur(6px);font-size:11px;font-weight:800}
+.st-supply span{display:flex;align-items:center;gap:6px}
+.st-supply i{display:block;background:#fff;border:1px solid #b9c9d6}
+.st-supply i.l1{width:14px;height:8px}.st-supply i.l2{width:11px;height:8px}.st-supply i.l3{width:8px;height:8px}
+.st-supply i.dome{width:12px;height:7px;border-radius:12px 12px 0 0;background:#2b5cad;border-color:#2b5cad}
+.st-bottom{position:absolute;left:50%;bottom:calc(14px + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(620px,calc(100% - 20px));display:flex;flex-direction:column;gap:4px}
+.st-status{display:flex;align-items:center;gap:9px;padding:11px 14px;border-radius:16px;background:#ffffffe6;backdrop-filter:blur(8px);font-size:12px;color:var(--d-soft);box-shadow:0 8px 24px #1b3f8022}
+.st-status strong{flex:none;color:var(--d-ink)}
+.st-status>span:not(.duel-dot){flex:1}
+.st-status.is-mine{box-shadow:0 0 0 2px var(--d-accent),0 8px 24px #1b3f8033}
+.st-status.is-mine strong{color:var(--d-accent)}
+.st-status .duel-icon-btn{width:28px;height:28px}
+.st-last{align-self:center;padding:3px 10px;border-radius:99px;background:#1c2b3c99;color:#fff;font-size:10px}
+.st-result{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
+.st-result svg{color:#e2a52c}
+.st-result h3{font-size:18px}
+.st-result p{color:#5f7487;font-size:13px;margin-bottom:6px}
+.st-result .duel-button{align-self:stretch}
+.st-show-result{position:absolute;left:50%;bottom:100px;transform:translateX(-50%)}
+@media(max-width:560px){
+  .st-player{padding:5px 8px;font-size:11px}
+  .st-player small{display:none}
+  .st-topbar{gap:4px;padding-left:6px;padding-right:6px}
+}
+.st-a11y{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.st-grid-fallback{position:absolute;inset:90px 16px auto;display:grid;grid-template-columns:repeat(5,1fr);gap:4px;max-width:420px;margin:auto}
+.st-grid-fallback button{aspect-ratio:1;border-radius:8px;background:#fff;font-weight:800}
+.st-grid-fallback button[class^='is-']{box-shadow:0 0 0 3px #ffd35a}
