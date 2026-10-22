@@ -199,8 +199,8 @@ function Table({ room, meId, client }: Props) {
         <p>{view.mustChoose ? '고르지 않은 카드는 상대 쪽에 놓여요.' : pending.kind === 'gift' ? '고르고 남은 두 장이 내 쪽에 놓여요.' : '남은 묶음이 내 쪽에 놓여요.'}</p>
         <div className="hm-offer-options">
           {pending.kind === 'gift'
-            ? pending.cards.map((c, i) => <button key={c.id} type="button" className="hm-offer-option" disabled={!view.mustChoose || busy} onClick={() => void send('game:action', { type: 'choose', index: i })} aria-label={`${GEISHAS[c.geisha]!.name}의 ${GEISHAS[c.geisha]!.item} 가져가기`}><ItemCard card={c} /></button>)
-            : pending.groups.map((group, i) => <button key={i} type="button" className="hm-offer-option is-pair" disabled={!view.mustChoose || busy} onClick={() => void send('game:action', { type: 'choose', index: i })} aria-label={`${i === 0 ? 'A' : 'B'} 묶음 가져가기: ${group.map(c => GEISHAS[c.geisha]!.item).join(', ')}`}>
+            ? pending.cards.map((c, i) => <button key={c.id} type="button" className="hm-offer-option" style={{ '--i': i } as React.CSSProperties} disabled={!view.mustChoose || busy} onClick={() => void send('game:action', { type: 'choose', index: i })} aria-label={`${GEISHAS[c.geisha]!.name}의 ${GEISHAS[c.geisha]!.item} 가져가기`}><ItemCard card={c} /></button>)
+            : pending.groups.map((group, i) => <button key={i} type="button" className="hm-offer-option is-pair" style={{ '--i': i * 2 } as React.CSSProperties} disabled={!view.mustChoose || busy} onClick={() => void send('game:action', { type: 'choose', index: i })} aria-label={`${i === 0 ? 'A' : 'B'} 묶음 가져가기: ${group.map(c => GEISHAS[c.geisha]!.item).join(', ')}`}>
               <b>{i === 0 ? 'A' : 'B'}</b>{group.map(c => <ItemCard key={c.id} card={c} />)}
             </button>)}
         </div>

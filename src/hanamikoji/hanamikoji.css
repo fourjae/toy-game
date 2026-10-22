@@ -124,6 +124,17 @@ button.hm-token:not(:disabled):hover{transform:translateY(-1px)}
 .hm-offer-option{display:flex;align-items:center;gap:6px;padding:8px;border:2px solid transparent;border-radius:14px;background:#ffffff0d;cursor:pointer;transition:transform .15s,border-color .15s}
 .hm-offer-option:not(:disabled):hover{transform:translateY(-4px);border-color:#ffd78a}
 .hm-offer-option:disabled{opacity:1;cursor:default}
+/* 카드가 한 장씩 탁자에 놓이고, 고르는 쪽은 손을 올린 카드가 어디로 갈지 미리 본다 */
+.hm-offer-option{position:relative;animation:hm-deal .42s cubic-bezier(.2,.8,.3,1.25) backwards;animation-delay:calc(var(--i,0) * 110ms + 120ms)}
+@keyframes hm-deal{from{opacity:0;transform:translateY(-26px) rotate(-8deg) scale(.8)}}
+.hm-offer-option::after{position:absolute;left:50%;bottom:-11px;transform:translateX(-50%);padding:2px 8px;border-radius:99px;font-size:10px;font-weight:900;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s}
+.hm-offer.is-choosing .hm-offer-options:has(.hm-offer-option:is(:hover,:focus-visible)) .hm-offer-option::after{opacity:1}
+.hm-offer.is-choosing .hm-offer-option:is(:hover,:focus-visible)::after{content:'내 쪽으로';background:#ffd78a;color:#5a2a0c}
+.hm-offer.is-choosing .hm-offer-option:not(:hover):not(:focus-visible)::after{content:'상대 쪽으로';background:#ffffff26;color:var(--d-soft)}
+.hm-offer.is-choosing .hm-offer-options:has(.hm-offer-option:is(:hover,:focus-visible)) .hm-offer-option:not(:hover):not(:focus-visible){opacity:.6;transform:scale(.94)}
+.hm-offer.is-waiting .hm-offer-option{animation-name:hm-deal-wait}
+@keyframes hm-deal-wait{from{opacity:0;transform:translateY(26px) scale(.85)}}
+@media(prefers-reduced-motion:reduce){.hm-offer-option{animation:none}}
 .hm-offer-option.is-pair b{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#ffd78a;color:#5a2a0c;font-size:12px}
 .hm-show-result{position:fixed;left:50%;bottom:120px;transform:translateX(-50%);z-index:800}
 
