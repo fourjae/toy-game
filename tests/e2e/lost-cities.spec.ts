@@ -190,6 +190,11 @@ test('로스트 시티: 3라운드는 라운드마다 둘 다 눌러야 넘어�
   await playRound(host, guest);
   await expect(host.getByRole('dialog')).toContainText('1라운드 끝');
   await expect(host.locator('.lc-result-table .match')).toBeVisible();
+  // 라운드 사이 '대기실로 나가기'는 매치를 끝내므로 한 번 더 묻고, 그대로 두면 4초 뒤 원래대로 돌아온다.
+  await guest.getByRole('button', { name: '대기실로 나가기' }).click();
+  await expect(guest.getByRole('button', { name: /매치를 끝내고 나가기/ })).toBeVisible();
+  await expect(guest.locator('.lc-result')).toBeVisible();
+  await expect(guest.getByRole('button', { name: '대기실로 나가기' })).toBeVisible({ timeout: 7_000 });
   await host.getByRole('button', { name: '2라운드 시작' }).click();
   await expect(host.getByRole('button', { name: '친구의 답을 기다리는 중' })).toBeDisabled();
   await expect(host.locator('.lc-result')).toBeVisible();

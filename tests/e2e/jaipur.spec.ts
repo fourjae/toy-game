@@ -32,6 +32,9 @@ test('자이푸르: 시장의 낙타를 모두 데려오고 차례가 넘어간�
   await expect(other.locator('.jp-action.is-mine')).toBeVisible();
   await expect(mover.locator('.jp-herd span').first()).not.toHaveText(`낙타 ${herdBefore}`);
   await expect(mover.locator('.jp-slot')).toHaveCount(5);
+  // 데려온 쪽 무리가 반짝이고, 상대 화면의 그 사람 낙타 수 옆에 +N이 뜬다.
+  await expect(mover.locator('.jp-herd')).toHaveClass(/is-gaining/u);
+  await expect(other.locator('.jp-topbar .jp-herd-gain')).toHaveText(/^\+\d+$/u);
 });
 
 test('자이푸르: 한 라운드를 끝까지 하면 결산창에 점수와 인장이 나온다', async ({ browser }) => {
