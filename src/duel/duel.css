@@ -96,6 +96,10 @@
 .duel-empty svg{color:var(--d-accent);opacity:.7}
 .duel-empty h3{margin:6px 0 0;color:var(--d-ink);font-size:15px}
 .duel-empty p{margin:0 0 4px;font-size:12px}
+.duel-empty-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:14px}
+.duel-empty > svg{animation:duel-bob 3.2s ease-in-out infinite}
+@keyframes duel-bob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-6px) rotate(3deg)}}
+@media(prefers-reduced-motion:reduce){.duel-empty > svg{animation:none}}
 .duel-rooms-foot{display:flex;align-items:center;gap:8px;color:var(--d-soft);font-size:11px}
 
 .duel-topline{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}

@@ -146,7 +146,10 @@ function Lobby<V, O>({ theme, client, onRules }: { theme: DuelTheme<V, O>; clien
             <span className="duel-room-count"><Users size={13} />{r.playerCount}/2</span>
             {r.canJoin && <ChevronRight size={16} />}
           </button>)}
-          {shown.length === 0 && <div className="duel-empty">{theme.emptyIcon}<h3>{filter === 'all' ? '아직 펼쳐진 판이 없어요' : '아직 기다리는 방이 없어요'}</h3><p>첫 번째 방의 주인이 되어 보세요.</p><button className="duel-text-button" onClick={() => setCreating(true)}>우리 방 만들기 <ArrowRight size={14} /></button></div>}
+          {shown.length === 0 && (rooms.length > 0
+            // 기다리는 방만 보기에서 비었지만, 다른 방은 게임 중일 때: '첫 번째 방'이라고 하면 틀린 말이 된다.
+            ? <div className="duel-empty">{theme.emptyIcon}<h3>모든 방이 게임 중이에요</h3><p>지금 {rooms.length}개 방에서 승부가 한창이에요. 새 방을 열고 친구를 불러 보세요.</p><span className="duel-empty-actions"><button className="duel-text-button" onClick={() => setCreating(true)}>새 방 만들기 <ArrowRight size={14} /></button><button className="duel-text-button" onClick={() => setFilter('all')}>모든 방 보기 <ArrowRight size={14} /></button></span></div>
+            : <div className="duel-empty">{theme.emptyIcon}<h3>{filter === 'all' ? '아직 펼쳐진 판이 없어요' : '아직 기다리는 방이 없어요'}</h3><p>첫 번째 방의 주인이 되어 보세요.</p><button className="duel-text-button" onClick={() => setCreating(true)}>우리 방 만들기 <ArrowRight size={14} /></button></div>)}
         </div>
         <div className="duel-rooms-foot"><span className="duel-dot" /> 방 목록은 실시간으로 바뀌어요</div>
       </section>
