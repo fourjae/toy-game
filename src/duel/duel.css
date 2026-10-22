@@ -205,3 +205,8 @@
 .duel-stats td.is-lead{color:#c47a12}
 .duel-stats td.is-lead::after{content:'★';font-size:10px;margin-left:3px;vertical-align:2px}
 @media(prefers-reduced-motion:reduce){.duel-trophy{animation:none}}
+.duel-result-leave.confirming{color:#b4371f;font-weight:800;animation:duel-nudge .32s ease-out}
+.duel-ready-hint{display:flex;align-items:center;justify-content:center;gap:8px;margin:0 0 -2px;color:var(--d-accent);font-size:12px;font-weight:700;animation:duel-hint-in .4s ease-out}
+@keyframes duel-nudge{0%,100%{transform:translateX(0)}30%{transform:translateX(-4px)}65%{transform:translateX(3px)}}
+@keyframes duel-hint-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.duel-result-leave.confirming,.duel-ready-hint{animation:none}}

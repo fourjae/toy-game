@@ -429,3 +429,8 @@
 @keyframes lc-reveal{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .lc-count{font-variant-numeric:tabular-nums}
 @media(prefers-reduced-motion:reduce){.lc-reveal{animation:none}}
+.lc-result-leave.confirming{color:#b4371f;font-weight:800;animation:lc-nudge .32s ease-out}
+.lc-ready-hint{margin:0 0 8px;text-align:center;color:#a5612a;font-size:12px;font-weight:700;animation:lc-hint-in .4s ease-out}
+@keyframes lc-nudge{0%,100%{transform:translateX(0)}30%{transform:translateX(-4px)}65%{transform:translateX(3px)}}
+@keyframes lc-hint-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.lc-result-leave.confirming,.lc-ready-hint{animation:none}}

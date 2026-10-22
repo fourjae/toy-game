@@ -367,6 +367,13 @@ function ResultDialog({ room, view, meId, client, onHide }: { room: LCRoomView; 
   const finished = view.status === 'finished';
   const voted = room.readyVotes.includes(meId);
   const oppOnline = room.players.find(p => p.id === oppId)?.connected;
+  const oppVoted = room.readyVotes.includes(oppId);
+  // 라운드 사이에 나가면 매치 전체가 끝나므로 한 번 더 묻는다.
+  const [confirmLeave, setConfirmLeave] = useState(false);
+  async function leave() {
+    if (!finished && !confirmLeave) { setConfirmLeave(true); return; }
+    if (await send('rooms:leave')) window.history.replaceState({}, '', window.location.pathname);
+  }
   const myIndex = view.playerIds.indexOf(meId);
   const lastRound = view.roundScores.at(-1) ?? [0, 0];
   const myRound = lastRound[myIndex]!;
@@ -396,10 +403,11 @@ function ResultDialog({ room, view, meId, client, onHide }: { room: LCRoomView; 
       </table>
       {view.rounds > 1 && view.roundScores.length > 1 && <p className="lc-result-rounds">{view.roundScores.map((r, i) => `${i + 1}R ${signed(r[myIndex]!)} : ${signed(r[1 - myIndex]!)}`).join('  ·  ')}</p>}
       {!finished && <p className="lc-result-note">다음 라운드는 이번 점수가 낮은 쪽이 먼저 시작해요.</p>}
+      {oppVoted && !voted && <p className="lc-ready-hint" role="status">{name(oppId)}님이 {finished ? '한 판 더 하고 싶어 해요' : '다음 라운드를 기다려요'}</p>}
       <button className="lc-button primary full" disabled={busy || voted || !oppOnline} onClick={() => send('game:ready')}>
-        {voted ? '친구의 답을 기다리는 중' : finished ? '한 판 더 하기' : `${view.round + 1}라운드 시작`}<ArrowRight size={17} />
+        {voted ? '친구의 답을 기다리는 중' : finished ? (oppVoted ? '좋아요, 한 판 더!' : '한 판 더 하기') : `${view.round + 1}라운드 시작`}<ArrowRight size={17} />
       </button>
-      <button className="lc-text-button lc-result-leave" onClick={async () => { if (await send('rooms:leave')) window.history.replaceState({}, '', window.location.pathname); }}>대기실로 나가기 <ArrowRight size={14} /></button>
+      <button className={`lc-text-button lc-result-leave ${confirmLeave ? 'confirming' : ''}`} onClick={leave}>{confirmLeave ? '매치를 끝내고 나가기 · 한 번 더 누르세요' : '대기실로 나가기'} <ArrowRight size={14} /></button>
     </div>
   </Dialog>;
 }
