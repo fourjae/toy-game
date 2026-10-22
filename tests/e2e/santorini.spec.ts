@@ -46,11 +46,14 @@ test('산토리니: 일꾼을 놓고 한 번 움직여 짓는다', async ({ brow
 });
 
 test('산토리니: 탑을 쌓아 3층에 오르면 두 사람 모두 결과창과 기록표를 본다', async ({ browser }) => {
-  // 두 창이 three.js 장면을 소프트웨어 렌더링(GPU 없음)으로 그려서 이 환경에선 한 판에 2분 가까이 걸린다.
-  test.setTimeout(240_000);
+  // 3D 장면은 GPU 없는 환경에서 소프트웨어 렌더링이라 한 판에 2분 가까이 걸려서, 평면 보기로 둔다(규칙·결과창은 같다).
+  test.setTimeout(90_000);
   const host = await (await browser.newContext({ reducedMotion: 'reduce' })).newPage();
   const guest = await (await browser.newContext({ reducedMotion: 'reduce' })).newPage();
-  for (const page of [host, guest]) page.setDefaultTimeout(10_000);
+  for (const page of [host, guest]) {
+    page.setDefaultTimeout(10_000);
+    await page.addInitScript(() => window.localStorage.setItem('santorini.flat', '1'));
+  }
   await enter(host, '민수', '/santorini');
   await host.getByRole('button', { name: '방 만들기' }).first().click();
   await host.getByRole('dialog').getByRole('button', { name: '방 만들기' }).click();
@@ -113,4 +116,28 @@ test('산토리니: 탑을 쌓아 3층에 오르면 두 사람 모두 결과창�
   await winDialog.getByRole('button', { name: /닫기/ }).first().click();
   await first.getByRole('button', { name: '결과 다시 보기' }).click();
   await expect(winDialog).toBeVisible();
+});
+
+test('산토리니: 평면으로 보기로 바꾸면 3D 장면 대신 격자 판이 나오고, 다시 3D로 돌아간다', async ({ browser }) => {
+  const host = await browser.newPage();
+  const guest = await browser.newPage();
+  for (const page of [host, guest]) page.setDefaultTimeout(10_000);
+  await enter(host, '민수', '/santorini');
+  await host.getByRole('button', { name: '방 만들기' }).first().click();
+  await host.getByRole('dialog').getByRole('button', { name: '방 만들기' }).click();
+  const code = (await host.locator('.duel-invite strong').innerText()).trim();
+  await enter(guest, '지수', `/santorini?room=${code}`);
+  await expect(guest.getByText('둘 다 모였네요')).toBeVisible();
+  await host.getByRole('button', { name: '섬에서 시작' }).click();
+  await expect(host.locator('.st-canvas canvas')).toBeVisible({ timeout: 20_000 });
+  await host.getByRole('button', { name: '평면으로 보기' }).click();
+  await expect(host.locator('.st-canvas')).toHaveCount(0);
+  await expect(host.locator('.st-grid-fallback button')).toHaveCount(25);
+  await expect(host.locator('.st-grid-fallback button').first()).toBeVisible();
+  // 고른 보기는 기기에 남아서 새로 열어도 평면이다.
+  await host.reload();
+  await expect(host.locator('.st-grid-fallback button')).toHaveCount(25, { timeout: 20_000 });
+  await expect(host.locator('.st-canvas')).toHaveCount(0);
+  await host.getByRole('button', { name: '3D로 보기' }).click();
+  await expect(host.locator('.st-canvas canvas')).toBeVisible({ timeout: 20_000 });
 });

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
-import { ArrowLeft, Camera, Castle, HelpCircle, History, Layers, Mountain, Sailboat, Sun, Trophy, Users, X } from 'lucide-react';
+import { ArrowLeft, Box, Camera, Castle, Grid3x3, HelpCircle, History, Layers, Mountain, Sailboat, Sun, Trophy, Users, X } from 'lucide-react';
 import Dialog from '../components/Dialog';
 import CountUp from '../duel/CountUp';
 import DuelShell, { LeaveDialog, LogDialog, ReadyButtons, type DuelTheme, type TableProps } from '../duel/DuelShell';
@@ -8,6 +8,16 @@ import { IslandScene, SEAT_COLORS, type Highlight } from './scene';
 import './santorini.css';
 
 type Options = Record<string, never>;
+
+// 평면 보기: 3D가 버거운 기기(GPU 없는 브라우저, 오래된 폰)를 위해 같은 판을 위에서 본 2D 격자로 그린다.
+// 고른 값은 기기에 기억해 두고, 주소에 ?flat 이 있으면 처음부터 평면으로 연다.
+const FLAT_KEY = 'santorini.flat';
+function readFlat() {
+  try { return new URLSearchParams(window.location.search).has('flat') || window.localStorage.getItem(FLAT_KEY) === '1'; } catch { return false; }
+}
+function saveFlat(flat: boolean) {
+  try { window.localStorage.setItem(FLAT_KEY, flat ? '1' : '0'); } catch { /* 저장 못 해도 이번 판엔 적용됨 */ }
+}
 type Props = TableProps<STView, Options>;
 
 function RulesDialog({ onClose }: { onClose: () => void }) {
@@ -30,6 +40,7 @@ function RulesDialog({ onClose }: { onClose: () => void }) {
       <ul>
         <li>한 손가락으로 끌면 섬이 돌아가고, 두 손가락(또는 휠)으로 확대해요.</li>
         <li>내 일꾼을 누르고, 빛나는 칸을 눌러 옮기세요. 짓기도 빛나는 칸을 누르면 돼요.</li>
+        <li>화면이 버벅이면 오른쪽 <b>평면으로 보기</b> 단추로 위에서 본 판으로 바꿀 수 있어요.</li>
       </ul>
       <p className="duel-rules-note">상대가 3층 바로 옆 2층에 서 있다면, 그 3층에 돔을 얹어 막는 게 가장 급해요.</p>
     </div>
@@ -81,6 +92,8 @@ function Table({ room, meId, client }: Props) {
   const [resultHidden, setResultHidden] = useState(false);
   const [topView, setTopView] = useState(false);
   const [webglFailed, setWebglFailed] = useState(false);
+  const [flat, setFlat] = useState(readFlat);
+  const gridMode = flat || webglFailed;
   useEffect(() => { setSelected(null); }, [view.revision]);
   useEffect(() => { setResultHidden(false); }, [view.status]);
 
@@ -118,14 +131,14 @@ function Table({ room, meId, client }: Props) {
   };
 
   useEffect(() => {
-    if (!hostRef.current) return;
+    if (!hostRef.current || flat) return;
     try {
       sceneRef.current = new IslandScene(hostRef.current, cell => pickRef.current(cell), seat);
     } catch {
       setWebglFailed(true);
     }
     return () => { sceneRef.current?.dispose(); sceneRef.current = null; };
-  }, [seat]);
+  }, [seat, flat]);
 
   useEffect(() => {
     sceneRef.current?.sync({
@@ -133,7 +146,7 @@ function Table({ room, meId, client }: Props) {
       workers: view.playerIds.map(id => view.workers[id]!),
       highlights, selectedCell: selected, lastBuild: view.lastBuild?.cell ?? null,
     });
-  }, [view, highlights, selected]);
+  }, [view, highlights, selected, flat]);
 
   const placedCount = myWorkers.filter(c => c !== null).length;
   const hint = view.status === 'finished' ? '게임이 끝났어요.'
@@ -157,19 +170,25 @@ function Table({ room, meId, client }: Props) {
   const reason = view.winReason === 'climb' ? '3층에 먼저 올라섰어요'
     : view.winReason === 'stuck' ? `${loserName} 일꾼이 움직일 곳이 없었어요` : `${loserName} 일꾼이 지을 곳이 없었어요`;
   return <main className="st-game">
-    <div className="st-canvas" ref={hostRef} />
-    {/* The same board as buttons, for screen readers and keyboards (and the e2e test). */}
-    <div className={webglFailed ? 'st-grid-fallback' : 'st-a11y'} role="group" aria-label="섬 칸">
+    {!flat && <div className="st-canvas" ref={hostRef} />}
+    {/* The same board as buttons, for screen readers and keyboards (and the e2e test). In flat mode it is the board. */}
+    <div className={gridMode ? 'st-grid-fallback' : 'st-a11y'} role="group" aria-label="섬 칸">
       {view.levels.map((level, cell) => {
         const who = view.playerIds.findIndex(id => view.workers[id]!.includes(cell));
         const glow = highlights.get(cell);
         return <button key={cell} type="button" data-cell={cell} className={glow ? `is-${glow}` : ''} disabled={busy} onClick={() => pickRef.current(cell)}
           aria-label={`${cellName(cell)} ${view.domes[cell] ? '돔' : `${level}층`}${who >= 0 ? `, ${view.playerIds[who] === meId ? '내' : '상대'} 일꾼` : ''}${glow ? ', 선택 가능' : ''}`}>
-          {level}{view.domes[cell] ? '◓' : ''}{who >= 0 ? (who === 0 ? '●' : '○') : ''}
+          {gridMode ? <span className="st-tile" aria-hidden="true">
+            {[1, 2, 3].slice(0, level).map(l => <i key={l} className={`st-tier t${l}`} />)}
+            {view.domes[cell] && <i className="st-cap" />}
+            {who >= 0 && <i className={`st-pawn ${view.playerIds[who] === meId ? 'is-me' : ''}`} style={{ background: SEAT_COLORS[who] }} />}
+            {level > 0 && !view.domes[cell] && <b className="st-lv">{level}</b>}
+            {view.lastBuild?.cell === cell && <i className="st-fresh" key={view.revision} />}
+          </span> : <>{level}{view.domes[cell] ? '◓' : ''}{who >= 0 ? (who === 0 ? '●' : '○') : ''}</>}
         </button>;
       })}
     </div>
-    {webglFailed && <div className="st-nogl">이 기기에서는 3D 화면을 열 수 없어요. 다른 브라우저로 시도해 주세요.</div>}
+    {webglFailed && !flat && <div className="st-nogl">이 기기에서는 3D 화면을 열 수 없어서 평면으로 보여 드려요.</div>}
     <header className="st-topbar">
       <button className="duel-icon-btn" onClick={() => setLeaving(true)} aria-label="방 나가기"><ArrowLeft size={17} /></button>
       {chip(oppId)}
@@ -179,7 +198,8 @@ function Table({ room, meId, client }: Props) {
       <button className="duel-icon-btn" onClick={() => setShowRules(true)} aria-label="게임 방법"><HelpCircle size={17} /></button>
     </header>
     <div className="st-side">
-      <button className="duel-icon-btn" onClick={() => { const next = !topView; setTopView(next); sceneRef.current?.resetCamera(seat, next); }} aria-label={topView ? '비스듬히 보기' : '위에서 보기'} title={topView ? '비스듬히 보기' : '위에서 보기'}><Camera size={17} /></button>
+      {!gridMode && <button className="duel-icon-btn" onClick={() => { const next = !topView; setTopView(next); sceneRef.current?.resetCamera(seat, next); }} aria-label={topView ? '비스듬히 보기' : '위에서 보기'} title={topView ? '비스듬히 보기' : '위에서 보기'}><Camera size={17} /></button>}
+      {!webglFailed && <button className="duel-icon-btn" onClick={() => { const next = !flat; setFlat(next); saveFlat(next); setTopView(false); }} aria-label={flat ? '3D로 보기' : '평면으로 보기'} title={flat ? '3D로 보기' : '평면으로 보기'}>{flat ? <Box size={17} /> : <Grid3x3 size={17} />}</button>}
       <div className="st-supply" aria-label="남은 블록">
         <span title="1층 블록"><i className="l1" />{view.supply[1]}</span>
         <span title="2층 블록"><i className="l2" />{view.supply[2]}</span>
