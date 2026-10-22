@@ -46,7 +46,8 @@ test('산토리니: 일꾼을 놓고 한 번 움직여 짓는다', async ({ brow
 });
 
 test('산토리니: 탑을 쌓아 3층에 오르면 두 사람 모두 결과창과 기록표를 본다', async ({ browser }) => {
-  test.setTimeout(120_000);
+  // 두 창이 three.js 장면을 소프트웨어 렌더링(GPU 없음)으로 그려서 이 환경에선 한 판에 2분 가까이 걸린다.
+  test.setTimeout(240_000);
   const host = await (await browser.newContext({ reducedMotion: 'reduce' })).newPage();
   const guest = await (await browser.newContext({ reducedMotion: 'reduce' })).newPage();
   for (const page of [host, guest]) page.setDefaultTimeout(10_000);
