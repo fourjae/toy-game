@@ -120,6 +120,30 @@ type HandPhase = 'entering' | 'returned' | 'stay' | 'leaving' | 'decking';
 interface HandCard { troop: Troop; phase: HandPhase; order: number }
 
 /**
+ * 손패가 가로로 넘치면(폰에서 병정 6장 이상) 가려진 쪽 가장자리를 흐리게 해서 밀어 볼 수 있다는 걸 알려 준다.
+ * 어느 쪽에 더 있는지는 스크롤 위치·크기·카드 수가 바뀔 때마다 다시 잰다.
+ */
+function useScrollEdges<T extends HTMLElement>(count: number) {
+  const ref = useRef<T>(null);
+  const [edges, setEdges] = useState({ left: false, right: false });
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const measure = () => {
+      const left = el.scrollLeft > 4;
+      const right = el.scrollLeft + el.clientWidth < el.scrollWidth - 4;
+      setEdges(prev => (prev.left === left && prev.right === right ? prev : { left, right }));
+    };
+    measure();
+    el.addEventListener('scroll', measure, { passive: true });
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => { el.removeEventListener('scroll', measure); observer.disconnect(); };
+  }, [count]);
+  return [ref, edges] as const;
+}
+
+/**
  * The hand the player sees lags the real one just long enough to animate: a discarded troop stays
  * as a ghost while it bounces and drops away, and a drawn troop slides in from the right.
  * Troops placed on the board leave at once, since the board already shows where they went.
@@ -248,6 +272,7 @@ function GameScreen({ room, meId, busy, send, onLeave, onRules }: { room: RoomVi
   const events = useDiscardEvents(game, meId);
   const { cards: handCards, settle: settleCard } = useAnimatedHand(game.hand, game.discarded, game.events);
   const enteringStart = handCards.findIndex(c => c.phase === 'entering');
+  const [handScrollRef, handEdges] = useScrollEdges<HTMLDivElement>(handCards.length);
   const [handCollapsed, setHandCollapsed] = useState(false);
   // A folded hand opens again when it is your move, so a turn never starts with the cards hidden.
   useEffect(() => { if (mine && !finished) setHandCollapsed(false); }, [mine, finished]);
@@ -286,7 +311,7 @@ function GameScreen({ room, meId, busy, send, onLeave, onRules }: { room: RoomVi
       {turnBar('turn-bar--dock')}
       <button type="button" className="hand-mobile-toggle" onClick={() => setHandCollapsed(!handCollapsed)} aria-expanded={!handCollapsed} aria-label={handCollapsed ? `패 펼치기, ${game.hand.length}장` : '패 접기'}>{handCollapsed ? <ChevronUp size={15} /> : <ChevronDown size={15} />}<span>{handCollapsed ? `패 펼치기 · ${game.hand.length}장` : '패 접기'}</span></button>
       <div className="hand-topline"><h3><button type="button" className="hand-toggle" onClick={() => setHandCollapsed(!handCollapsed)} aria-expanded={!handCollapsed} aria-label={handCollapsed ? '손패 펼치기' : '손패 접기'}>{handCollapsed ? <ChevronUp size={15} /> : <ChevronDown size={15} />}</button>내 손 <span>병정 {game.hand.length} / 8</span>{handCollapsed && definition && <em className="hand-selected-note">{definition.name} 선택 중</em>}</h3><div className="hand-action">{pending ? <button className="button secondary compact" disabled={busy || finished} onClick={() => send('game:action', { type: 'skip' })}>효과 건너뛰기 <ChevronRight size={15} /></button> : <button className="button primary compact" disabled={!game.canDraw || busy || finished} onClick={() => send('game:action', { type: 'draw' })}><Plus size={17} /> {drawCount > 0 ? `병정 ${drawCount}개 뽑기` : ownPlayer.supplyCount ? '손이 가득 찼어요' : '뽑을 병정이 없어요'}</button>}<span className="supply-count">남은 병정 {ownPlayer.supplyCount}개</span></div></div>
-      <div className="hand-cards">{handCards.map((card, i) => { const t = card.troop; const power = TROOPS[t.type].power; const frozen = game.frozenTroopIds.includes(t.id); const phaseClass = card.phase === 'entering' ? 'is-entering' : card.phase === 'returned' ? 'is-returned' : card.phase === 'leaving' ? 'is-leaving' : card.phase === 'decking' ? 'is-decking' : ''; return <button className={`troop-card ${ownPlayer.index === 0 ? 'blue-card' : 'red-card'} ${selected === t.id ? 'selected' : ''} ${phaseClass} ${frozen ? 'is-frozen' : ''}`} key={t.id} aria-label={`${TROOPS[t.type].name}, 힘 ${power || '조커'}${frozen ? ', 이번 차례 배치 불가' : ''}`} aria-pressed={selected === t.id} aria-hidden={card.phase === 'leaving' || card.phase === 'decking' || undefined} style={{ '--card-index': i, '--enter-index': card.phase === 'entering' ? i - enteringStart : 0 } as React.CSSProperties} onAnimationEnd={e => { if (e.target === e.currentTarget && ['card-deal', 'card-collapse', 'card-return'].includes(e.animationName)) settleCard(t.id); }} onClick={() => { setSelected(selected === t.id ? null : t.id); setUseAbility(true); }} disabled={busy || finished || card.phase === 'leaving' || card.phase === 'decking' || frozen}><span className="troop-power">{power || '★'}</span><ToyIcon type={t.type} size={65} color={ownPlayer.index === 0 ? 'blue' : 'red'} /><strong>{TROOPS[t.type].name}</strong><span className="troop-skill">{SKILL_LABEL[t.type]}</span></button>; })}
+      <div ref={handScrollRef} className={`hand-cards ${handEdges.left ? 'more-left' : ''} ${handEdges.right ? 'more-right' : ''}`}>{handCards.map((card, i) => { const t = card.troop; const power = TROOPS[t.type].power; const frozen = game.frozenTroopIds.includes(t.id); const phaseClass = card.phase === 'entering' ? 'is-entering' : card.phase === 'returned' ? 'is-returned' : card.phase === 'leaving' ? 'is-leaving' : card.phase === 'decking' ? 'is-decking' : ''; return <button className={`troop-card ${ownPlayer.index === 0 ? 'blue-card' : 'red-card'} ${selected === t.id ? 'selected' : ''} ${phaseClass} ${frozen ? 'is-frozen' : ''}`} key={t.id} aria-label={`${TROOPS[t.type].name}, 힘 ${power || '조커'}${frozen ? ', 이번 차례 배치 불가' : ''}`} aria-pressed={selected === t.id} aria-hidden={card.phase === 'leaving' || card.phase === 'decking' || undefined} style={{ '--card-index': i, '--enter-index': card.phase === 'entering' ? i - enteringStart : 0 } as React.CSSProperties} onAnimationEnd={e => { if (e.target === e.currentTarget && ['card-deal', 'card-collapse', 'card-return'].includes(e.animationName)) settleCard(t.id); }} onClick={() => { setSelected(selected === t.id ? null : t.id); setUseAbility(true); }} disabled={busy || finished || card.phase === 'leaving' || card.phase === 'decking' || frozen}><span className="troop-power">{power || '★'}</span><ToyIcon type={t.type} size={65} color={ownPlayer.index === 0 ? 'blue' : 'red'} /><strong>{TROOPS[t.type].name}</strong><span className="troop-skill">{SKILL_LABEL[t.type]}</span></button>; })}
         {handCards.length === 0 && <p className="empty-hand">손이 비었어요. 병정을 뽑아 주세요.</p>}<div className="hand-end"><span>한 수,<br />신중하게.</span><span>↙</span></div></div>
       <div className="selected-description">{definition ? <><strong>{definition.name}</strong><span>{definition.ability}</span>{OPTIONAL_ABILITY.includes(troop!.type) && mine && <label><input type="checkbox" checked={useAbility} onChange={e => setUseAbility(e.target.checked)} /> 능력 사용</label>}</> : <span>{mine ? '병정을 누르면 능력과 놓을 수 있는 곳이 보여요.' : '내 병정을 눌러 다음 수를 미리 생각해 보세요.'}</span>}</div>
     </section>
