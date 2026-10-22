@@ -184,3 +184,10 @@ button.hm-token:not(:disabled):hover{transform:translateY(-1px)}
 .hm-result-geisha.is-moved{box-shadow:0 0 0 0 #e5573f80;animation:duel-reveal .45s cubic-bezier(.2,.8,.3,1.2) both,hm-moved 1.2s ease-out both;animation-delay:calc(var(--i) * 90ms + 120ms),calc(var(--i) * 90ms + 600ms)}
 @keyframes hm-moved{0%{box-shadow:0 0 0 0 #e5573f90}100%{box-shadow:0 0 0 12px #e5573f00}}
 @media(prefers-reduced-motion:reduce){.hm-result-geisha.is-moved{animation:none}}
+
+/* A secret or traded-off card is turned face down as it is laid aside. Plays once when the pile first appears each round. */
+.hm-hidden-cards > .hm-laid{perspective:240px}
+.hm-hidden-cards > .hm-laid > .hm-card{animation:hm-lay-down .7s cubic-bezier(.3,1.2,.5,1) both}
+.hm-hidden-cards > .hm-laid > .hm-card:nth-child(2){animation-delay:.12s}
+@keyframes hm-lay-down{0%{opacity:0;transform:translateY(-70%) rotateY(180deg) scale(1.35)}45%{opacity:1}100%{transform:none}}
+@media(prefers-reduced-motion:reduce){.hm-hidden-cards > .hm-laid > .hm-card{animation:none}}

@@ -163,16 +163,16 @@ function Table({ room, meId, client }: Props) {
       <span className="hm-opp-hand" aria-label={`상대 손패 ${view.opponentHandCount}장`}>{Array.from({ length: view.opponentHandCount }, (_, i) => <CardBack key={i} small />)}</span>
       <TokenRow used={view.used[oppId]!} mine={false} active={null} />
       <span className="hm-hidden-cards">
-        {view.opponentHasSecret && <span title="상대의 비밀 카드"><CardBack small /><Lock size={11} /></span>}
-        {view.opponentDiscardedCount > 0 && <span title="상대가 포기한 카드"><CardBack small /><Trash2 size={11} />{view.opponentDiscardedCount}</span>}
+        {view.opponentHasSecret && <span className="hm-laid" title="상대의 비밀 카드"><CardBack small /><Lock size={11} /></span>}
+        {view.opponentDiscardedCount > 0 && <span className="hm-laid" title="상대가 포기한 카드"><CardBack small /><Trash2 size={11} />{view.opponentDiscardedCount}</span>}
       </span>
     </section>
     <section className="hm-board" aria-label="게이샤 일곱 명">{GEISHAS.map((_, g) => column(g))}</section>
     <section className="hm-strip is-mine">
       <TokenRow used={view.used[meId]!} mine active={mode} onPick={pickAction} disabled={!myTurn || busy} />
       <span className="hm-hidden-cards">
-        {view.mySecret && <span title="내 비밀 카드 (라운드 끝에 공개)"><ItemCard card={view.mySecret} small /><Lock size={11} /></span>}
-        {view.myDiscarded.length > 0 && <span title="내가 포기한 카드">{view.myDiscarded.map(c => <ItemCard key={c.id} card={c} small />)}<Trash2 size={11} /></span>}
+        {view.mySecret && <span className="hm-laid" title="내 비밀 카드 (라운드 끝에 공개)"><ItemCard card={view.mySecret} small /><Lock size={11} /></span>}
+        {view.myDiscarded.length > 0 && <span className="hm-laid" title="내가 포기한 카드">{view.myDiscarded.map(c => <ItemCard key={c.id} card={c} small />)}<Trash2 size={11} /></span>}
       </span>
     </section>
     <section className={`hm-hand ${myTurn ? 'is-mine' : ''}`}>

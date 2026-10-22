@@ -165,6 +165,14 @@ function Table({ room, meId, client }: Props) {
           const b = toScreen(squareOf(seat, view.lastMove.lane, view.lastMove.to.pos));
           return { '--x': Math.min(a.x, b.x), '--y': Math.min(a.y, b.y), '--w': Math.abs(a.x - b.x) + 1, '--h': Math.abs(a.y - b.y) + 1 } as CSSProperties;
         })()} />}
+        {view.lastMove?.sent.map(s => {
+          // A splash where each jumped boat was, keyed by revision so it plays once per move.
+          const victimSeat = 1 - view.playerIds.indexOf(view.lastMove!.playerId);
+          const p = toScreen(squareOf(victimSeat, s.lane, s.from));
+          return <span key={`splash-${view.revision}-${s.lane}`} className="sq-splash" style={{ '--x': p.x, '--y': p.y } as CSSProperties}>
+            {Array.from({ length: 7 }, (_, i) => <i key={i} style={{ '--k': i } as CSSProperties} />)}
+          </span>;
+        })}
         {preview && selected !== null && (() => {
           // Dashed route from the chosen boat to where it would stop.
           const a = toScreen(squareOf(mySeat, selected, view.pieces[meId]![selected]!.pos));

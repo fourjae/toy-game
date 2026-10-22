@@ -370,6 +370,11 @@ function ResultDialog({ room, view, meId, client, onHide }: { room: LCRoomView; 
   const oppVoted = room.readyVotes.includes(oppId);
   // 라운드 사이에 나가면 매치 전체가 끝나므로 한 번 더 묻는다.
   const [confirmLeave, setConfirmLeave] = useState(false);
+  useEffect(() => {
+    if (!confirmLeave) return;
+    const timer = setTimeout(() => setConfirmLeave(false), 4000);
+    return () => clearTimeout(timer);
+  }, [confirmLeave]);
   async function leave() {
     if (!finished && !confirmLeave) { setConfirmLeave(true); return; }
     if (await send('rooms:leave')) window.history.replaceState({}, '', window.location.pathname);
