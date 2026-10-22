@@ -1,4 +1,7 @@
 import { expect, test } from '@playwright/test';
+import { closeExtraPagesAfterEach } from './cleanup';
+
+closeExtraPagesAfterEach(test);
 
 test('하나미코지: 방을 만들고 초대 링크로 들어와 선물 한 번을 주고받는다', async ({ browser }) => {
   const host = await browser.newPage();
