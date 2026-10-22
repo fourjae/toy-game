@@ -86,6 +86,7 @@ button.hm-token:not(:disabled):hover{transform:translateY(-1px)}
 .hm-col{display:grid;grid-template-rows:minmax(0,1fr) auto minmax(0,1fr);min-width:0;min-height:0;border-radius:12px;background:linear-gradient(180deg,color-mix(in srgb,var(--g) 18%,transparent),color-mix(in srgb,var(--g) 6%,transparent) 50%,color-mix(in srgb,var(--g) 18%,transparent))}
 .hm-stack{display:flex;flex-direction:column;gap:3px;min-height:0;padding:4px;overflow:hidden}
 .hm-stack.is-opp{justify-content:flex-end}
+.hm-stack-ghost{display:grid;place-items:center;width:100%;aspect-ratio:1.55;border:1.5px dashed color-mix(in srgb,var(--g) 50%,transparent);border-radius:5px;color:var(--g);opacity:.35}
 .hm-stack .hm-card{flex:none;animation:hm-land .35s ease-out}
 @keyframes hm-land{from{transform:scale(.6);opacity:0}to{transform:none;opacity:1}}
 .hm-geisha{position:relative;display:flex;flex-direction:column;align-items:center;padding:4px 2px 5px;border-radius:10px;background:linear-gradient(180deg,var(--gs),color-mix(in srgb,var(--g) 35%,#fff));color:#2a1a24;box-shadow:0 3px 10px #0006}
@@ -123,6 +124,17 @@ button.hm-token:not(:disabled):hover{transform:translateY(-1px)}
 .hm-offer-option{display:flex;align-items:center;gap:6px;padding:8px;border:2px solid transparent;border-radius:14px;background:#ffffff0d;cursor:pointer;transition:transform .15s,border-color .15s}
 .hm-offer-option:not(:disabled):hover{transform:translateY(-4px);border-color:#ffd78a}
 .hm-offer-option:disabled{opacity:1;cursor:default}
+/* 카드가 한 장씩 탁자에 놓이고, 고르는 쪽은 손을 올린 카드가 어디로 갈지 미리 본다 */
+.hm-offer-option{position:relative;animation:hm-deal .42s cubic-bezier(.2,.8,.3,1.25) backwards;animation-delay:calc(var(--i,0) * 110ms + 120ms)}
+@keyframes hm-deal{from{opacity:0;transform:translateY(-26px) rotate(-8deg) scale(.8)}}
+.hm-offer-option::after{position:absolute;left:50%;bottom:-11px;transform:translateX(-50%);padding:2px 8px;border-radius:99px;font-size:10px;font-weight:900;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s}
+.hm-offer.is-choosing .hm-offer-options:has(.hm-offer-option:is(:hover,:focus-visible)) .hm-offer-option::after{opacity:1}
+.hm-offer.is-choosing .hm-offer-option:is(:hover,:focus-visible)::after{content:'내 쪽으로';background:#ffd78a;color:#5a2a0c}
+.hm-offer.is-choosing .hm-offer-option:not(:hover):not(:focus-visible)::after{content:'상대 쪽으로';background:#ffffff26;color:var(--d-soft)}
+.hm-offer.is-choosing .hm-offer-options:has(.hm-offer-option:is(:hover,:focus-visible)) .hm-offer-option:not(:hover):not(:focus-visible){opacity:.6;transform:scale(.94)}
+.hm-offer.is-waiting .hm-offer-option{animation-name:hm-deal-wait}
+@keyframes hm-deal-wait{from{opacity:0;transform:translateY(26px) scale(.85)}}
+@media(prefers-reduced-motion:reduce){.hm-offer-option{animation:none}}
 .hm-offer-option.is-pair b{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#ffd78a;color:#5a2a0c;font-size:12px}
 .hm-show-result{position:fixed;left:50%;bottom:120px;transform:translateX(-50%);z-index:800}
 
@@ -168,3 +180,7 @@ button.hm-token:not(:disabled):hover{transform:translateY(-1px)}
   .hm-geisha .hm-portrait{max-width:44px}
   .hm-hand-cards{--cw:clamp(40px,calc((min(100vw,820px) - 40px) / 7.4),62px)}
 }
+/* 이번 라운드에 편을 바꾼 게이샤는 결과창에서 한 번 더 반짝인다. */
+.hm-result-geisha.is-moved{box-shadow:0 0 0 0 #e5573f80;animation:duel-reveal .45s cubic-bezier(.2,.8,.3,1.2) both,hm-moved 1.2s ease-out both;animation-delay:calc(var(--i) * 90ms + 120ms),calc(var(--i) * 90ms + 600ms)}
+@keyframes hm-moved{0%{box-shadow:0 0 0 0 #e5573f90}100%{box-shadow:0 0 0 12px #e5573f00}}
+@media(prefers-reduced-motion:reduce){.hm-result-geisha.is-moved{animation:none}}

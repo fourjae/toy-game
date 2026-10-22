@@ -408,6 +408,7 @@
 /* ---- a card on its way: lives on top of the table until it lands ---- */
 .lc-ghost{position:fixed!important;margin:0!important;z-index:40;pointer-events:none;will-change:transform;transform-origin:50% 50%;filter:drop-shadow(0 10px 12px #3b1c1466)}
 .lc-ghost.is-back{filter:drop-shadow(0 8px 10px #3b1c1466)}
+.lc-puff{position:fixed;z-index:39;pointer-events:none;border-radius:14%;box-shadow:0 0 0 2px #f6e3bd,0 0 14px 4px #e9c98a90}
 
 .lc-opp-count{display:none}
 @media(max-width:520px){
@@ -423,3 +424,14 @@
   .lc-deck{padding:2px 5px 2px 2px;font-size:12px}
   .lc-round{font-size:8px}
 }
+
+/* Result table: site rows slide in one after another (--i), the totals count up. */
+.lc-reveal{animation:lc-reveal .45s cubic-bezier(.2,.8,.3,1.2) both;animation-delay:calc(var(--i,0) * 80ms + 120ms)}
+@keyframes lc-reveal{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.lc-count{font-variant-numeric:tabular-nums}
+@media(prefers-reduced-motion:reduce){.lc-reveal{animation:none}}
+.lc-result-leave.confirming{color:#b4371f;font-weight:800;animation:lc-nudge .32s ease-out}
+.lc-ready-hint{margin:0 0 8px;text-align:center;color:#a5612a;font-size:12px;font-weight:700;animation:lc-hint-in .4s ease-out}
+@keyframes lc-nudge{0%,100%{transform:translateX(0)}30%{transform:translateX(-4px)}65%{transform:translateX(3px)}}
+@keyframes lc-hint-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.lc-result-leave.confirming,.lc-ready-hint{animation:none}}

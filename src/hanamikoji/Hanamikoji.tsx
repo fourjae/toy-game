@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, Check, Coffee, Flower2, Gift, HelpCircle, History, Lock, Medal, RotateCw, Swords, Trash2, Users, X } from 'lucide-react';
 import Dialog from '../components/Dialog';
+import CountUp from '../duel/CountUp';
 import DuelShell, { LeaveDialog, LogDialog, ReadyButtons, type DuelTheme, type TableProps } from '../duel/DuelShell';
 import {
   ACTION_INFO, ACTIONS, GEISHAS, WIN_CHARM, WIN_GEISHAS,
@@ -130,7 +131,7 @@ function Table({ room, meId, client }: Props) {
     const mine = view.placed[meId]![g]!;
     const info = GEISHAS[g]!;
     return <div key={g} className="hm-col" style={geishaStyle(g)}>
-      <div className="hm-stack is-opp" aria-label={`${info.name} 상대 쪽 ${theirs.length}장`}>{theirs.map(c => <ItemCard key={c.id} card={c} small />)}</div>
+      <div className="hm-stack is-opp" aria-label={`${info.name} 상대 쪽 ${theirs.length}장`}>{theirs.length ? theirs.map(c => <ItemCard key={c.id} card={c} small />) : <span className="hm-stack-ghost"><ItemGlyph geisha={g} size="60%" /></span>}</div>
       <div className={`hm-geisha favor-${holder === meId ? 'me' : holder === oppId ? 'opp' : 'none'}`} aria-label={`${info.name}, 매력 ${info.charm}, 호감 ${holder === meId ? '내 쪽' : holder === oppId ? '상대 쪽' : '아직 없음'}`}>
         <span className="hm-favor" aria-hidden="true" />
         <GeishaPortrait geisha={g} />
@@ -138,7 +139,7 @@ function Table({ room, meId, client }: Props) {
         <span className="hm-geisha-charm">{info.charm}</span>
         <span className="hm-geisha-count"><b>{theirs.length}</b><i>:</i><b>{mine.length}</b></span>
       </div>
-      <div className="hm-stack is-mine" aria-label={`${info.name} 내 쪽 ${mine.length}장`}>{mine.map(c => <ItemCard key={c.id} card={c} small />)}</div>
+      <div className="hm-stack is-mine" aria-label={`${info.name} 내 쪽 ${mine.length}장`}>{mine.length ? mine.map(c => <ItemCard key={c.id} card={c} small />) : <span className="hm-stack-ghost"><ItemGlyph geisha={g} size="60%" /></span>}</div>
     </div>;
   };
 
@@ -198,8 +199,8 @@ function Table({ room, meId, client }: Props) {
         <p>{view.mustChoose ? '고르지 않은 카드는 상대 쪽에 놓여요.' : pending.kind === 'gift' ? '고르고 남은 두 장이 내 쪽에 놓여요.' : '남은 묶음이 내 쪽에 놓여요.'}</p>
         <div className="hm-offer-options">
           {pending.kind === 'gift'
-            ? pending.cards.map((c, i) => <button key={c.id} type="button" className="hm-offer-option" disabled={!view.mustChoose || busy} onClick={() => void send('game:action', { type: 'choose', index: i })} aria-label={`${GEISHAS[c.geisha]!.name}의 ${GEISHAS[c.geisha]!.item} 가져가기`}><ItemCard card={c} /></button>)
-            : pending.groups.map((group, i) => <button key={i} type="button" className="hm-offer-option is-pair" disabled={!view.mustChoose || busy} onClick={() => void send('game:action', { type: 'choose', index: i })} aria-label={`${i === 0 ? 'A' : 'B'} 묶음 가져가기: ${group.map(c => GEISHAS[c.geisha]!.item).join(', ')}`}>
+            ? pending.cards.map((c, i) => <button key={c.id} type="button" className="hm-offer-option" style={{ '--i': i } as React.CSSProperties} disabled={!view.mustChoose || busy} onClick={() => void send('game:action', { type: 'choose', index: i })} aria-label={`${GEISHAS[c.geisha]!.name}의 ${GEISHAS[c.geisha]!.item} 가져가기`}><ItemCard card={c} /></button>)
+            : pending.groups.map((group, i) => <button key={i} type="button" className="hm-offer-option is-pair" style={{ '--i': i * 2 } as React.CSSProperties} disabled={!view.mustChoose || busy} onClick={() => void send('game:action', { type: 'choose', index: i })} aria-label={`${i === 0 ? 'A' : 'B'} 묶음 가져가기: ${group.map(c => GEISHAS[c.geisha]!.item).join(', ')}`}>
               <b>{i === 0 ? 'A' : 'B'}</b>{group.map(c => <ItemCard key={c.id} card={c} />)}
             </button>)}
         </div>
@@ -236,7 +237,7 @@ function ResultDialog({ room, meId, client, onHide }: { room: Props['room']; meI
           const theirs = me === 0 ? b : a;
           const after = result.after[i];
           const moved = result.before[i] !== after;
-          return <div key={i} className={`hm-result-geisha ${after === meId ? 'is-me' : after === oppId ? 'is-opp' : ''}`} style={geishaStyle(i)}>
+          return <div key={i} className={`hm-result-geisha duel-reveal ${after === meId ? 'is-me' : after === oppId ? 'is-opp' : ''} ${moved ? 'is-moved' : ''}`} style={{ ...geishaStyle(i), '--i': i } as React.CSSProperties}>
             <GeishaPortrait geisha={i} />
             <strong>{g.name}<small>{g.charm}</small></strong>
             <span>{theirs} : {mine}</span>
@@ -247,8 +248,8 @@ function ResultDialog({ room, meId, client, onHide }: { room: Props['room']; meI
       <table className="hm-result-table">
         <thead><tr><th /><th>{name(meId)}<small>나</small></th><th>{name(oppId)}</th></tr></thead>
         <tbody>
-          <tr><th><Flower2 size={13} /> 매력</th><td>{result.charm[me]}</td><td>{result.charm[1 - me]}</td></tr>
-          <tr><th><Users size={13} /> 게이샤</th><td>{result.geishas[me]}</td><td>{result.geishas[1 - me]}</td></tr>
+          <tr className="duel-reveal" style={{ '--i': GEISHAS.length } as React.CSSProperties}><th><Flower2 size={13} /> 매력</th><td><CountUp value={result.charm[me]!} delayMs={800} /></td><td><CountUp value={result.charm[1 - me]!} delayMs={800} /></td></tr>
+          <tr className="duel-reveal" style={{ '--i': GEISHAS.length + 1 } as React.CSSProperties}><th><Users size={13} /> 게이샤</th><td><CountUp value={result.geishas[me]!} delayMs={900} /></td><td><CountUp value={result.geishas[1 - me]!} delayMs={900} /></td></tr>
         </tbody>
       </table>
       {view.removed && <p className="hm-result-note"><Coffee size={13} /> 이번 라운드에 빼 둔 카드: {GEISHAS[view.removed.geisha]!.name}의 {GEISHAS[view.removed.geisha]!.item}</p>}

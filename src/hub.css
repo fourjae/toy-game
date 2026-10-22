@@ -35,6 +35,10 @@ button.hub-card:active{transform:translateY(0)}
 .hub-card--squadro .hub-card-art{background:linear-gradient(160deg,#cfeadf,#7fbcae)}
 .hub-card--squadro .hub-card-body strong{color:#1f7f78}
 .hub-card--squadro .hub-card-go{color:#135750}
+.hub-card--jaipur{border-color:#efc0b6}
+.hub-card--jaipur .hub-card-art{background:linear-gradient(180deg,#f7b267,#f4978e)}
+.hub-card--jaipur .hub-card-body strong{color:#c8434f}
+.hub-card--jaipur .hub-card-go{color:#8f2834}
 .hub-loading{display:grid;place-items:center;min-height:100vh;color:var(--muted)}
 .hub-card--empty{align-items:center;justify-content:center;gap:8px;border:1.5px dashed #d3d4c8;background:transparent;color:#b0b2a6;font-size:11px}
 .hub-link{margin-right:2px}
@@ -75,3 +79,16 @@ button.hub-card:active{transform:translateY(0)}
 @media(max-width:640px) and (orientation:portrait){
   .hub-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+/* 첫 화면: 게임 카드가 왼쪽 위부터 차례로 올라온다. fill-mode는 backwards만 써서 끝난 뒤 hover 이동을 막지 않는다. */
+.hub-card{animation:hub-card-in .5s cubic-bezier(.2,.8,.25,1) backwards}
+.hub-card:nth-child(2){animation-delay:.05s}.hub-card:nth-child(3){animation-delay:.1s}
+.hub-card:nth-child(4){animation-delay:.15s}.hub-card:nth-child(5){animation-delay:.2s}
+.hub-card:nth-child(6){animation-delay:.25s}.hub-card:nth-child(7){animation-delay:.3s}
+.hub-card:nth-child(8){animation-delay:.35s}.hub-card:nth-child(9){animation-delay:.4s}
+.hub-card-art svg{transition:transform .35s cubic-bezier(.3,1.6,.5,1)}
+button.hub-card:hover .hub-card-art svg,button.hub-card:focus-visible .hub-card-art svg{transform:scale(1.06) rotate(-1.5deg)}
+.hub-card-go{transition:transform .2s ease}
+button.hub-card:hover .hub-card-go{transform:translateX(3px)}
+@keyframes hub-card-in{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.hub-card{animation:none}.hub-card-art svg,.hub-card-go{transition:none}}

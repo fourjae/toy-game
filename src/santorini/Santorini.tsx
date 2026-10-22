@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { ArrowLeft, Camera, Castle, HelpCircle, History, Layers, Mountain, Sailboat, Sun, Trophy, Users, X } from 'lucide-react';
 import Dialog from '../components/Dialog';
+import CountUp from '../duel/CountUp';
 import DuelShell, { LeaveDialog, LogDialog, ReadyButtons, type DuelTheme, type TableProps } from '../duel/DuelShell';
 import { cellName, type STView } from '../../shared/santorini';
 import { IslandScene, SEAT_COLORS, type Highlight } from './scene';
@@ -151,7 +152,10 @@ function Table({ room, meId, client }: Props) {
   };
 
   const winnerName = view.winnerId ? names[view.winnerId] ?? '플레이어' : '';
-  const reason = view.winReason === 'climb' ? '3층에 먼저 올라섰어요' : view.winReason === 'stuck' ? '상대가 움직일 곳이 없어요' : '상대가 지을 곳이 없었어요';
+  // Both players read this line, so name the stuck player instead of saying "상대".
+  const loserName = view.winnerId ? (view.winnerId === meId ? '상대' : '내') : '';
+  const reason = view.winReason === 'climb' ? '3층에 먼저 올라섰어요'
+    : view.winReason === 'stuck' ? `${loserName} 일꾼이 움직일 곳이 없었어요` : `${loserName} 일꾼이 지을 곳이 없었어요`;
   return <main className="st-game">
     <div className="st-canvas" ref={hostRef} />
     {/* The same board as buttons, for screen readers and keyboards (and the e2e test). */}
@@ -192,9 +196,23 @@ function Table({ room, meId, client }: Props) {
     </section>
     {view.status === 'finished' && !resultHidden && <Dialog title={view.winnerId === meId ? '섬 꼭대기에 섰어요!' : '아쉬운 한 판'} onClose={() => setResultHidden(true)}>
       <div className="st-result">
-        <Trophy size={40} />
+        <Trophy size={40} className="duel-trophy" />
         <h3>{winnerName}님의 승리</h3>
-        <p>{reason}. {view.turn}턴 만에 끝났어요.</p>
+        <p>{reason}. <CountUp value={view.turn} delayMs={300} />턴 만에 끝났어요.</p>
+        <table className="duel-stats">
+          <thead><tr><th /><th>{names[meId] ?? '나'}<small>나</small></th><th>{names[oppId] ?? '상대'}</th></tr></thead>
+          <tbody>
+            {([
+              [<><Layers size={13} />지은 블록</>, view.stats[meId]?.blocks ?? 0, view.stats[oppId]?.blocks ?? 0, false],
+              [<><Castle size={13} />얹은 돔</>, view.stats[meId]?.domes ?? 0, view.stats[oppId]?.domes ?? 0, false],
+              [<><Mountain size={13} />가장 높이 오른 층</>, view.stats[meId]?.peak ?? 0, view.stats[oppId]?.peak ?? 0, true],
+            ] as const).map(([label, a, b, lead], i) => <tr key={i} className="duel-reveal" style={{ '--i': i + 2 } as CSSProperties}>
+              <th>{label}</th>
+              <td className={lead && a > b ? 'is-lead' : ''}><CountUp value={a} delayMs={400 + i * 120} /></td>
+              <td className={lead && b > a ? 'is-lead' : ''}><CountUp value={b} delayMs={400 + i * 120} /></td>
+            </tr>)}
+          </tbody>
+        </table>
         <ReadyButtons room={room as never} meId={meId} client={client as never} finished nextLabel="" />
       </div>
     </Dialog>}

@@ -74,12 +74,20 @@ export function LogDialog({ log, meId, names, onClose }: { log: Array<{ id: numb
 /** The two buttons under every result: vote for the next round / rematch, or go back to the lobby. */
 export function ReadyButtons({ room, meId, client, finished, nextLabel }: { room: DuelRoomView; meId: string; client: DuelClient; finished: boolean; nextLabel: string }) {
   const voted = room.readyVotes.includes(meId);
-  const oppOnline = room.players.find(p => p.id !== meId)?.connected;
+  const opp = room.players.find(p => p.id !== meId);
+  const oppVoted = Boolean(opp && room.readyVotes.includes(opp.id));
+  // 라운드 사이에 나가면 매치 전체가 끝나므로 한 번 더 묻는다. 판이 끝난 뒤에는 바로 나간다.
+  const [confirming, setConfirming] = useState(false);
+  async function leave() {
+    if (!finished && !confirming) { setConfirming(true); return; }
+    if (await client.send('rooms:leave')) window.history.replaceState({}, '', window.location.pathname);
+  }
   return <>
-    <button className="duel-button primary full" disabled={client.busy || voted || !oppOnline} onClick={() => client.send('game:ready')}>
-      {voted ? '친구의 답을 기다리는 중' : finished ? '한 판 더 하기' : nextLabel}<ArrowRight size={17} />
+    {oppVoted && !voted && <p className="duel-ready-hint" role="status"><span className="duel-dot" /> {opp!.name}님이 {finished ? '한 판 더 하고 싶어 해요' : '다음 라운드를 기다려요'}</p>}
+    <button className="duel-button primary full" disabled={client.busy || voted || !opp?.connected} onClick={() => client.send('game:ready')}>
+      {voted ? '친구의 답을 기다리는 중' : finished ? (oppVoted ? '좋아요, 한 판 더!' : '한 판 더 하기') : nextLabel}<ArrowRight size={17} />
     </button>
-    <button className="duel-text-button duel-result-leave" onClick={async () => { if (await client.send('rooms:leave')) window.history.replaceState({}, '', window.location.pathname); }}>대기실로 나가기 <ArrowRight size={14} /></button>
+    <button className={`duel-text-button duel-result-leave ${confirming ? 'confirming' : ''}`} onClick={leave}>{confirming ? '매치를 끝내고 나가기 · 한 번 더 누르세요' : '대기실로 나가기'} <ArrowRight size={14} /></button>
   </>;
 }
 
@@ -146,7 +154,10 @@ function Lobby<V, O>({ theme, client, onRules }: { theme: DuelTheme<V, O>; clien
             <span className="duel-room-count"><Users size={13} />{r.playerCount}/2</span>
             {r.canJoin && <ChevronRight size={16} />}
           </button>)}
-          {shown.length === 0 && <div className="duel-empty">{theme.emptyIcon}<h3>{filter === 'all' ? '아직 펼쳐진 판이 없어요' : '아직 기다리는 방이 없어요'}</h3><p>첫 번째 방의 주인이 되어 보세요.</p><button className="duel-text-button" onClick={() => setCreating(true)}>우리 방 만들기 <ArrowRight size={14} /></button></div>}
+          {shown.length === 0 && (rooms.length > 0
+            // 기다리는 방만 보기에서 비었지만, 다른 방은 게임 중일 때: '첫 번째 방'이라고 하면 틀린 말이 된다.
+            ? <div className="duel-empty">{theme.emptyIcon}<h3>모든 방이 게임 중이에요</h3><p>지금 {rooms.length}개 방에서 승부가 한창이에요. 새 방을 열고 친구를 불러 보세요.</p><span className="duel-empty-actions"><button className="duel-text-button" onClick={() => setCreating(true)}>새 방 만들기 <ArrowRight size={14} /></button><button className="duel-text-button" onClick={() => setFilter('all')}>모든 방 보기 <ArrowRight size={14} /></button></span></div>
+            : <div className="duel-empty">{theme.emptyIcon}<h3>{filter === 'all' ? '아직 펼쳐진 판이 없어요' : '아직 기다리는 방이 없어요'}</h3><p>첫 번째 방의 주인이 되어 보세요.</p><button className="duel-text-button" onClick={() => setCreating(true)}>우리 방 만들기 <ArrowRight size={14} /></button></div>)}
         </div>
         <div className="duel-rooms-foot"><span className="duel-dot" /> 방 목록은 실시간으로 바뀌어요</div>
       </section>

@@ -1,3 +1,4 @@
+import './lostCities.css';
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent } from 'react';
 import {
   ArrowLeft, ArrowRight, Check, ChevronRight, Clock3, Copy, HelpCircle, History, Layers,
@@ -7,6 +8,7 @@ import { useGame } from './useGame';
 import { useCardFlight } from './useCardFlight';
 import { CardBack, CardFace, SITE_ICON } from './lostCitiesCards';
 import Dialog from './components/Dialog';
+import CountUp from './duel/CountUp';
 import {
   HAND_SIZE, SITES, SITE_INFO, scoreExpedition,
   type DrawSource, type LCCard, type LCView, type Site,
@@ -365,6 +367,13 @@ function ResultDialog({ room, view, meId, client, onHide }: { room: LCRoomView; 
   const finished = view.status === 'finished';
   const voted = room.readyVotes.includes(meId);
   const oppOnline = room.players.find(p => p.id === oppId)?.connected;
+  const oppVoted = room.readyVotes.includes(oppId);
+  // 라운드 사이에 나가면 매치 전체가 끝나므로 한 번 더 묻는다.
+  const [confirmLeave, setConfirmLeave] = useState(false);
+  async function leave() {
+    if (!finished && !confirmLeave) { setConfirmLeave(true); return; }
+    if (await send('rooms:leave')) window.history.replaceState({}, '', window.location.pathname);
+  }
   const myIndex = view.playerIds.indexOf(meId);
   const lastRound = view.roundScores.at(-1) ?? [0, 0];
   const myRound = lastRound[myIndex]!;
@@ -378,26 +387,27 @@ function ResultDialog({ room, view, meId, client, onHide }: { room: LCRoomView; 
       <table className="lc-result-table">
         <thead><tr><th>유적지</th><th>{name(meId)}<small>나</small></th><th>{name(oppId)}</th></tr></thead>
         <tbody>
-          {SITES.map(site => {
+          {SITES.map((site, i) => {
             const Icon = SITE_ICON[site];
             const mineCards = view.expeditions[meId]![site];
             const oppCards = view.expeditions[oppId]![site];
-            return <tr key={site}>
+            return <tr key={site} className="lc-reveal" style={{ '--i': i } as CSSProperties}>
               <th className={`site-${site}`}><Icon size={13} />{SITE_INFO[site].name}</th>
               <td className={scoreTone(scoreExpedition(mineCards))}>{mineCards.length ? <>{signed(scoreExpedition(mineCards))}<small>{mineCards.length}장</small></> : '–'}</td>
               <td className={scoreTone(scoreExpedition(oppCards))}>{oppCards.length ? <>{signed(scoreExpedition(oppCards))}<small>{oppCards.length}장</small></> : '–'}</td>
             </tr>;
           })}
-          <tr className="total"><th>이번 라운드</th><td className={scoreTone(myRound)}>{signed(myRound)}</td><td className={scoreTone(oppRound)}>{signed(oppRound)}</td></tr>
-          {view.rounds > 1 && <tr className="match"><th>전체 합계</th><td>{view.matchTotals[myIndex]}</td><td>{view.matchTotals[1 - myIndex]}</td></tr>}
+          <tr className="total lc-reveal" style={{ '--i': SITES.length } as CSSProperties}><th>이번 라운드</th><td className={scoreTone(myRound)}><CountUp value={myRound} format={signed} delayMs={650} className="lc-count" /></td><td className={scoreTone(oppRound)}><CountUp value={oppRound} format={signed} delayMs={650} className="lc-count" /></td></tr>
+          {view.rounds > 1 && <tr className="match lc-reveal" style={{ '--i': SITES.length + 1 } as CSSProperties}><th>전체 합계</th><td><CountUp value={view.matchTotals[myIndex]!} delayMs={850} className="lc-count" /></td><td><CountUp value={view.matchTotals[1 - myIndex]!} delayMs={850} className="lc-count" /></td></tr>}
         </tbody>
       </table>
       {view.rounds > 1 && view.roundScores.length > 1 && <p className="lc-result-rounds">{view.roundScores.map((r, i) => `${i + 1}R ${signed(r[myIndex]!)} : ${signed(r[1 - myIndex]!)}`).join('  ·  ')}</p>}
       {!finished && <p className="lc-result-note">다음 라운드는 이번 점수가 낮은 쪽이 먼저 시작해요.</p>}
+      {oppVoted && !voted && <p className="lc-ready-hint" role="status">{name(oppId)}님이 {finished ? '한 판 더 하고 싶어 해요' : '다음 라운드를 기다려요'}</p>}
       <button className="lc-button primary full" disabled={busy || voted || !oppOnline} onClick={() => send('game:ready')}>
-        {voted ? '친구의 답을 기다리는 중' : finished ? '한 판 더 하기' : `${view.round + 1}라운드 시작`}<ArrowRight size={17} />
+        {voted ? '친구의 답을 기다리는 중' : finished ? (oppVoted ? '좋아요, 한 판 더!' : '한 판 더 하기') : `${view.round + 1}라운드 시작`}<ArrowRight size={17} />
       </button>
-      <button className="lc-text-button lc-result-leave" onClick={async () => { if (await send('rooms:leave')) window.history.replaceState({}, '', window.location.pathname); }}>대기실로 나가기 <ArrowRight size={14} /></button>
+      <button className={`lc-text-button lc-result-leave ${confirmLeave ? 'confirming' : ''}`} onClick={leave}>{confirmLeave ? '매치를 끝내고 나가기 · 한 번 더 누르세요' : '대기실로 나가기'} <ArrowRight size={14} /></button>
     </div>
   </Dialog>;
 }

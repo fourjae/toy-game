@@ -57,11 +57,31 @@ function fly(root: HTMLElement, node: HTMLElement, launch: Launch, to: DOMRect, 
     ghost.remove();
     if (!target?.isConnected) return;
     target.style.opacity = '';
-    // A little thump as it settles, like a card hitting the table.
-    target.animate([{ transform: 'scale(1.14)' }, { transform: 'scale(1)' }], { duration: 160, easing: 'ease-out' });
+    // A little thump as it settles, like a card hitting the table: it lands big, squashes a touch, then rests.
+    target.animate([
+      { transform: 'scale(1.14)', offset: 0 },
+      { transform: 'scale(.96) translateY(1px)', offset: 0.55 },
+      { transform: 'scale(1)', offset: 1 },
+    ], { duration: 260, easing: 'ease-out' });
+    // Cards put down on the table also kick up a faint ring of dust.
+    if (target.dataset.zone && target.dataset.zone !== 'hand') puff(root, target.getBoundingClientRect());
   };
   animation.addEventListener('finish', land, { once: true });
   animation.addEventListener('cancel', land, { once: true });
+}
+
+function puff(root: HTMLElement, at: DOMRect) {
+  const ring = document.createElement('span');
+  ring.className = 'lc-puff';
+  Object.assign(ring.style, { left: `${at.left}px`, top: `${at.top}px`, width: `${at.width}px`, height: `${at.height}px` });
+  root.appendChild(ring);
+  const animation = ring.animate([
+    { transform: 'scale(.9)', opacity: 0.75 },
+    { transform: 'scale(1.35)', opacity: 0 },
+  ], { duration: 420, easing: 'ease-out', fill: 'forwards' });
+  const remove = () => ring.remove();
+  animation.addEventListener('finish', remove, { once: true });
+  animation.addEventListener('cancel', remove, { once: true });
 }
 
 /** A card that travels at its own size, starting from where it sat. */

@@ -1,4 +1,7 @@
 import { expect, test, type Browser, type Page } from '@playwright/test';
+import { closeExtraPagesAfterEach } from './cleanup';
+
+closeExtraPagesAfterEach(test);
 
 // 초대 링크로 들어오면 대기실을 건너뛰고 곧장 방으로 들어간다.
 async function enter(page: Page, name: string, path = '/lost-cities') {
@@ -8,9 +11,12 @@ async function enter(page: Page, name: string, path = '/lost-cities') {
   await expect(path.includes('room=') ? page.getByText('오늘의 탐험가') : page.getByRole('heading', { name: `반가워요, ${name}님.` })).toBeVisible();
 }
 
-async function startGame(browser: Browser, rounds: '1판 승부' | '3라운드 합산' = '1판 승부') {
-  const host = await browser.newPage();
-  const guest = await browser.newPage();
+async function startGame(browser: Browser, rounds: '1판 승부' | '3라운드 합산' = '1판 승부', { fast = false } = {}) {
+  // fast: 움직임 줄이기를 켜서 깜빡임·전환 애니메이션을 끈다. 클릭할 때마다 요소가 '안정될 때까지'
+  // 기다리지 않아 한 판을 끝까지 두는 테스트가 절반 시간에 끝난다. 애니메이션을 보는 테스트에는 쓰지 않는다.
+  const context = fast ? { reducedMotion: 'reduce' as const } : {};
+  const host = await browser.newPage(context);
+  const guest = await browser.newPage(context);
   host.setDefaultTimeout(8_000);
   guest.setDefaultTimeout(8_000);
   await enter(host, '민수');
@@ -96,7 +102,9 @@ test('로스트 시티 규칙 창에 점수 계산과 예시가 있다', async (
 });
 
 test('로스트 시티: 방을 만들고 들어와 1판을 끝까지 둔다', async ({ browser }) => {
-  const { host, guest } = await startGame(browser);
+  // 한 판을 끝까지 두는 데 느린 환경에서는 30초 넘게 걸린다.
+  test.setTimeout(120_000);
+  const { host, guest } = await startGame(browser, '1판 승부', { fast: true });
   await expect(host.locator('.lc-deck b')).toHaveText('44');
   await playRound(host, guest);
   await expect(host.locator('.lc-result-table tbody tr')).toHaveCount(6);
@@ -175,7 +183,9 @@ test('로스트 시티: 기둥을 누르면 양쪽 탐험과 버린 더미를 �
 });
 
 test('로스트 시티: 3라운드는 라운드마다 둘 다 눌러야 넘어가고 합계가 이어진다', async ({ browser }) => {
-  const { host, guest } = await startGame(browser, '3라운드 합산');
+  // 한 라운드를 끝까지 둬야 해서 느린 환경에서는 30초 넘게 걸린다.
+  test.setTimeout(120_000);
+  const { host, guest } = await startGame(browser, '3라운드 합산', { fast: true });
   await expect(host.locator('.lc-round')).toContainText('1 / 3');
   await playRound(host, guest);
   await expect(host.getByRole('dialog')).toContainText('1라운드 끝');

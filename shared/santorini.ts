@@ -40,12 +40,16 @@ export interface STState {
   supply: Record<SupplyKey, number>;
   lastMove: { playerId: string; worker: number; from: number; to: number } | null;
   lastBuild: { cell: number; dome: boolean } | null;
+  /** Per player: blocks built, domes placed and the highest level a worker stood on. For the result screen. */
+  stats: Record<string, STStats>;
   turn: number;
   log: LogEntry[];
   revision: number;
   winnerId: string | null;
   winReason: 'climb' | 'stuck' | 'no-build' | null;
 }
+
+export interface STStats { blocks: number; domes: number; peak: number }
 
 export const rowOf = (cell: number) => Math.floor(cell / SIZE);
 export const colOf = (cell: number) => cell % SIZE;
@@ -75,6 +79,7 @@ export function createSantorini(playerIds: [string, string], rng: () => number):
     levels: Array(CELLS).fill(0), domes: Array(CELLS).fill(false),
     workers: { [playerIds[0]]: [null, null], [playerIds[1]]: [null, null] },
     movedWorker: null, supply: { ...SUPPLY }, lastMove: null, lastBuild: null,
+    stats: { [playerIds[0]]: { blocks: 0, domes: 0, peak: 0 }, [playerIds[1]]: { blocks: 0, domes: 0, peak: 0 } },
     turn: 1, log: [], revision: 0, winnerId: null, winReason: null,
   };
 }
@@ -158,6 +163,7 @@ export function applySantoriniAction(previous: STState, playerId: string, action
     state.lastMove = { playerId, worker: action.worker, from, to: action.to };
     state.lastBuild = null;
     state.movedWorker = action.worker;
+    state.stats[playerId]!.peak = Math.max(state.stats[playerId]!.peak, state.levels[action.to]!);
     pushLog(state, playerId, `${cellName(from)} → ${cellName(action.to)} (${state.levels[action.to]}층)`);
     if (state.levels[action.to] === 3 && state.levels[from]! < 3) {
       pushLog(state, playerId, '3층에 올라섰어요!');
@@ -178,11 +184,13 @@ export function applySantoriniAction(previous: STState, playerId: string, action
     if (level === 3) {
       state.domes[action.cell] = true;
       state.supply.dome -= 1;
+      state.stats[playerId]!.domes += 1;
       state.lastBuild = { cell: action.cell, dome: true };
       pushLog(state, playerId, `${cellName(action.cell)}에 돔을 얹었어요.`);
     } else {
       state.levels[action.cell] = level + 1;
       state.supply[(level + 1) as 1 | 2 | 3] -= 1;
+      state.stats[playerId]!.blocks += 1;
       state.lastBuild = { cell: action.cell, dome: false };
       pushLog(state, playerId, `${cellName(action.cell)}에 ${level + 1}층을 지었어요.`);
     }
@@ -211,6 +219,7 @@ export interface STView {
   myBuilds: number[];
   lastMove: STState['lastMove'];
   lastBuild: STState['lastBuild'];
+  stats: STState['stats'];
   turn: number;
   log: LogEntry[];
   revision: number;
@@ -227,7 +236,7 @@ export function getSantoriniView(state: STState, viewerId: string): STView {
     levels: state.levels, domes: state.domes, workers: state.workers, movedWorker: state.movedWorker, supply: state.supply,
     myMoves: mine && state.phase === 'move' ? legalMoves(state, viewerId) : [],
     myBuilds: mine && state.phase === 'build' && at !== null ? buildTargets(state, at) : [],
-    lastMove: state.lastMove, lastBuild: state.lastBuild, turn: state.turn,
+    lastMove: state.lastMove, lastBuild: state.lastBuild, stats: state.stats, turn: state.turn,
     log: state.log.slice(-40), revision: state.revision, winnerId: state.winnerId, winReason: state.winReason,
   };
 }
