@@ -76,3 +76,35 @@ export interface LCClientState {
   rooms: LCRoomSummary[];
   room: LCRoomView | null;
 }
+
+/** Games built on server/duel.ts (하나미코지 and later) share one room shape with game-specific options. */
+export interface DuelRoomSummary<Options = unknown> {
+  id: string;
+  code: string;
+  title: string;
+  hostName: string;
+  playerCount: number;
+  phase: 'waiting' | 'playing' | 'finished';
+  canJoin: boolean;
+  options: Options;
+}
+
+export interface DuelRoomView<View = unknown, Options = unknown> {
+  id: string;
+  code: string;
+  title: string;
+  hostId: string;
+  players: Array<{ id: string; name: string; connected: boolean; isHost: boolean }>;
+  phase: 'waiting' | 'playing' | 'finished';
+  options: Options;
+  game: View | null;
+  /** Players who asked for the next round or a rematch. */
+  readyVotes: string[];
+  notice: string | null;
+}
+
+export interface DuelClientState<View = unknown, Options = unknown> {
+  me: { id: string; name: string } | null;
+  rooms: DuelRoomSummary<Options>[];
+  room: DuelRoomView<View, Options> | null;
+}
