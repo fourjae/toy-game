@@ -167,11 +167,11 @@
   .duel-header{height:64px}
   .duel-header nav{gap:14px}
   .duel-header nav .duel-text-button span{display:none}
-  .duel-landing{grid-template-columns:1fr;gap:28px;padding:18px 0 40px}
+  .duel-landing{grid-template-columns:minmax(0,1fr);gap:28px;padding:18px 0 40px}
   .duel-landing-copy h1{font-size:42px;letter-spacing:-2.4px;margin:14px 0 14px}
   .duel-intro{font-size:13px;margin-bottom:20px}
   .duel-meta{margin-top:20px;flex-wrap:wrap;gap:14px}
-  .duel-grid{grid-template-columns:1fr}
+  .duel-grid{grid-template-columns:minmax(0,1fr)}
   .duel-lobby,.duel-waiting{padding:12px 0 40px}
   .duel-lobby-heading{flex-direction:column;align-items:stretch}
   .duel-lobby-heading h1,.duel-waiting-heading h1{font-size:32px;letter-spacing:-1.6px}
@@ -210,3 +210,6 @@
 @keyframes duel-nudge{0%,100%{transform:translateX(0)}30%{transform:translateX(-4px)}65%{transform:translateX(3px)}}
 @keyframes duel-hint-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.duel-result-leave.confirming,.duel-ready-hint{animation:none}}
+
+/* 아주 좁은 폰(320~400px): 머리줄 이름을 숨겨 게임 이름이 한 줄로 남게 한다(이름은 대기실 인사말에 있음). */
+@media(max-width:400px){.duel-brand>span{white-space:nowrap}.duel-header-player{display:none}}

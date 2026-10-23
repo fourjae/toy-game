@@ -44,3 +44,6 @@
 .hand-cards.more-right{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 44px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 44px),transparent)}
 .hand-cards.more-left{-webkit-mask-image:linear-gradient(to right,transparent,#000 44px);mask-image:linear-gradient(to right,transparent,#000 44px)}
 .hand-cards.more-left.more-right{-webkit-mask-image:linear-gradient(to right,transparent,#000 44px,#000 calc(100% - 44px),transparent);mask-image:linear-gradient(to right,transparent,#000 44px,#000 calc(100% - 44px),transparent)}
+
+/* 아주 좁은 폰(320~400px): 머리줄에 이름까지 넣으면 브랜드가 세로로 쪼개진다. 이름은 대기실 인사말에 이미 있으니 숨긴다. */
+@media(max-width:400px){.brand>span{white-space:nowrap}.header-player{display:none}}

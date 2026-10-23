@@ -319,9 +319,9 @@
   .lc-header nav{gap:12px}
   .lc-header nav .lc-text-button span{display:none}
   .lc-landing{padding:20px 0 40px}
-  .lc-landing-main{grid-template-columns:1fr;gap:26px}
+  .lc-landing-main{grid-template-columns:minmax(0,1fr);gap:26px}
   .lc-landing-copy h1{font-size:46px;letter-spacing:-3px}
-  .lc-lobby-grid,.lc-waiting-grid{grid-template-columns:1fr}
+  .lc-lobby-grid,.lc-waiting-grid{grid-template-columns:minmax(0,1fr)}
   .lc-lobby-heading h1,.lc-waiting-heading h1{font-size:34px}
   .lc-rules-steps{grid-template-columns:1fr}
   .lc-score-rules{grid-template-columns:1fr}
@@ -435,3 +435,7 @@
 @keyframes lc-nudge{0%,100%{transform:translateX(0)}30%{transform:translateX(-4px)}65%{transform:translateX(3px)}}
 @keyframes lc-hint-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.lc-result-leave.confirming,.lc-ready-hint{animation:none}}
+
+/* 아주 좁은 폰(320~400px): 머리줄 이름을 숨기고, 대기실 '방 만들기'는 인사말 아래 한 줄로 내린다. */
+@media(max-width:400px){.lc-brand>span{white-space:nowrap}.lc-header-player{display:none}}
+@media(max-width:520px){.lc-lobby-heading{flex-direction:column;align-items:stretch}}
