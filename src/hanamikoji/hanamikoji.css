@@ -46,7 +46,7 @@
 
 /* ---- the table ---- */
 .hm-game{
-  display:grid;grid-template-rows:auto auto minmax(0,1fr) auto auto;height:100vh;height:100dvh;width:min(100%,820px);margin-inline:auto;
+  display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr) auto auto;height:100vh;height:100dvh;width:min(100%,820px);margin-inline:auto;
   padding:0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   background:linear-gradient(180deg,#1d1626cc,#2a1d2ecc 50%,#1d1626ee);box-shadow:0 0 0 100vmax #1a1420aa;clip-path:inset(0 -100vmax);
 }
@@ -107,7 +107,7 @@ button.hm-token:not(:disabled):hover{transform:translateY(-1px)}
 .hm-status.is-mine strong{color:#ffd78a}
 .hm-status-actions{display:flex;align-items:center;gap:6px;margin-left:auto}
 .hm-status-actions .duel-icon-btn{width:30px;height:30px}
-.hm-hand-cards{--cw:clamp(42px,calc((min(100vw,820px) - 40px) / 7.4),80px);display:flex;justify-content:center;gap:5px;padding:12px 0 6px;min-height:calc(var(--cw) / .7 + 18px)}
+.hm-hand-cards{--cw:clamp(34px,calc((min(100vw,820px) - 40px) / 7.4),80px);display:flex;justify-content:center;gap:5px;padding:12px 0 6px;min-height:calc(var(--cw) / .7 + 18px)}
 .hm-hand-card{padding:0;border:0;background:none;cursor:pointer}
 .hm-hand-card:disabled{opacity:1;cursor:default}
 .hm-hand-empty{align-self:center;color:var(--d-soft);font-size:12px}
@@ -178,7 +178,7 @@ button.hm-token:not(:disabled):hover{transform:translateY(-1px)}
 }
 @media(max-height:700px){
   .hm-geisha .hm-portrait{max-width:44px}
-  .hm-hand-cards{--cw:clamp(40px,calc((min(100vw,820px) - 40px) / 7.4),62px)}
+  .hm-hand-cards{--cw:clamp(34px,calc((min(100vw,820px) - 40px) / 7.4),62px)}
 }
 /* 이번 라운드에 편을 바꾼 게이샤는 결과창에서 한 번 더 반짝인다. */
 .hm-result-geisha.is-moved{box-shadow:0 0 0 0 #e5573f80;animation:duel-reveal .45s cubic-bezier(.2,.8,.3,1.2) both,hm-moved 1.2s ease-out both;animation-delay:calc(var(--i) * 90ms + 120ms),calc(var(--i) * 90ms + 600ms)}
