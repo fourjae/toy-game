@@ -182,8 +182,14 @@ function Table({ room, meId, client }: Props) {
         return <button key={cell} type="button" data-cell={cell} className={glow ? `is-${glow}` : ''} disabled={busy} onClick={() => pickRef.current(cell)}
           aria-label={`${cellName(cell)} ${view.domes[cell] ? '돔' : `${level}층`}${who >= 0 ? `, ${view.playerIds[who] === meId ? '내' : '상대'} 일꾼` : ''}${glow ? ', 선택 가능' : ''}`}>
           {gridMode ? <span className="st-tile" aria-hidden="true">
-            {[1, 2, 3].slice(0, level).map(l => <i key={l} className={`st-tier t${l}`} />)}
-            {view.domes[cell] && <i className="st-cap" />}
+            {/* 방금 지은 칸은 맨 윗블록(또는 돔)이 위에서 떨어져 얹힌다. key에 revision을 넣어 지을 때마다 다시 움직인다. */}
+            {[1, 2, 3].slice(0, level).map(l => {
+              const fresh = view.lastBuild?.cell === cell && !view.lastBuild.dome && l === level;
+              return <i key={fresh ? `${l}-${view.revision}` : l} className={`st-tier t${l}${fresh ? ' is-dropping' : ''}`} />;
+            })}
+            {view.domes[cell] && (view.lastBuild?.cell === cell && view.lastBuild.dome
+              ? <i className="st-cap is-dropping" key={`cap-${view.revision}`} />
+              : <i className="st-cap" />)}
             {level > 0 && !view.domes[cell] && <b className="st-lv">{level}</b>}
             {view.lastBuild?.cell === cell && <i className="st-fresh" key={view.revision} />}
           </span> : <>{level}{view.domes[cell] ? '◓' : ''}{who >= 0 ? (who === 0 ? '●' : '○') : ''}</>}

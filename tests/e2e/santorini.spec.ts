@@ -95,6 +95,12 @@ test('산토리니: 탑을 쌓아 3층에 오르면 두 사람 모두 결과창�
   const idle: [number, number, number, string][] = [[16, 15, 20, '1층'], [15, 16, 21, '1층'], [16, 15, 20, '2층'], [15, 16, 21, '2층'], [16, 15, 20, '3층']];
   for (let i = 0; i < climb.length; i++) {
     await turn(first, ...climb[i]);
+    // 방금 지은 칸은 맨 윗블록만 '떨어지는' 블록으로 표시된다(두 사람 화면 모두).
+    if (i === 2) for (const page of [first, second]) {
+      await expect(cell(page, 0).locator('.st-tier')).toHaveCount(2);
+      await expect(cell(page, 0).locator('.st-tier.is-dropping')).toHaveClass(/t2/);
+      await expect(page.locator('.st-tier.is-dropping')).toHaveCount(1);
+    }
     await turn(second, ...idle[i]);
   }
   // 2층에서 3층으로 올라서면 바로 이긴다.
