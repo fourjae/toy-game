@@ -65,3 +65,33 @@ for (const [path, start, selectors] of ROOMS) {
     await guest.context().close();
   });
 }
+
+// 로스트 시티 방 안: 예전엔 머리줄 이름이 '하…' 한 글자로 잘리고 '아틀란티스' 이름표가 두 줄로 꺾였다.
+test('좁은 폰 /lost-cities: 머리줄 이름이 읽히고 유적지 이름표가 한 줄이다', async ({ browser }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop', '폭을 직접 정하므로 한 번만 돌린다');
+  const opts = { viewport: { width: 320, height: 640 }, isMobile: true, hasTouch: true, reducedMotion: 'reduce' as const };
+  const host = await (await browser.newContext(opts)).newPage();
+  const guest = await (await browser.newContext(opts)).newPage();
+  const enter = async (page: typeof host, url: string, name: string) => {
+    await page.goto(url);
+    await page.getByLabel('어떤 이름으로 불러드릴까요?').fill(name);
+    await page.locator('form button[type="submit"]').first().click();
+  };
+  await enter(host, '/lost-cities', '가나다라마바');
+  await host.getByRole('button', { name: '방 만들기' }).first().click();
+  await host.getByRole('dialog').getByRole('button', { name: '방 만들기' }).click();
+  const code = (await host.locator('.lc-invite strong').innerText()).trim();
+  await enter(guest, `/lost-cities?room=${code}`, '하나둘셋넷');
+  await host.getByRole('button', { name: '탐험 시작' }).click();
+  for (const page of [host, guest]) {
+    await expect(page.locator('.lc-hand-card')).toHaveCount(8);
+    // 이름 칸이 세 글자 이상 들어갈 폭(약 30px)은 있어야 한다.
+    const widths = await page.locator('.lc-player strong').evaluateAll(els => els.map(el => el.getBoundingClientRect().width));
+    for (const w of widths) expect(w).toBeGreaterThan(30);
+    const heights = await page.locator('.lc-pile-label').evaluateAll(els => els.map(el => el.getBoundingClientRect().height));
+    for (const h of heights) expect(h).toBeLessThanOrEqual(18);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+  }
+  await host.context().close();
+  await guest.context().close();
+});

@@ -439,3 +439,17 @@
 /* 아주 좁은 폰(320~400px): 머리줄 이름을 숨기고, 대기실 '방 만들기'는 인사말 아래 한 줄로 내린다. */
 @media(max-width:400px){.lc-brand>span{white-space:nowrap}.lc-header-player{display:none}}
 @media(max-width:520px){.lc-lobby-heading{flex-direction:column;align-items:stretch}}
+
+/* 320px 폰 방 안: 머리줄 이름이 '하…' 한 글자로 잘리지 않게 이름을 윗줄, 점수·상대 손패를 아랫줄로 내리고,
+   다섯 유적지 이름표는 아이콘을 빼서 '아틀란티스'가 두 줄로 꺾이지 않게 한다. */
+@media(max-width:400px){
+  .lc-player{flex-wrap:wrap;column-gap:5px;row-gap:0;padding:2px 7px;border-radius:12px;line-height:1.2}
+  .lc-player strong{flex:1 1 100%}
+  .lc-topbar-side--me .lc-player strong{text-align:right}
+  .lc-topbar-side--me .lc-player{justify-content:flex-end}
+  .lc-player-score{font-size:15px}
+  .lc-opp-fan .lc-back--mini{display:none}
+  .lc-pile-label svg{display:none}
+  .lc-pile-label>span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+  .lc-pile-label{max-width:100%;padding-inline:2px;letter-spacing:-.3px}
+}
