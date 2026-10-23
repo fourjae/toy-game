@@ -207,3 +207,52 @@ test('가로 폰 /toy-battle: 세로로 돌리라는 안내가 뜨고, 이대로
   await host.context().close();
   await guest.context().close();
 });
+
+// 하나미코지를 가로 폰에서 '이대로 할게요'로 하면: 예전엔 게이샤 줄이 판을 다 차지해 양쪽에 놓인 카드 자리가 0px,
+// 차례 안내가 게이샤 뒤로 숨었다 → 왼쪽 판, 오른쪽 손패 기둥. 선물 고르기 창도 화면 높이 안에 들어와야 한다.
+test('가로 폰 /hanamikoji: 이대로 할게요 뒤에도 놓인 카드 자리와 손패, 선물 고르기가 화면 안에 있다', async ({ browser }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop', '크기를 직접 정하므로 한 번만 돌린다');
+  const host = await (await browser.newContext(LANDSCAPE)).newPage();
+  const guest = await (await browser.newContext(LANDSCAPE)).newPage();
+  const enter = async (page: typeof host, url: string, name: string) => {
+    await page.goto(url);
+    await page.getByLabel('어떤 이름으로 불러드릴까요?').fill(name);
+    await page.locator('form button[type="submit"]').first().click();
+  };
+  await enter(host, '/hanamikoji', '가나다라마바');
+  await host.getByRole('button', { name: '방 만들기' }).first().click();
+  await host.getByRole('dialog').getByRole('button', { name: '방 만들기' }).click();
+  const code = (await host.locator('.duel-invite strong').innerText()).trim();
+  await enter(guest, `/hanamikoji?room=${code}`, '하나둘셋넷');
+  await host.getByRole('button', { name: '꽃길 걷기 시작' }).click();
+  const inside = async (page: typeof host, selector: string) => {
+    for (const box of await page.locator(selector).evaluateAll(els => els.map(e => e.getBoundingClientRect().toJSON()))) {
+      expect(box.top, `${selector} 위`).toBeGreaterThanOrEqual(0);
+      expect(box.bottom, `${selector} 아래`).toBeLessThanOrEqual(320);
+      expect(box.right, `${selector} 오른쪽`).toBeLessThanOrEqual(640);
+    }
+  };
+  for (const page of [host, guest]) {
+    const keep = page.getByRole('button', { name: '이대로 할게요' });
+    await expect(keep).toBeVisible();
+    await keep.click();
+    await expect(page.locator('.hm-geisha')).toHaveCount(7);
+    const stack = (await page.locator('.hm-stack.is-mine').first().boundingBox())!;
+    expect(stack.height, '내 쪽 카드 자리 높이').toBeGreaterThanOrEqual(40);
+    await inside(page, '.hm-status');
+  }
+  const mover = (await host.locator('.hm-status.is-mine').count()) ? host : guest;
+  const other = mover === host ? guest : host;
+  await expect(mover.locator('.hm-hand-card')).toHaveCount(7);
+  await inside(mover, '.hm-hand-card');
+  await mover.getByRole('button', { name: /^선물/ }).click();
+  for (let i = 0; i < 3; i++) await mover.locator('.hm-hand-card').nth(i).click();
+  await inside(mover, '.hm-status-actions .duel-button');
+  await mover.locator('.hm-status-actions .duel-button').click();
+  await expect(other.locator('.hm-offer.is-choosing')).toBeVisible();
+  await inside(other, '.hm-offer-option');
+  await other.locator('.hm-offer-option').first().click();
+  await expect(other.locator('.hm-stack.is-mine .hm-card')).toHaveCount(1);
+  await host.context().close();
+  await guest.context().close();
+});
