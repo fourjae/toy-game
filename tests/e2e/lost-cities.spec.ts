@@ -269,4 +269,10 @@ test('로스트 시티: 폰을 눕히면 세로로 돌려 달라고 안내하고
   await host.getByRole('button', { name: '이대로 할게요' }).click();
   await expect(host.locator('.lc-rotate')).toBeHidden();
   await expect(host.locator('.lc-hand-card')).toHaveCount(8);
+  // 한 번 닫으면 새로고침(재접속)해도 같은 탭에서는 다시 묻지 않는다. 예전엔 매번 다시 떴다.
+  await host.reload();
+  await expect(host.locator('.lc-hand-card')).toHaveCount(8);
+  await expect(host.locator('.lc-rotate')).toBeHidden();
+  // 닫지 않은 상대는 그대로 안내가 보인다.
+  await expect(guest.locator('.lc-rotate')).toBeVisible();
 });

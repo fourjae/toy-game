@@ -14,6 +14,7 @@ import {
   type DrawSource, type LCCard, type LCView, type Site,
 } from '../shared/lostCities';
 import type { LCClientState, LCRoomView } from '../server/types';
+import { useRotateDismissed } from './useRotateDismissed';
 
 const EMPTY_STATE: LCClientState = { me: null, rooms: [], room: null };
 const signed = (n: number) => (n > 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : '0');
@@ -236,7 +237,7 @@ function GameTable({ room, meId, client }: { room: LCRoomView; meId: string; cli
   const [showRules, setShowRules] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [inspect, setInspect] = useState<Site | null>(null);
-  const [rotateDismissed, setRotateDismissed] = useState(false);
+  const [rotateDismissed, dismissRotate] = useRotateDismissed('lost-cities');
   const [resultHidden, setResultHidden] = useState(false);
   const mine = view.currentPlayerId === meId && view.status === 'playing';
   const oppId = view.opponentId;
@@ -334,7 +335,7 @@ function GameTable({ room, meId, client }: { room: LCRoomView; meId: string; cli
         </button>)}
       </div>
     </section>
-    <div className={`lc-rotate ${rotateDismissed ? 'is-dismissed' : ''}`} role="status"><RotateCw size={34} /><strong>폰을 세로로 돌려 주세요</strong><span>토이 배틀처럼 세로 화면에서 카드가 가장 크게 보여요.</span><button className="lc-button secondary compact" onClick={() => setRotateDismissed(true)}>이대로 할게요</button></div>
+    <div className={`lc-rotate ${rotateDismissed ? 'is-dismissed' : ''}`} role="status"><RotateCw size={34} /><strong>폰을 세로로 돌려 주세요</strong><span>세로 화면에서 카드가 가장 크게 보여요. 가로로도 할 수 있어요.</span><button className="lc-button secondary compact" onClick={dismissRotate}>이대로 할게요</button></div>
     {finishedDialog && <ResultDialog room={room} view={view} meId={meId} client={client} onHide={() => setResultHidden(true)} />}
     {view.status !== 'playing' && resultHidden && <button className="lc-button primary lc-show-result" onClick={() => setResultHidden(false)}>결과 다시 보기</button>}
     {showLog && <Dialog title="지난 차례" onClose={() => setShowLog(false)}>
