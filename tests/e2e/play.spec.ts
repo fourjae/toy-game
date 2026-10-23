@@ -258,3 +258,12 @@ test('대기실: 모든 방이 게임 중이면 빈 목록 대신 그렇게 알�
   }
   await expect(visitor.locator('.room-row', { hasText: title })).toContainText('게임 중');
 });
+
+test('탭 제목: 첫 화면은 놀이터 이름, 토이 배틀에 들어가면 바뀌고 나오면 돌아온다', async ({ page }) => {
+  await page.goto('/');
+  await expect(page).toHaveTitle('작은 놀이터 — 둘이서 하는 보드게임');
+  await page.goto('/toy-battle');
+  await expect(page).toHaveTitle('작은 전투 — 둘이서 한 판');
+  await page.getByRole('button', { name: '게임 선택' }).click();
+  await expect(page).toHaveTitle('작은 놀이터 — 둘이서 하는 보드게임');
+});
