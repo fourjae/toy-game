@@ -47,3 +47,6 @@
 
 /* 아주 좁은 폰(320~400px): 머리줄에 이름까지 넣으면 브랜드가 세로로 쪼개진다. 이름은 대기실 인사말에 이미 있으니 숨긴다. */
 @media(max-width:400px){.brand>span{white-space:nowrap}.header-player{display:none}}
+
+/* 창 안 한국어 문장이 좁은 폰에서 '…못했어 / 요'처럼 글자 단위로 꺾이지 않게 낱말 단위로 줄을 바꾸고, 제목은 줄 길이를 고르게. */
+.dialog{word-break:keep-all;overflow-wrap:break-word}.dialog h2,.dialog h3{text-wrap:balance}

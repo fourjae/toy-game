@@ -116,10 +116,10 @@
 .jp-result-table .jp-seals{justify-content:center}
 @media(max-width:520px){
   .jp-player{gap:6px;padding:5px 8px;font-size:11px}
-  .jp-tokens{gap:3px;padding:5px}
+  .jp-tokens{gap:3px;padding:5px 8px 5px 5px}
   .jp-token-pile{flex-direction:column;gap:0;padding:4px 1px}
   .jp-token-pile b{font-size:13px}
-  .jp-bonus-piles{flex-direction:column;gap:1px}
+  .jp-bonus-piles{flex-direction:column;gap:1px;padding-left:2px}
   .jp-bonus-piles span{flex-direction:row;gap:2px}
   .jp-bonus-piles i{width:14px;height:14px;font-size:8px}
   .jp-action{flex-wrap:wrap}
