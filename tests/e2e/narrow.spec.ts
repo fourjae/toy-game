@@ -137,3 +137,71 @@ test('좁은 폰 /toy-battle: 확대 단추가 판의 칸을 가리지 않는다
   await host.context().close();
   await guest.context().close();
 });
+
+// 가로로 눕힌 폰(640×320): 예전엔 세로용 배치 그대로라 스쿼드로 호수는 100px 남짓, 산토리니 평면 판은 60px까지 줄었다.
+// 토이 배틀은 손패 독이 화면을 덮어 판이 안 보였다 → 로스트 시티·하나미코지처럼 세로로 돌리라는 안내.
+const LANDSCAPE = { viewport: { width: 640, height: 320 }, isMobile: true, hasTouch: true, reducedMotion: 'reduce' as const };
+const BOARDS: [string, string, string, number][] = [
+  ['/squadro', '출발 신호', '.sq-board', 260],
+  ['/santorini', '섬에서 시작', '.st-grid-fallback', 180],
+];
+
+for (const [path, start, board, min] of BOARDS) {
+  test(`가로 폰 ${path}: 판이 화면 높이를 넉넉히 쓴다`, async ({ browser }, testInfo) => {
+    test.skip(testInfo.project.name !== 'desktop', '크기를 직접 정하므로 한 번만 돌린다');
+    const host = await (await browser.newContext(LANDSCAPE)).newPage();
+    const guest = await (await browser.newContext(LANDSCAPE)).newPage();
+    for (const page of [host, guest]) await page.addInitScript(() => window.localStorage.setItem('santorini.flat', '1'));
+    const enter = async (page: typeof host, url: string, name: string) => {
+      await page.goto(url);
+      await page.getByLabel('어떤 이름으로 불러드릴까요?').fill(name);
+      await page.locator('form button[type="submit"]').first().click();
+    };
+    await enter(host, path, '가나다라마바');
+    await host.getByRole('button', { name: '방 만들기' }).first().click();
+    await host.getByRole('dialog').getByRole('button', { name: '방 만들기' }).click();
+    const code = (await host.locator('.duel-invite strong').innerText()).trim();
+    await enter(guest, `${path}?room=${code}`, '하나둘셋넷');
+    await host.getByRole('button', { name: start }).click();
+    for (const page of [host, guest]) {
+      await expect(page.locator(board)).toBeVisible();
+      const box = (await page.locator(board).boundingBox())!;
+      expect(box.height, `${board} 높이`).toBeGreaterThanOrEqual(min);
+      expect(box.y).toBeGreaterThanOrEqual(0);
+      expect(box.y + box.height).toBeLessThanOrEqual(320);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(640);
+    }
+    await host.context().close();
+    await guest.context().close();
+  });
+}
+
+test('가로 폰 /toy-battle: 세로로 돌리라는 안내가 뜨고, 이대로 할게요로 닫힌다', async ({ browser }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop', '크기를 직접 정하므로 한 번만 돌린다');
+  const host = await (await browser.newContext(LANDSCAPE)).newPage();
+  const guest = await (await browser.newContext(LANDSCAPE)).newPage();
+  const enter = async (page: typeof host, name: string) => {
+    await page.goto('/toy-battle');
+    await page.getByLabel('어떤 이름으로 불러드릴까요?').fill(name);
+    await page.getByRole('button', { name: '놀러 가기' }).click();
+  };
+  await enter(host, '가나다라마바');
+  await enter(guest, '하나둘셋넷');
+  await host.getByRole('button', { name: '방 만들기' }).first().click();
+  await host.getByRole('dialog').getByRole('button', { name: '방 만들기' }).click();
+  const code = (await host.locator('.invite-box strong').innerText()).trim();
+  await guest.getByRole('button', { name: '코드로 입장' }).click();
+  await guest.getByLabel('초대 코드').fill(code);
+  await guest.getByRole('button', { name: '방 들어가기' }).click();
+  await host.getByRole('button', { name: '게임 시작' }).click();
+  const hint = host.locator('.game-rotate');
+  await expect(hint.getByText('폰을 세로로 돌려 주세요')).toBeVisible();
+  await hint.getByRole('button', { name: '이대로 할게요' }).click();
+  await expect(hint).toBeHidden();
+  await expect(host.locator('.board-shell').first()).toBeVisible();
+  // 세로로 세우면(같은 창 크기를 돌림) 안내가 나오지 않는다.
+  await guest.setViewportSize({ width: 320, height: 640 });
+  await expect(guest.locator('.game-rotate')).toBeHidden();
+  await host.context().close();
+  await guest.context().close();
+});

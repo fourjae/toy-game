@@ -99,3 +99,7 @@
   .st-player{position:relative;gap:4px;padding:5px 7px}
   .st-player em{position:absolute;top:-6px;right:4px;padding:0 5px;font-size:8px;line-height:14px}
 }
+/* 가로 폰(높이 500px 이하): 세로용 계산(화면 높이 - 260px)이면 판이 60px까지 줄어든다. 위아래 띠만 빼고 높이에 맞춘다. */
+@media(orientation:landscape) and (max-height:500px){
+  .st-grid-fallback{width:min(calc(100dvh - 124px),460px);transform:translate(-50%,-51%);gap:4px;padding:8px;border-radius:16px}
+}

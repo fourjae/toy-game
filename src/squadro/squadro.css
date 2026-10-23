@@ -86,3 +86,11 @@
 .sq-result-boats i{width:12px;height:18px;border-radius:50% 50% 40% 40%/70% 70% 30% 30%;border:1.5px dashed var(--hull2);opacity:.5}
 .sq-result-boats i.is-home{opacity:1;background:var(--hull);border-style:solid;animation:duel-reveal .4s cubic-bezier(.2,.8,.3,1.4) both;animation-delay:calc(var(--i) * 140ms + 450ms)}
 @media(prefers-reduced-motion:reduce){.sq-result-boats i.is-home{animation:none}}
+/* 가로 폰(높이 500px 이하): 세로로 쌓으면 호수가 머리줄·이름표·안내 사이에 끼어 100px 남짓으로 줄었다.
+   호수는 왼쪽에 화면 높이만큼, 머리줄·이름표·안내는 오른쪽 기둥으로 옮긴다. */
+@media(orientation:landscape) and (max-height:500px){
+  .sq-game{display:grid;grid-template-columns:min(calc(100dvh - 20px),55vw) minmax(0,1fr);grid-template-rows:auto auto auto auto 1fr;align-content:start;column-gap:14px;row-gap:8px;width:min(100%,900px);padding:10px calc(10px + env(safe-area-inset-right)) 10px calc(10px + env(safe-area-inset-left))}
+  .sq-board-wrap{grid-column:1;grid-row:1/-1;height:calc(100dvh - 20px)}
+  .sq-topbar{padding-top:0}
+  .sq-player{padding:6px 10px}
+}
