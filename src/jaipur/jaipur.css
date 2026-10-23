@@ -144,7 +144,7 @@
 @media(orientation:landscape) and (max-height:500px){
   .jp-game{display:grid;grid-template-columns:minmax(0,1fr) minmax(200px,34%);
     grid-template-areas:"top tokens" "market opp" "market ostall" "market action" "hand me" "hand mstall";
-    grid-template-rows:repeat(6,auto);align-content:start;column-gap:8px;row-gap:5px;width:min(100%,900px);overflow-y:auto;
+    grid-template-rows:repeat(6,max-content);align-content:start;column-gap:8px;row-gap:5px;width:min(100%,900px);overflow-y:auto;
     padding:6px calc(8px + env(safe-area-inset-right)) 6px calc(8px + env(safe-area-inset-left))}
   .jp-topbar{grid-area:top}
   .jp-tokens{grid-area:tokens}
@@ -174,6 +174,12 @@
   .jp-bonus-piles span{flex-direction:row;gap:2px}
   .jp-bonus-piles i{width:13px;height:13px;font-size:8px}
   .jp-stall{min-height:28px;padding:3px 8px}
+  /* 판 토큰이 늘면 가판대가 두세 줄로 커져, 오른쪽 기둥이 화면 높이를 넘으며 '내 차례' 칸과 이름줄이 겹쳤다
+     (낙타 모두 단추가 눌리지 않음) → 토큰을 겹쳐 한 줄로, 넘치면 옆으로 밀어 보기. 줄 높이도 내용보다 작아지지 않게. */
+  .jp-stall-coins{flex-wrap:nowrap;gap:0;overflow-x:auto;scrollbar-width:none;padding-right:2px}
+  .jp-stall-coins::-webkit-scrollbar{display:none}
+  .jp-stall-coins .jp-coin{flex:none}
+  .jp-stall-coins .jp-coin+.jp-coin{margin-left:-6px}
   .jp-action{min-height:0;padding:5px 8px}
   .jp-show-result{bottom:16px}
 }

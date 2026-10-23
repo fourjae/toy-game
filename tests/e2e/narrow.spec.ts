@@ -308,3 +308,59 @@ test('가로 폰 /lost-cities: 이대로 할게요 뒤에도 손패 여덟 장�
   await host.context().close();
   await guest.context().close();
 });
+
+// 자이푸르 가로 폰: 판 토큰이 쌓이면 가판대가 두세 줄로 커져 오른쪽 기둥이 화면 높이를 넘었고,
+// 격자 줄이 내용보다 작아지며 '내 차례' 칸이 이름줄 밑에 깔려 '낙타 모두' 단추가 눌리지 않았다(한 라운드 중반쯤).
+// 한 라운드를 끝까지 두며 매 차례 두 칸이 겹치지 않는지, 결산창의 다음 라운드 단추에 닿는지 본다.
+test('가로 폰 /jaipur: 한 라운드 내내 차례 칸과 이름줄이 겹치지 않고, 결산창 단추에 닿는다', async ({ browser }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop', '크기를 직접 정하므로 한 번만 돌린다');
+  test.setTimeout(180_000);
+  const host = await (await browser.newContext(LANDSCAPE)).newPage();
+  const guest = await (await browser.newContext(LANDSCAPE)).newPage();
+  host.setDefaultTimeout(8_000);
+  guest.setDefaultTimeout(8_000);
+  const enter = async (page: typeof host, url: string, name: string) => {
+    await page.goto(url);
+    await page.getByLabel('어떤 이름으로 불러드릴까요?').fill(name);
+    await page.getByRole('button', { name: '시장 들어가기' }).click();
+  };
+  await enter(host, '/jaipur', '민수');
+  await host.getByRole('button', { name: '방 만들기' }).first().click();
+  await host.getByRole('dialog').getByRole('button', { name: '방 만들기' }).click();
+  const code = (await host.locator('.duel-invite strong').innerText()).trim();
+  await enter(guest, `/jaipur?room=${code}`, '지수');
+  await host.getByRole('button', { name: '장사 시작' }).click();
+  const ended = async () => (await host.locator('.jp-result').count()) > 0;
+  for (let i = 0; i < 200 && !(await ended()); i++) {
+    await expect.poll(async () => (await host.locator('.jp-action.is-mine').count()) + (await guest.locator('.jp-action.is-mine').count()) + (await host.locator('.jp-result').count())).toBeGreaterThan(0);
+    if (await ended()) break;
+    const mover = (await host.locator('.jp-action.is-mine').count()) ? host : guest;
+    const action = (await mover.locator('.jp-action').boundingBox())!;
+    const me = (await mover.locator('.jp-me').boundingBox())!;
+    expect(action.y + action.height, `${i}번째 차례: 차례 칸 아래가 이름줄 위보다 위`).toBeLessThanOrEqual(me.y + 1);
+    const camels = mover.getByRole('button', { name: /낙타 \d+마리 모두/u });
+    const hand = (await mover.locator('.jp-hand-card').evaluateAll(els => els.map(el => el.getAttribute('aria-label') ?? '')))
+      .map(label => label.replace('손패 ', ''));
+    if (await camels.count()) {
+      await camels.click();
+    } else if (hand.length < 7) {
+      await mover.locator('.jp-slot').first().click();
+      await mover.locator('.jp-buttons .duel-button.primary').click();
+    } else {
+      const counts = new Map<string, number>();
+      for (const kind of hand) counts.set(kind, (counts.get(kind) ?? 0) + 1);
+      const kind = [...counts].sort((a, b) => b[1] - a[1])[0]![0];
+      const cards = mover.getByRole('button', { name: `손패 ${kind}`, exact: true });
+      for (let c = 0; c < counts.get(kind)!; c++) await cards.nth(c).click();
+      await mover.locator('.jp-buttons .duel-button.primary').click();
+    }
+    await expect.poll(async () => (await mover.locator('.jp-action.is-mine').count()) === 0 || (await mover.locator('.jp-result').count()) > 0).toBe(true);
+  }
+  for (const page of [host, guest]) {
+    await expect(page.locator('.jp-result')).toBeVisible();
+    await page.getByRole('button', { name: '2라운드 시작' }).click();
+  }
+  await expect(host.locator('.jp-result')).toHaveCount(0);
+  await host.context().close();
+  await guest.context().close();
+});
