@@ -101,3 +101,39 @@ test('좁은 폰 /lost-cities: 머리줄 이름이 읽히고 유적지 이름표
   await host.context().close();
   await guest.context().close();
 });
+
+// 토이 배틀 방 안: 예전엔 가로로 늘어선 확대 단추 묶음이 판 오른쪽 아래를 가렸다. 이제 판 칸과 겹치지 않는다.
+test('좁은 폰 /toy-battle: 확대 단추가 판의 칸을 가리지 않는다', async ({ browser }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop', '폭을 직접 정하므로 한 번만 돌린다');
+  const opts = { viewport: { width: 320, height: 640 }, isMobile: true, hasTouch: true, reducedMotion: 'reduce' as const };
+  const host = await (await browser.newContext(opts)).newPage();
+  const guest = await (await browser.newContext(opts)).newPage();
+  const enter = async (page: typeof host, name: string) => {
+    await page.goto('/toy-battle');
+    await page.getByLabel('어떤 이름으로 불러드릴까요?').fill(name);
+    await page.getByRole('button', { name: '놀러 가기' }).click();
+  };
+  await enter(host, '가나다라마바');
+  await enter(guest, '하나둘셋넷');
+  await host.getByRole('button', { name: '방 만들기' }).first().click();
+  await host.getByRole('dialog').getByRole('button', { name: '방 만들기' }).click();
+  const code = (await host.locator('.invite-box strong').innerText()).trim();
+  await guest.getByRole('button', { name: '코드로 입장' }).click();
+  await guest.getByLabel('초대 코드').fill(code);
+  await guest.getByRole('button', { name: '방 들어가기' }).click();
+  await host.getByRole('button', { name: '게임 시작' }).click();
+  for (const page of [host, guest]) {
+    await expect(page.locator('.board-controls')).toBeVisible();
+    await expect(page.locator('.board-base').first()).toBeVisible();
+    const hits = await page.evaluate(() => {
+      const c = document.querySelector('.board-controls')!.getBoundingClientRect();
+      return [...document.querySelectorAll('.board-base')].filter(node => {
+        const r = node.getBoundingClientRect();
+        return r.right > c.left && r.left < c.right && r.bottom > c.top && r.top < c.bottom;
+      }).length;
+    });
+    expect(hits).toBe(0);
+  }
+  await host.context().close();
+  await guest.context().close();
+});
