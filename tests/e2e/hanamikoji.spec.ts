@@ -35,10 +35,13 @@ test('하나미코지: 방을 만들고 초대 링크로 들어와 선물 한 �
   await expect(other.locator('.hm-status.is-mine')).toBeVisible();
 });
 
-test('하나미코지: 한 라운드를 끝까지 두면 결산창이 나오고, 라운드 사이 나가기는 한 번 더 묻는다', async ({ browser }) => {
+// 320px 폰에서도 한 번 돌려, 결산창 단추가 스크롤 없이 보이는지 본다(예전엔 게이샤 두 줄 때문에 화면 아래로 숨었다).
+for (const narrow of [false, true]) test(`하나미코지: 한 라운드를 끝까지 두면 결산창이 나오고, 라운드 사이 나가기는 한 번 더 묻는다${narrow ? ' (320px 폰)' : ''}`, async ({ browser }, testInfo) => {
+  test.skip(narrow && testInfo.project.name !== 'desktop', '폭을 직접 정하므로 한 번만 돌린다');
   test.setTimeout(120_000);
-  const host = await (await browser.newContext({ reducedMotion: 'reduce' })).newPage();
-  const guest = await (await browser.newContext({ reducedMotion: 'reduce' })).newPage();
+  const opts = narrow ? { reducedMotion: 'reduce' as const, viewport: { width: 320, height: 640 }, isMobile: true, hasTouch: true } : { reducedMotion: 'reduce' as const };
+  const host = await (await browser.newContext(opts)).newPage();
+  const guest = await (await browser.newContext(opts)).newPage();
   for (const page of [host, guest]) page.setDefaultTimeout(10_000);
   await host.goto('/hanamikoji');
   await host.getByLabel('어떤 이름으로 불러드릴까요?').fill('민수');
@@ -71,7 +74,18 @@ test('하나미코지: 한 라운드를 끝까지 두면 결산창이 나오고,
     if (turn < 7) await expect(mover.locator('.hm-status.is-mine')).toHaveCount(0);
   }
 
-  for (const page of [host, guest]) await expect(page.locator('.hm-result-geisha')).toHaveCount(7);
+  for (const page of [host, guest]) {
+    await expect(page.locator('.hm-result-geisha')).toHaveCount(7);
+    const leaveBtn = page.getByRole('button', { name: '대기실로 나가기' });
+    // 창은 밝은 종이색: 밤거리 테마의 밝은 글자색(#f7ecdd)이 그대로 오면 안 보인다.
+    expect(await leaveBtn.evaluate(el => getComputedStyle(el).color)).not.toBe('rgb(247, 236, 221)');
+    if (narrow) {
+      const box = (await leaveBtn.boundingBox())!;
+      expect(box.y + box.height, '나가기 단추가 화면 아래로 숨음').toBeLessThanOrEqual(640);
+      const rights = await page.locator('.hm-result-geisha').evaluateAll(els => els.map(el => el.getBoundingClientRect().right));
+      expect(Math.max(...rights)).toBeLessThanOrEqual(320);
+    }
+  }
   // 결산창을 닫아 판을 들여다봐도 '결과 다시 보기'로 다시 연다.
   await guest.getByRole('dialog').getByRole('button', { name: '닫기' }).click();
   await expect(guest.locator('.hm-result-geisha')).toHaveCount(0);

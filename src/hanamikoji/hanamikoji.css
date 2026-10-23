@@ -198,3 +198,23 @@ button.hm-token:not(:disabled):hover{transform:translateY(-1px)}
   .hm-player strong{flex:1 1 100%}
   .hm-player-stat{font-size:10px}
 }
+/* 320~400px 폰 결산창: 게이샤 넷·셋 두 줄이면 창이 넘쳐 '다음 라운드' 단추가 스크롤 아래로 숨었다.
+   일곱 명을 한 줄로 세우고(초상은 작게), 표·여백을 줄여 단추까지 한 화면에 들어오게 한다. */
+@media(max-width:400px){
+  .hm-result{gap:10px;margin-inline:-12px}
+  .hm-result h3{font-size:15px;text-wrap:balance}
+  .hm-result-grid{grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
+  .hm-result-geisha{padding:4px 0 3px;border-radius:7px;font-size:9px;letter-spacing:-.4px;line-height:1.25}
+  .hm-result-geisha .hm-portrait{width:88%}
+  .hm-result-geisha strong{font-size:9px;display:flex;flex-direction:column;align-items:center}
+  .hm-result-geisha strong small{margin:0;font-size:9px}
+  .hm-result-geisha em{font-size:8px;white-space:nowrap}
+  .hm-result-table{font-size:12px}
+  .hm-result-table th,.hm-result-table td{padding:5px 6px}
+  .hm-result-table td{font-size:15px}
+  .hm-result-note{font-size:11px;align-items:flex-start}
+  .hm-result-note svg{flex-shrink:0;margin-top:2px}
+}
+/* 창(.dialog)은 밝은 종이색인데 하나미코지 테마 글자색(--d-ink/--d-soft)은 밤거리용 밝은 색이라,
+   창 안 '대기실로 나가기' 같은 글자가 거의 안 보였다. 창 안에서는 어두운 글자색으로 바꿔 쓴다. */
+.theme-hm .dialog{--d-ink:#2c2230;--d-soft:#7c6c72}
