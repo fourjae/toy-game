@@ -320,13 +320,13 @@ function GameTable({ room, meId, client }: { room: LCRoomView; meId: string; cli
         </button>
         <span className="lc-round">{view.rounds > 1 ? `${view.round} / ${view.rounds} 라운드` : '단판'}</span>
       </div>
-      <div className="lc-topbar-side lc-topbar-side--me">{status(meId, myName, true)}<button className="lc-icon-btn" onClick={() => setShowLog(true)} aria-label="지난 차례 기록"><History size={17} /></button><button className="lc-icon-btn" onClick={() => setShowRules(true)} aria-label="게임 방법"><HelpCircle size={17} /></button></div>
+      <div className="lc-topbar-side lc-topbar-side--me">{status(meId, myName, true)}<button className="lc-icon-btn lc-log-btn" onClick={() => setShowLog(true)} aria-label="지난 차례 기록"><History size={17} /></button><button className="lc-icon-btn" onClick={() => setShowRules(true)} aria-label="게임 방법"><HelpCircle size={17} /></button></div>
     </header>
     <section className="lc-board" aria-label="유적지 탐험 판">
       {SITES.map(site => <div key={site} className={`lc-col site-${site}`}>{half(oppId, false, site)}{discardCell(site)}{half(meId, true, site)}</div>)}
     </section>
     <section className={`lc-hand ${mine ? 'is-mine' : ''}`}>
-      <div className={`lc-status ${mine ? 'is-mine' : ''}`}><span className="lc-dot" /><strong>{view.status !== 'playing' ? '라운드 종료' : mine ? '내 차례' : '상대 차례'}</strong><span>{hint}</span></div>
+      <div className={`lc-status ${mine ? 'is-mine' : ''}`}><span className="lc-dot" /><strong>{view.status !== 'playing' ? '라운드 종료' : mine ? '내 차례' : '상대 차례'}</strong><span className="lc-status-hint">{hint}</span><button type="button" className="lc-status-log" onClick={() => setShowLog(true)} aria-label="지난 차례 기록"><History size={13} />기록</button></div>
       <div className="lc-hand-cards" role="group" aria-label={`내 손패 ${hand.length}/${HAND_SIZE}`}>
         {hand.map(c => <button key={c.id} type="button" className={`lc-hand-card ${selected === c.id ? 'selected' : ''} ${playing && !view.playable[c.id] ? 'is-dead' : ''}`}
           aria-pressed={selected === c.id} aria-label={`${SITE_INFO[c.site].name} ${c.value === 0 ? '악수 카드' : c.value}`} onClick={() => setSelected(selected === c.id ? null : c.id)} disabled={busy || view.status !== 'playing'}>

@@ -159,9 +159,9 @@
 .lc-status{display:flex;align-items:center;gap:8px;flex:none;min-height:calc(2.9em + 8px);padding:4px 12px;font-size:clamp(11px,2.2dvh,12px);line-height:1.45}
 .lc-status .lc-dot{flex:none}
 .lc-status strong{flex:none;font-weight:900}
-.lc-status>span:last-child{overflow:hidden;color:var(--lc-soft);white-space:normal;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+.lc-status-hint{overflow:hidden;color:var(--lc-soft);white-space:normal;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
 .lc-status.is-mine{background:linear-gradient(90deg,#e0702b2b,transparent)}
-.lc-status.is-mine>span:last-child{color:var(--lc-ink)}
+.lc-status.is-mine .lc-status-hint{color:var(--lc-ink)}
 .lc-hand-cards{display:flex;justify-content:center;padding:14px 8px calc(8px + env(safe-area-inset-bottom))}
 .lc-hand-card{flex:none;padding:0;border:0;background:none;cursor:pointer;transition:transform .14s ease,filter .14s ease}
 .lc-hand-card+.lc-hand-card{margin-left:calc(var(--hh) * .72 * -.22)}
@@ -452,4 +452,11 @@
   .lc-pile-label svg{display:none}
   .lc-pile-label>span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
   .lc-pile-label{max-width:100%;padding-inline:2px;letter-spacing:-.3px}
+}
+
+/* 320px 폰: 머리줄 오른쪽에 단추가 둘이면 내 이름이 '가나다…'로 잘려서, 기록 단추는 차례 안내 줄 오른쪽 끝으로 옮긴다. */
+.lc-status-log{display:none}
+@media(max-width:400px){
+  .lc-topbar .lc-log-btn{display:none}
+  .lc-status-log{display:inline-flex;align-items:center;gap:3px;flex:none;margin-left:auto;padding:4px 8px;border:1px solid var(--lc-line);border-radius:999px;background:#fffaf2cc;color:var(--lc-ink);font:inherit;font-size:11px;font-weight:800;cursor:pointer}
 }

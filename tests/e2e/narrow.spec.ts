@@ -88,9 +88,15 @@ test('좁은 폰 /lost-cities: 머리줄 이름이 읽히고 유적지 이름표
     // 이름 칸이 세 글자 이상 들어갈 폭(약 30px)은 있어야 한다.
     const widths = await page.locator('.lc-player strong').evaluateAll(els => els.map(el => el.getBoundingClientRect().width));
     for (const w of widths) expect(w).toBeGreaterThan(30);
+    // 내 이름(여섯 글자)도 '가나다…'로 잘리지 않는다 — 기록 단추를 차례 안내 줄로 옮겼다.
+    const cut = await page.locator('.lc-player.is-me strong').evaluate(el => el.scrollWidth - el.clientWidth);
+    expect(cut).toBeLessThanOrEqual(1);
     const heights = await page.locator('.lc-pile-label').evaluateAll(els => els.map(el => el.getBoundingClientRect().height));
     for (const h of heights) expect(h).toBeLessThanOrEqual(18);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+    await page.getByRole('button', { name: '지난 차례 기록' }).click();
+    await expect(page.getByRole('dialog', { name: '지난 차례' })).toBeVisible();
+    await page.keyboard.press('Escape');
   }
   await host.context().close();
   await guest.context().close();
