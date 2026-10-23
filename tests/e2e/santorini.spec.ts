@@ -83,6 +83,12 @@ test('산토리니: 탑을 쌓아 3층에 오르면 두 사람 모두 결과창�
   await expect(second.locator('.st-status.is-mine')).toBeVisible();
   await click(second, 16, /일꾼/);
   await click(second, 18, /일꾼/);
+  // 평면 판도 3D 카메라처럼 각자 자기 쪽이 아래로 오게 돈다: 먼저 둔 쪽과 나중 둔 쪽의 첫 칸이 서로 반대.
+  const corners = [await first.locator('.st-grid-fallback button').first().getAttribute('data-cell'), await second.locator('.st-grid-fallback button').first().getAttribute('data-cell')];
+  expect(corners.sort()).toEqual(['0', '24']);
+  // 일꾼은 칸 위에 따로 얹혀 있다(옮길 때 미끄러지도록).
+  for (const page of [first, second]) await expect(page.locator('.st-pawns .st-pawn')).toHaveCount(4);
+  if (process.env.SHOT_DIR) for (const [i, page] of [first, second].entries()) await page.screenshot({ path: `${process.env.SHOT_DIR}/st-flat-${i}.png` });
 
   // 먼저 둔 쪽은 맨 윗줄 왼쪽 두 칸을 번갈아 오르내리며 탑을 올리고, 상대는 아랫줄에서 비켜 둔다.
   const climb: [number, number, number, string][] = [[6, 1, 0, '1층'], [1, 0, 1, '1층'], [0, 1, 0, '2층'], [1, 0, 1, '2층'], [0, 1, 0, '3층']];

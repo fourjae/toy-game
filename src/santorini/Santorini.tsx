@@ -82,6 +82,7 @@ function Table({ room, meId, client }: Props) {
   const names = Object.fromEntries(room.players.map(p => [p.id, p.name]));
   const oppId = view.opponentId;
   const seat = view.playerIds.indexOf(meId);
+  const order = useMemo(() => Array.from({ length: 25 }, (_, i) => seat === 1 ? 24 - i : i), [seat]);
   const hostRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<IslandScene | null>(null);
   const pickRef = useRef<(cell: number) => void>(() => undefined);
@@ -171,9 +172,11 @@ function Table({ room, meId, client }: Props) {
     : view.winReason === 'stuck' ? `${loserName} 일꾼이 움직일 곳이 없었어요` : `${loserName} 일꾼이 지을 곳이 없었어요`;
   return <main className="st-game">
     {!flat && <div className="st-canvas" ref={hostRef} />}
-    {/* The same board as buttons, for screen readers and keyboards (and the e2e test). In flat mode it is the board. */}
+    {/* The same board as buttons, for screen readers and keyboards (and the e2e test). In flat mode it is the board.
+        The second player sees the island from the other side in 3D, so the grid is turned the same way. */}
     <div className={gridMode ? 'st-grid-fallback' : 'st-a11y'} role="group" aria-label="섬 칸">
-      {view.levels.map((level, cell) => {
+      {order.map(cell => {
+        const level = view.levels[cell]!;
         const who = view.playerIds.findIndex(id => view.workers[id]!.includes(cell));
         const glow = highlights.get(cell);
         return <button key={cell} type="button" data-cell={cell} className={glow ? `is-${glow}` : ''} disabled={busy} onClick={() => pickRef.current(cell)}
@@ -181,12 +184,20 @@ function Table({ room, meId, client }: Props) {
           {gridMode ? <span className="st-tile" aria-hidden="true">
             {[1, 2, 3].slice(0, level).map(l => <i key={l} className={`st-tier t${l}`} />)}
             {view.domes[cell] && <i className="st-cap" />}
-            {who >= 0 && <i className={`st-pawn ${view.playerIds[who] === meId ? 'is-me' : ''}`} style={{ background: SEAT_COLORS[who] }} />}
             {level > 0 && !view.domes[cell] && <b className="st-lv">{level}</b>}
             {view.lastBuild?.cell === cell && <i className="st-fresh" key={view.revision} />}
           </span> : <>{level}{view.domes[cell] ? '◓' : ''}{who >= 0 ? (who === 0 ? '●' : '○') : ''}</>}
         </button>;
       })}
+      {/* 일꾼은 칸 위에 따로 얹어서, 옮길 때 칸 사이를 미끄러져 가게 한다. 높은 층일수록 조금 크게. */}
+      {gridMode && <div className="st-pawns" aria-hidden="true">
+        {view.playerIds.flatMap((id, s) => view.workers[id]!.map((at, w) => {
+          if (at === null) return null;
+          const d = order.indexOf(at);
+          const style = { '--col': d % 5, '--row': Math.floor(d / 5), '--lift': view.domes[at] ? 3 : view.levels[at]!, background: SEAT_COLORS[s] } as CSSProperties;
+          return <i key={`${s}-${w}`} className={`st-pawn ${id === meId ? 'is-me' : ''} ${at === selected ? 'is-picked' : ''}`} style={style} />;
+        }))}
+      </div>}
     </div>
     {webglFailed && !flat && <div className="st-nogl">이 기기에서는 3D 화면을 열 수 없어서 평면으로 보여 드려요.</div>}
     <header className="st-topbar">
