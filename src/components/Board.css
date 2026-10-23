@@ -221,3 +221,10 @@
   .board-zoom-value { order: -1; min-width: 0; padding: 1px 0; font-size: 9px; }
   .board-pan-hint { bottom: 12px; }
 }
+
+/* 좁은 폰: '드래그해서 둘러보기'가 판 그림 왼쪽 아래 모서리에 겹쳐 읽기 어려웠다. 옅은 알약 배경을 깔고, 5초 뒤 스르르 사라진다. */
+@media (max-width: 400px) {
+  .board-pan-hint { left: 8px; bottom: 8px; padding: 3px 8px; border-radius: 999px; background: #f7f8f0e6; box-shadow: 0 1px 3px #3038251a; animation: board-hint-out .6s ease 5s forwards; }
+}
+@keyframes board-hint-out { to { opacity: 0; visibility: hidden; } }
+@media (prefers-reduced-motion: reduce) { .board-pan-hint { animation: none; } }
