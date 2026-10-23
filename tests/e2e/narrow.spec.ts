@@ -253,6 +253,15 @@ test('가로 폰 /hanamikoji: 이대로 할게요 뒤에도 놓인 카드 자리
   await inside(other, '.hm-offer-option');
   await other.locator('.hm-offer-option').first().click();
   await expect(other.locator('.hm-stack.is-mine .hm-card')).toHaveCount(1);
+  // 나가기 창의 '계속 있을게요'가 밤거리용 어두운 칸 색을 그대로 써서 어두운 글자와 겹쳐 안 보였다.
+  await host.getByRole('button', { name: '방 나가기' }).click();
+  const stay = host.getByRole('dialog').getByRole('button', { name: '계속 있을게요' });
+  const light = await stay.evaluate(el => {
+    const lum = (c: string) => { const [r, g, b] = c.match(/[\d.]+/g)!.map(Number); return (0.299 * r! + 0.587 * g! + 0.114 * b!) / 255; };
+    const st = getComputedStyle(el);
+    return [lum(st.backgroundColor), lum(st.color)];
+  });
+  expect(Math.abs(light[0]! - light[1]!), '단추 바탕과 글자 밝기 차이').toBeGreaterThan(0.4);
   await host.context().close();
   await guest.context().close();
 });
