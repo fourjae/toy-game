@@ -40,6 +40,10 @@ button.hub-card:active{transform:translateY(0)}
 .hub-card--jaipur .hub-card-body strong{color:#c8434f}
 .hub-card--jaipur .hub-card-go{color:#8f2834}
 .hub-loading{display:grid;place-items:center;min-height:100vh;color:var(--muted)}
+.hub-load-failed{place-content:center;gap:14px;text-align:center;line-height:1.6;padding:16px}
+.hub-load-failed div{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.hub-load-failed button{min-height:42px;padding:0 18px;border-radius:999px;border:1.5px solid #d3d4c8;background:#fff;font:inherit;font-weight:700;cursor:pointer}
+.hub-load-failed .hub-load-retry{background:#2f3a2c;border-color:#2f3a2c;color:#fff}
 .hub-card--empty{align-items:center;justify-content:center;gap:8px;border:1.5px dashed #d3d4c8;background:transparent;color:#b0b2a6;font-size:11px}
 .hub-link{margin-right:2px}
 

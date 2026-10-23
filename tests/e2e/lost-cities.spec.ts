@@ -83,6 +83,16 @@ test('첫 화면의 3x3 선반에서 두 게임을 고를 수 있다', async ({ 
   await expect(page.getByRole('heading', { name: /탐험 한 판/u })).toBeVisible();
 });
 
+test('게임 화면 파일을 못 받으면 흰 화면 대신 다시 불러오기 안내가 나온다', async ({ page }) => {
+  // 새로 배포돼 옛 파일 이름이 사라진 경우를 흉내 낸다: 스쿼드로 화면 묶음 요청을 끊는다.
+  await page.route(/\/src\/squadro\/|\/assets\/Squadro-/u, route => route.abort());
+  await page.goto('/');
+  await page.getByRole('button', { name: /스쿼드로/ }).click();
+  await expect(page.getByRole('alert')).toContainText('게임 화면을 불러오지 못했어요');
+  await page.getByRole('button', { name: '첫 화면으로' }).click();
+  await expect(page.locator('.hub-card')).toHaveCount(9);
+});
+
 test('예전 토이 배틀 초대 링크(/?room=)는 토이 배틀로 연결된다', async ({ page }) => {
   await page.goto('/?room=ABC123');
   await expect(page.getByRole('heading', { name: /한 판/u })).toBeVisible();

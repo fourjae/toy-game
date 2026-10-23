@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
+import { Component, lazy, Suspense, useCallback, useEffect, useState, type ReactNode } from 'react';
 import Hub from './Hub';
 
 // 게임 화면은 들어갈 때만 받는다. 첫 화면(허브)은 가볍게 뜨고, three.js 같은 큰 묶음은 산토리니에서만 받는다.
@@ -36,6 +36,25 @@ function Screen({ game, onHome }: { game: GameId; onHome: () => void }) {
   }
 }
 
+/**
+ * 게임 화면 묶음을 못 받으면(새로 배포돼 옛 파일 이름이 사라졌거나 연결이 끊김) Suspense만으로는 흰 화면이 된다.
+ * 그때 다시 불러오기와 첫 화면으로 가는 길을 보여 준다.
+ */
+class LoadGuard extends Component<{ children: ReactNode; onHome: () => void }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() { return { failed: true }; }
+  render() {
+    if (!this.state.failed) return this.props.children;
+    return <div className="hub-loading hub-load-failed" role="alert">
+      <p>게임 화면을 불러오지 못했어요.<br />연결을 확인하고 다시 시도해 주세요.</p>
+      <div>
+        <button type="button" className="hub-load-retry" onClick={() => window.location.reload()}>다시 불러오기</button>
+        <button type="button" className="hub-load-home" onClick={this.props.onHome}>첫 화면으로</button>
+      </div>
+    </div>;
+  }
+}
+
 /** A handful of tiny routes; the server answers every GET with index.html, so plain paths survive a refresh. */
 export default function Root() {
   const [game, setGame] = useState<GameId | null>(routeFromLocation);
@@ -52,8 +71,10 @@ export default function Root() {
   const home = useCallback(() => open(null), [open]);
   if (!game) return <Hub onOpen={open} />;
   return (
-    <Suspense fallback={<div className="hub-loading">{LOADING[game]}</div>}>
-      <Screen game={game} onHome={home} />
-    </Suspense>
+    <LoadGuard key={game} onHome={home}>
+      <Suspense fallback={<div className="hub-loading">{LOADING[game]}</div>}>
+        <Screen game={game} onHome={home} />
+      </Suspense>
+    </LoadGuard>
   );
 }
