@@ -72,6 +72,11 @@ test('하나미코지: 한 라운드를 끝까지 두면 결산창이 나오고,
   }
 
   for (const page of [host, guest]) await expect(page.locator('.hm-result-geisha')).toHaveCount(7);
+  // 결산창을 닫아 판을 들여다봐도 '결과 다시 보기'로 다시 연다.
+  await guest.getByRole('dialog').getByRole('button', { name: '닫기' }).click();
+  await expect(guest.locator('.hm-result-geisha')).toHaveCount(0);
+  await guest.getByRole('button', { name: '결과 다시 보기' }).click();
+  await expect(guest.locator('.hm-result-geisha')).toHaveCount(7);
   const finished = await host.getByRole('button', { name: /한 판 더/ }).count();
   const leave = host.getByRole('button', { name: /대기실로 나가기|매치를 끝내고 나가기/ });
   if (!finished) {

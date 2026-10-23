@@ -81,4 +81,9 @@ test('자이푸르: 한 라운드를 끝까지 하면 결산창에 점수와 인
     await expect(page.locator('.jp-result-table tbody tr')).toHaveCount(5);
     await expect(page.getByRole('button', { name: '2라운드 시작' })).toBeVisible();
   }
+  // 결산창을 닫아 시장을 들여다봐도 '결과 다시 보기'로 다시 연다.
+  await guest.getByRole('dialog').getByRole('button', { name: '닫기' }).click();
+  await expect(guest.locator('.jp-result')).toHaveCount(0);
+  await guest.getByRole('button', { name: '결과 다시 보기' }).click();
+  await expect(guest.locator('.jp-result-table tbody tr')).toHaveCount(5);
 });
