@@ -256,3 +256,46 @@ test('가로 폰 /hanamikoji: 이대로 할게요 뒤에도 놓인 카드 자리
   await host.context().close();
   await guest.context().close();
 });
+
+// 로스트 시티도 가로 폰에서 '이대로 할게요'를 누르면 손패 여덟 장이 양옆·아래로 잘리고 탐험로가 40px로 눌렸다.
+test('가로 폰 /lost-cities: 이대로 할게요 뒤에도 손패 여덟 장과 탐험로가 화면 안에 있고, 한 수 둘 수 있다', async ({ browser }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop', '크기를 직접 정하므로 한 번만 돌린다');
+  const host = await (await browser.newContext(LANDSCAPE)).newPage();
+  const guest = await (await browser.newContext(LANDSCAPE)).newPage();
+  const enter = async (page: typeof host, url: string, name: string) => {
+    await page.goto(url);
+    await page.getByLabel('어떤 이름으로 불러드릴까요?').fill(name);
+    await page.getByRole('button', { name: '떠나 보기' }).click();
+  };
+  await enter(host, '/lost-cities', '민수');
+  await host.getByRole('button', { name: '방 만들기' }).first().click();
+  await host.getByRole('dialog').getByRole('button', { name: '방 만들기' }).click();
+  const code = (await host.locator('.lc-invite strong').innerText()).trim();
+  await enter(guest, `/lost-cities?room=${code}`, '지수');
+  await host.getByRole('button', { name: '탐험 시작' }).click();
+  for (const page of [host, guest]) {
+    await page.getByRole('button', { name: '이대로 할게요' }).click();
+    await expect(page.locator('.lc-hand-card')).toHaveCount(8);
+    for (const box of await page.locator('.lc-hand-card').evaluateAll(els => els.map(e => e.getBoundingClientRect().toJSON()))) {
+      expect(box.left).toBeGreaterThanOrEqual(0);
+      expect(box.right).toBeLessThanOrEqual(640);
+      expect(box.bottom).toBeLessThanOrEqual(320);
+    }
+    const half = (await page.locator('.lc-half').first().boundingBox())!;
+    expect(half.height, '탐험로 반쪽 높이').toBeGreaterThanOrEqual(60);
+  }
+  await expect.poll(async () => (await host.locator('.lc-status.is-mine').count()) + (await guest.locator('.lc-status.is-mine').count())).toBeGreaterThan(0);
+  const mover = (await host.locator('.lc-status.is-mine').count()) ? host : guest;
+  const live = mover.locator('.lc-hand-card:not(.is-dead)');
+  if (await live.count()) {
+    await live.first().click();
+    await mover.locator('.lc-half.is-target').first().click();
+  } else {
+    await mover.locator('.lc-hand-card').first().click();
+    await mover.locator('.lc-pile.is-discard-target').click();
+  }
+  await mover.locator('.lc-deck.is-draw-target').click();
+  await expect(mover.locator('.lc-status.is-mine')).toHaveCount(0);
+  await host.context().close();
+  await guest.context().close();
+});
