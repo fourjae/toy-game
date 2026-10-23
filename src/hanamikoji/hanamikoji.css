@@ -191,3 +191,10 @@ button.hm-token:not(:disabled):hover{transform:translateY(-1px)}
 .hm-hidden-cards > .hm-laid > .hm-card:nth-child(2){animation-delay:.12s}
 @keyframes hm-lay-down{0%{opacity:0;transform:translateY(-70%) rotateY(180deg) scale(1.35)}45%{opacity:1}100%{transform:none}}
 @media(prefers-reduced-motion:reduce){.hm-hidden-cards > .hm-laid > .hm-card{animation:none}}
+/* 320~400px 폰: 머리줄 이름이 '하…'로 잘리지 않게 점수는 이름 아래 줄로 내린다. */
+@media(max-width:400px){
+  .hm-topbar .duel-icon-btn{width:28px;height:28px}
+  .hm-player{flex-wrap:wrap;column-gap:6px;row-gap:0;padding:2px 8px;border-radius:12px;line-height:1.25}
+  .hm-player strong{flex:1 1 100%}
+  .hm-player-stat{font-size:10px}
+}
