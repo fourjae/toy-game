@@ -138,3 +138,42 @@
 @keyframes jp-herd-glow{0%{box-shadow:0 0 0 0 #e0a24a99}100%{box-shadow:0 0 0 10px #e0a24a00}}
 @keyframes jp-gain-rise{0%{transform:translate(-50%,6px);opacity:0}25%{opacity:1}100%{transform:translate(-50%,-14px);opacity:0}}
 @media(prefers-reduced-motion:reduce){.jp-herd-count.is-gaining>svg,.jp-herd.is-gaining>svg,.jp-herd.is-gaining{animation:none}.jp-herd-gain{animation:none;opacity:0}}
+
+/* 가로로 눕힌 폰: 세로 배치 그대로면 손패가 화면 아래로 사라졌다.
+   왼쪽에 상대 머리줄·시장·내 손패, 오른쪽 좁은 기둥에 토큰·가판대·행동·내 정보를 둔다. */
+@media(orientation:landscape) and (max-height:500px){
+  .jp-game{display:grid;grid-template-columns:minmax(0,1fr) minmax(200px,34%);
+    grid-template-areas:"top tokens" "market opp" "market ostall" "market action" "hand me" "hand mstall";
+    grid-template-rows:repeat(6,auto);align-content:start;column-gap:8px;row-gap:5px;width:min(100%,900px);overflow-y:auto;
+    padding:6px calc(8px + env(safe-area-inset-right)) 6px calc(8px + env(safe-area-inset-left))}
+  .jp-topbar{grid-area:top}
+  .jp-tokens{grid-area:tokens}
+  .jp-opp-hand{grid-area:opp;min-height:14px}
+  .jp-opp-hand .jp-back{width:10px}
+  .jp-stall.is-opp{grid-area:ostall;margin:0}
+  .jp-market{grid-area:market}
+  .jp-stall.is-mine{grid-area:mstall;margin:0;align-self:start}
+  .jp-action{grid-area:action;flex-wrap:wrap;align-self:start}
+  .jp-buttons{width:100%;justify-content:flex-end}
+  .jp-me{grid-area:me}
+  .jp-me .jp-herd-count{display:none}
+  .jp-me .jp-herd{padding:5px 8px;font-size:11px;white-space:nowrap}
+  .jp-me .jp-herd>svg{width:16px;height:16px}
+  .jp-hint{font-size:11px;line-height:1.35}
+  .jp-hand{grid-area:hand;align-items:center}
+  .jp-market,.jp-hand{--cw:clamp(30px,min(calc((66vw - 40px) / 7.6),calc((100dvh - 140px) * .36)),72px)}
+  .jp-market{padding:18px 6px 8px}
+  .jp-hand{padding:12px 4px 4px;min-height:0}
+  .jp-player{gap:6px;padding:5px 8px;font-size:11px}
+  .jp-tokens{gap:3px;padding:5px}
+  .jp-token-pile{display:grid;grid-template-areas:"i i" "b s";justify-items:center;align-items:baseline;column-gap:1px;padding:3px 1px}
+  .jp-token-pile svg{grid-area:i;width:13px;height:13px}
+  .jp-token-pile b{grid-area:b;font-size:12px;justify-self:end}
+  .jp-token-pile small{grid-area:s;font-size:8px;justify-self:start}
+  .jp-bonus-piles{flex-direction:column;gap:1px}
+  .jp-bonus-piles span{flex-direction:row;gap:2px}
+  .jp-bonus-piles i{width:13px;height:13px;font-size:8px}
+  .jp-stall{min-height:28px;padding:3px 8px}
+  .jp-action{min-height:0;padding:5px 8px}
+  .jp-show-result{bottom:16px}
+}

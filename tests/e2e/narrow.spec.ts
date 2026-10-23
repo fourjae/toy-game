@@ -138,12 +138,14 @@ test('좁은 폰 /toy-battle: 확대 단추가 판의 칸을 가리지 않는다
   await guest.context().close();
 });
 
-// 가로로 눕힌 폰(640×320): 예전엔 세로용 배치 그대로라 스쿼드로 호수는 100px 남짓, 산토리니 평면 판은 60px까지 줄었다.
+// 가로로 눕힌 폰(640×320): 예전엔 자이푸르 손패가 화면 밖에 있었고, 세로용 배치 그대로라 스쿼드로 호수는 100px 남짓, 산토리니 평면 판은 60px까지 줄었다.
 // 토이 배틀은 손패 독이 화면을 덮어 판이 안 보였다 → 로스트 시티·하나미코지처럼 세로로 돌리라는 안내.
 const LANDSCAPE = { viewport: { width: 640, height: 320 }, isMobile: true, hasTouch: true, reducedMotion: 'reduce' as const };
 const BOARDS: [string, string, string, number][] = [
   ['/squadro', '출발 신호', '.sq-board', 260],
   ['/santorini', '섬에서 시작', '.st-grid-fallback', 180],
+  // 자이푸르는 세로 배치 그대로면 손패가 화면 아래로 사라졌다 → 왼쪽 시장·손패, 오른쪽 기둥.
+  ['/jaipur', '장사 시작', '.jp-hand', 70],
 ];
 
 for (const [path, start, board, min] of BOARDS) {
