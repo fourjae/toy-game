@@ -59,3 +59,9 @@
 @keyframes game-tilt{0%,100%{transform:rotate(90deg)}50%{transform:rotate(0)}}
 @media(orientation:landscape) and (max-height:500px){.game-rotate{display:flex}.game-rotate.is-dismissed{display:none}}
 @media(prefers-reduced-motion:reduce){.game-rotate svg{animation:none}}
+/* 가로로 눕힌 폰(높이 320px 안팎): 창 여백·제목 간격이 커서 결산창 첫 화면에 표 머리만 보였다 → 여백을 줄여 내용이 더 들어오게. */
+@media(orientation:landscape) and (max-height:500px){
+  .dialog{padding:12px 18px;max-height:calc(100svh - 16px)}
+  .dialog-heading{margin-bottom:6px}
+  .dialog .duel-button.full{padding:9px 18px}
+}

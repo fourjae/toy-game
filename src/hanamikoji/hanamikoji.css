@@ -240,3 +240,11 @@ button.hm-token:not(:disabled):hover{transform:translateY(-1px)}
   .hm-offer-card{max-height:calc(100dvh - 16px);overflow-y:auto;padding:12px 18px;gap:4px}
   .hm-offer-options{--cw:clamp(44px,22dvh,80px);margin-top:4px}
 }
+/* 가로 폰 결산창: 게이샤 일곱 명 한 줄은 그대로 두고, 표·줄 간격을 줄인다. */
+@media(orientation:landscape) and (max-height:500px){
+  .hm-result{gap:8px}
+  .hm-result-geisha{padding:3px 2px}
+  .hm-result-geisha .hm-portrait{width:min(80%,34px)}
+  .hm-result-table th,.hm-result-table td{padding:4px 8px}
+  .hm-result-table td{font-size:14px}
+}

@@ -477,3 +477,12 @@
   .lc-hand-cards{flex-wrap:wrap;align-content:flex-start;gap:12px 6px;padding:10px 6px calc(8px + env(safe-area-inset-bottom))}
   .lc-hand-card+.lc-hand-card{margin-left:0}
 }
+/* 가로 폰 결과표: 유적지 다섯 줄 + 합계 두 줄이 523px라 창(302px) 첫 화면에 다섯 줄도 다 못 들어왔다 → 줄 높이·단추를 줄인다. */
+@media(orientation:landscape) and (max-height:500px){
+  .lc-result h3{margin-bottom:4px;font-size:15px}
+  .lc-result-table th,.lc-result-table td{padding:3px 8px}
+  .lc-result-table .total td,.lc-result-table .total th,.lc-result-table .match td,.lc-result-table .match th{font-size:14px}
+  .lc-result-rounds,.lc-result-note{margin-top:6px}
+  .lc-result .lc-button{margin-top:8px;padding:9px 18px}
+  .lc-result-leave{margin-top:4px}
+}
