@@ -203,6 +203,10 @@ test('로스트 시티: 3라운드는 라운드마다 둘 다 눌러야 넘어�
   await playRound(host, guest);
   await expect(host.getByRole('dialog')).toContainText('1라운드 끝');
   await expect(host.locator('.lc-result-table .match')).toBeVisible();
+  // 합계 줄과 안내 문구가 더 붙는 라운드 사이 결과창도 가로 폰에서 단추가 첫 화면에 있다. 보고 나면 원래 크기로.
+  const size = host.viewportSize()!;
+  await expectButtonsFitLandscape(host, /2라운드 시작/u);
+  await host.setViewportSize(size);
   // 라운드 사이 '대기실로 나가기'는 매치를 끝내므로 한 번 더 묻고, 그대로 두면 4초 뒤 원래대로 돌아온다.
   await guest.getByRole('button', { name: '대기실로 나가기' }).click();
   await expect(guest.getByRole('button', { name: /매치를 끝내고 나가기/ })).toBeVisible();
