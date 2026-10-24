@@ -46,7 +46,7 @@
 
 /* ---- the table ---- */
 .hm-game{
-  display:grid;grid-template-rows:auto auto minmax(0,1fr) auto auto;height:100vh;height:100dvh;width:min(100%,820px);margin-inline:auto;
+  display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr) auto auto;height:100vh;height:100dvh;width:min(100%,820px);margin-inline:auto;
   padding:0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   background:linear-gradient(180deg,#1d1626cc,#2a1d2ecc 50%,#1d1626ee);box-shadow:0 0 0 100vmax #1a1420aa;clip-path:inset(0 -100vmax);
 }
@@ -107,7 +107,7 @@ button.hm-token:not(:disabled):hover{transform:translateY(-1px)}
 .hm-status.is-mine strong{color:#ffd78a}
 .hm-status-actions{display:flex;align-items:center;gap:6px;margin-left:auto}
 .hm-status-actions .duel-icon-btn{width:30px;height:30px}
-.hm-hand-cards{--cw:clamp(42px,calc((min(100vw,820px) - 40px) / 7.4),80px);display:flex;justify-content:center;gap:5px;padding:12px 0 6px;min-height:calc(var(--cw) / .7 + 18px)}
+.hm-hand-cards{--cw:clamp(34px,calc((min(100vw,820px) - 40px) / 7.4),80px);display:flex;justify-content:center;gap:5px;padding:12px 0 6px;min-height:calc(var(--cw) / .7 + 18px)}
 .hm-hand-card{padding:0;border:0;background:none;cursor:pointer}
 .hm-hand-card:disabled{opacity:1;cursor:default}
 .hm-hand-empty{align-self:center;color:var(--d-soft);font-size:12px}
@@ -178,9 +178,85 @@ button.hm-token:not(:disabled):hover{transform:translateY(-1px)}
 }
 @media(max-height:700px){
   .hm-geisha .hm-portrait{max-width:44px}
-  .hm-hand-cards{--cw:clamp(40px,calc((min(100vw,820px) - 40px) / 7.4),62px)}
+  .hm-hand-cards{--cw:clamp(34px,calc((min(100vw,820px) - 40px) / 7.4),62px)}
 }
 /* 이번 라운드에 편을 바꾼 게이샤는 결과창에서 한 번 더 반짝인다. */
 .hm-result-geisha.is-moved{box-shadow:0 0 0 0 #e5573f80;animation:duel-reveal .45s cubic-bezier(.2,.8,.3,1.2) both,hm-moved 1.2s ease-out both;animation-delay:calc(var(--i) * 90ms + 120ms),calc(var(--i) * 90ms + 600ms)}
 @keyframes hm-moved{0%{box-shadow:0 0 0 0 #e5573f90}100%{box-shadow:0 0 0 12px #e5573f00}}
 @media(prefers-reduced-motion:reduce){.hm-result-geisha.is-moved{animation:none}}
+
+/* A secret or traded-off card is turned face down as it is laid aside. Plays once when the pile first appears each round. */
+.hm-hidden-cards > .hm-laid{perspective:240px}
+.hm-hidden-cards > .hm-laid > .hm-card{animation:hm-lay-down .7s cubic-bezier(.3,1.2,.5,1) both}
+.hm-hidden-cards > .hm-laid > .hm-card:nth-child(2){animation-delay:.12s}
+@keyframes hm-lay-down{0%{opacity:0;transform:translateY(-70%) rotateY(180deg) scale(1.35)}45%{opacity:1}100%{transform:none}}
+@media(prefers-reduced-motion:reduce){.hm-hidden-cards > .hm-laid > .hm-card{animation:none}}
+/* 320~400px 폰: 머리줄 이름이 '하…'로 잘리지 않게 점수는 이름 아래 줄로 내린다. */
+@media(max-width:400px){
+  .hm-topbar .duel-icon-btn{width:28px;height:28px}
+  .hm-player{flex-wrap:wrap;column-gap:6px;row-gap:0;padding:2px 8px;border-radius:12px;line-height:1.25}
+  .hm-player strong{flex:1 1 100%}
+  .hm-player-stat{font-size:10px}
+}
+/* 320~400px 폰 결산창: 게이샤 넷·셋 두 줄이면 창이 넘쳐 '다음 라운드' 단추가 스크롤 아래로 숨었다.
+   일곱 명을 한 줄로 세우고(초상은 작게), 표·여백을 줄여 단추까지 한 화면에 들어오게 한다. */
+@media(max-width:400px){
+  .hm-result{gap:10px;margin-inline:-12px}
+  .hm-result h3{font-size:15px;text-wrap:balance}
+  .hm-result-grid{grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
+  .hm-result-geisha{padding:4px 0 3px;border-radius:7px;font-size:9px;letter-spacing:-.4px;line-height:1.25}
+  .hm-result-geisha .hm-portrait{width:88%}
+  .hm-result-geisha strong{font-size:9px;display:flex;flex-direction:column;align-items:center}
+  .hm-result-geisha strong small{margin:0;font-size:9px}
+  .hm-result-geisha em{font-size:8px;white-space:nowrap}
+  .hm-result-table{font-size:12px}
+  .hm-result-table th,.hm-result-table td{padding:5px 6px}
+  .hm-result-table td{font-size:15px}
+  .hm-result-note{font-size:11px;align-items:flex-start}
+  .hm-result-note svg{flex-shrink:0;margin-top:2px}
+}
+/* 창(.dialog)은 밝은 종이색인데 하나미코지 테마 글자색(--d-ink/--d-soft)은 밤거리용 밝은 색이라,
+   창 안 '대기실로 나가기' 같은 글자가 거의 안 보였다. 창 안에서는 어두운 글자색으로 바꿔 쓴다. */
+/* 칸·테두리 색(--d-field/--d-line)도 밤거리용 어두운 보라라, 나가기 창 '계속 있을게요'가 어두운 바탕에 어두운 글자로 보였다. */
+.theme-hm .dialog{--d-ink:#2c2230;--d-soft:#7c6c72;--d-field:#fff;--d-line:#e6d8d2;--d-chip:#f4ebe6}
+/* 가로로 눕힌 폰에서 '이대로 할게요'를 누르면: 세로 배치 그대로라 게이샤 줄이 판을 다 차지해
+   양쪽에 놓인 카드가 안 보이고 차례 안내가 게이샤 뒤로 숨었다.
+   왼쪽에 토큰 줄·판, 오른쪽 기둥에 차례 안내와 손패(두 줄)를 둔다. */
+@media(orientation:landscape) and (max-height:500px){
+  .hm-game{grid-template-columns:minmax(0,1fr) minmax(200px,36%);grid-template-rows:auto auto minmax(0,1fr) auto;width:min(100%,960px)}
+  .hm-topbar{grid-column:1/-1;padding:4px 8px}
+  .hm-strip{min-height:0;padding:3px 8px}
+  .hm-strip.is-opp{grid-column:1;grid-row:2}
+  .hm-board{grid-column:1;grid-row:3}
+  .hm-strip.is-mine{grid-column:1;grid-row:4}
+  .hm-tokens.is-mine .hm-token{min-width:0;padding:3px 7px}
+  .hm-hand{grid-column:2;grid-row:2/5;min-height:0;overflow-y:auto;border-top:0;border-left:1px solid var(--d-line)}
+  .hm-status{flex-wrap:wrap;line-height:1.35}
+  .hm-hand-cards{--cw:clamp(34px,calc((36vw - 44px) / 4.3),62px);flex-wrap:wrap;align-content:flex-start;row-gap:10px;min-height:0}
+  .hm-geisha{padding:2px 1px 3px}
+  .hm-geisha .hm-portrait{max-width:30px}
+  .hm-geisha-name{font-size:10px}
+  .hm-offer{padding:8px}
+  .hm-offer-card{max-height:calc(100dvh - 16px);overflow-y:auto;padding:12px 18px;gap:4px}
+  .hm-offer-options{--cw:clamp(44px,22dvh,80px);margin-top:4px}
+}
+/* 가로 폰 결산창: 게이샤 일곱 명 한 줄은 그대로 두고, 표·줄 간격을 줄인다. */
+@media(orientation:landscape) and (max-height:500px){
+  .hm-result{gap:8px}
+  .hm-result-geisha{padding:3px 2px}
+  .hm-result-geisha .hm-portrait{width:min(80%,34px)}
+  .hm-result-table th,.hm-result-table td{padding:4px 8px}
+  .hm-result-table td{font-size:14px}
+  /* 게이샤 줄 아래를 두 칸으로: 왼쪽 점수표·안내, 오른쪽 다음 라운드·나가기 단추. 창을 내리지 않아도 단추가 보인다.
+     (dense: 칸만 정한 항목이 위쪽 빈 줄부터 채워져 양쪽이 같은 줄에서 시작한다.) */
+  .dialog .hm-result{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);grid-auto-flow:row dense;column-gap:16px;row-gap:5px;align-items:start}
+  .dialog .hm-result>*{grid-column:1/-1}
+  .dialog .hm-result>.hm-result-table,.dialog .hm-result>.hm-result-note{grid-column:1}
+  .dialog .hm-result>.duel-ready-hint,.dialog .hm-result>.duel-button,.dialog .hm-result>.duel-result-leave{grid-column:2}
+  .dialog .hm-result>.duel-result-leave{justify-self:center;margin-top:0;grid-row:span 2}
+  .dialog .hm-result h3{font-size:14px}
+  .dialog .hm-result-geisha{font-size:9px;gap:0}
+  .dialog .hm-result-geisha .hm-portrait{width:min(70%,28px)}
+  .dialog .hm-result-table th,.dialog .hm-result-table td{padding:3px 6px}
+  .dialog .hm-result-note{font-size:11px;line-height:1.3;margin:0}
+}

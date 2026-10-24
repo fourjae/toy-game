@@ -1,5 +1,6 @@
 import { expect, test, type Browser, type Page } from '@playwright/test';
 import { closeExtraPagesAfterEach } from './cleanup';
+import { expectButtonsFitLandscape } from './fit';
 
 closeExtraPagesAfterEach(test);
 
@@ -83,6 +84,16 @@ test('첫 화면의 3x3 선반에서 두 게임을 고를 수 있다', async ({ 
   await expect(page.getByRole('heading', { name: /탐험 한 판/u })).toBeVisible();
 });
 
+test('게임 화면 파일을 못 받으면 흰 화면 대신 다시 불러오기 안내가 나온다', async ({ page }) => {
+  // 새로 배포돼 옛 파일 이름이 사라진 경우를 흉내 낸다: 스쿼드로 화면 묶음 요청을 끊는다.
+  await page.route(/\/src\/squadro\/|\/assets\/Squadro-/u, route => route.abort());
+  await page.goto('/');
+  await page.getByRole('button', { name: /스쿼드로/ }).click();
+  await expect(page.getByRole('alert')).toContainText('게임 화면을 불러오지 못했어요');
+  await page.getByRole('button', { name: '첫 화면으로' }).click();
+  await expect(page.locator('.hub-card')).toHaveCount(9);
+});
+
 test('예전 토이 배틀 초대 링크(/?room=)는 토이 배틀로 연결된다', async ({ page }) => {
   await page.goto('/?room=ABC123');
   await expect(page.getByRole('heading', { name: /한 판/u })).toBeVisible();
@@ -109,6 +120,11 @@ test('로스트 시티: 방을 만들고 들어와 1판을 끝까지 둔다', as
   await playRound(host, guest);
   await expect(host.locator('.lc-result-table tbody tr')).toHaveCount(6);
   await expect(host.getByRole('button', { name: '한 판 더 하기' })).toBeEnabled();
+  // 폰을 눕혀도 결과표 아래 단추 둘이 창을 내리지 않고 보인다.
+  await expectButtonsFitLandscape(host);  // 상대가 먼저 한 판 더를 누르면 알림 한 줄이 붙는데, 그래도 단추가 첫 화면에 남는다.
+  await guest.getByRole('button', { name: '한 판 더 하기' }).click();
+  await expect(host.locator('.lc-ready-hint')).toBeVisible();
+  await expectButtonsFitLandscape(host, /좋아요, 한 판 더/u);
 });
 
 test('로스트 시티: 카드를 내면 날아가서 내 탐험에 놓이고, 상대 화면에도 보인다', async ({ browser }) => {
@@ -190,6 +206,15 @@ test('로스트 시티: 3라운드는 라운드마다 둘 다 눌러야 넘어�
   await playRound(host, guest);
   await expect(host.getByRole('dialog')).toContainText('1라운드 끝');
   await expect(host.locator('.lc-result-table .match')).toBeVisible();
+  // 합계 줄과 안내 문구가 더 붙는 라운드 사이 결과창도 가로 폰에서 단추가 첫 화면에 있다. 보고 나면 원래 크기로.
+  const size = host.viewportSize()!;
+  await expectButtonsFitLandscape(host, /2라운드 시작/u);
+  await host.setViewportSize(size);
+  // 라운드 사이 '대기실로 나가기'는 매치를 끝내므로 한 번 더 묻고, 그대로 두면 4초 뒤 원래대로 돌아온다.
+  await guest.getByRole('button', { name: '대기실로 나가기' }).click();
+  await expect(guest.getByRole('button', { name: /매치를 끝내고 나가기/ })).toBeVisible();
+  await expect(guest.locator('.lc-result')).toBeVisible();
+  await expect(guest.getByRole('button', { name: '대기실로 나가기' })).toBeVisible({ timeout: 7_000 });
   await host.getByRole('button', { name: '2라운드 시작' }).click();
   await expect(host.getByRole('button', { name: '친구의 답을 기다리는 중' })).toBeDisabled();
   await expect(host.locator('.lc-result')).toBeVisible();
@@ -254,4 +279,10 @@ test('로스트 시티: 폰을 눕히면 세로로 돌려 달라고 안내하고
   await host.getByRole('button', { name: '이대로 할게요' }).click();
   await expect(host.locator('.lc-rotate')).toBeHidden();
   await expect(host.locator('.lc-hand-card')).toHaveCount(8);
+  // 한 번 닫으면 새로고침(재접속)해도 같은 탭에서는 다시 묻지 않는다. 예전엔 매번 다시 떴다.
+  await host.reload();
+  await expect(host.locator('.lc-hand-card')).toHaveCount(8);
+  await expect(host.locator('.lc-rotate')).toBeHidden();
+  // 닫지 않은 상대는 그대로 안내가 보인다.
+  await expect(guest.locator('.lc-rotate')).toBeVisible();
 });

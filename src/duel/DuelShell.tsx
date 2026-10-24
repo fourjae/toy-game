@@ -78,6 +78,12 @@ export function ReadyButtons({ room, meId, client, finished, nextLabel }: { room
   const oppVoted = Boolean(opp && room.readyVotes.includes(opp.id));
   // 라운드 사이에 나가면 매치 전체가 끝나므로 한 번 더 묻는다. 판이 끝난 뒤에는 바로 나간다.
   const [confirming, setConfirming] = useState(false);
+  // 확인 문구는 잠깐만 유지한다. 한참 뒤 실수로 한 번 눌러도 바로 나가지 않게.
+  useEffect(() => {
+    if (!confirming) return;
+    const timer = setTimeout(() => setConfirming(false), 4000);
+    return () => clearTimeout(timer);
+  }, [confirming]);
   async function leave() {
     if (!finished && !confirming) { setConfirming(true); return; }
     if (await client.send('rooms:leave')) window.history.replaceState({}, '', window.location.pathname);

@@ -9,6 +9,7 @@ import {
 } from '../../shared/hanamikoji';
 import { GeishaPortrait, ItemGlyph, KyotoBackdrop, TeahouseArt, geishaStyle } from './art';
 import './hanamikoji.css';
+import { useRotateDismissed } from '../useRotateDismissed';
 
 type Options = Record<string, never>;
 type Props = TableProps<HMView, Options>;
@@ -87,7 +88,7 @@ function Table({ room, meId, client }: Props) {
   const [showRules, setShowRules] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [resultHidden, setResultHidden] = useState(false);
-  const [rotateDismissed, setRotateDismissed] = useState(false);
+  const [rotateDismissed, dismissRotate] = useRotateDismissed('hanamikoji');
   useEffect(() => { setMode(null); setPicked([]); }, [view.revision]);
   useEffect(() => { setResultHidden(false); }, [view.status, view.round]);
 
@@ -163,16 +164,16 @@ function Table({ room, meId, client }: Props) {
       <span className="hm-opp-hand" aria-label={`상대 손패 ${view.opponentHandCount}장`}>{Array.from({ length: view.opponentHandCount }, (_, i) => <CardBack key={i} small />)}</span>
       <TokenRow used={view.used[oppId]!} mine={false} active={null} />
       <span className="hm-hidden-cards">
-        {view.opponentHasSecret && <span title="상대의 비밀 카드"><CardBack small /><Lock size={11} /></span>}
-        {view.opponentDiscardedCount > 0 && <span title="상대가 포기한 카드"><CardBack small /><Trash2 size={11} />{view.opponentDiscardedCount}</span>}
+        {view.opponentHasSecret && <span className="hm-laid" title="상대의 비밀 카드"><CardBack small /><Lock size={11} /></span>}
+        {view.opponentDiscardedCount > 0 && <span className="hm-laid" title="상대가 포기한 카드"><CardBack small /><Trash2 size={11} />{view.opponentDiscardedCount}</span>}
       </span>
     </section>
     <section className="hm-board" aria-label="게이샤 일곱 명">{GEISHAS.map((_, g) => column(g))}</section>
     <section className="hm-strip is-mine">
       <TokenRow used={view.used[meId]!} mine active={mode} onPick={pickAction} disabled={!myTurn || busy} />
       <span className="hm-hidden-cards">
-        {view.mySecret && <span title="내 비밀 카드 (라운드 끝에 공개)"><ItemCard card={view.mySecret} small /><Lock size={11} /></span>}
-        {view.myDiscarded.length > 0 && <span title="내가 포기한 카드">{view.myDiscarded.map(c => <ItemCard key={c.id} card={c} small />)}<Trash2 size={11} /></span>}
+        {view.mySecret && <span className="hm-laid" title="내 비밀 카드 (라운드 끝에 공개)"><ItemCard card={view.mySecret} small /><Lock size={11} /></span>}
+        {view.myDiscarded.length > 0 && <span className="hm-laid" title="내가 포기한 카드">{view.myDiscarded.map(c => <ItemCard key={c.id} card={c} small />)}<Trash2 size={11} /></span>}
       </span>
     </section>
     <section className={`hm-hand ${myTurn ? 'is-mine' : ''}`}>
@@ -207,7 +208,7 @@ function Table({ room, meId, client }: Props) {
       </div>
     </div>}
 
-    <div className={`duel-rotate ${rotateDismissed ? 'is-dismissed' : ''}`} role="status"><RotateCw size={34} /><strong>폰을 세로로 돌려 주세요</strong><span>세로 화면에서 게이샤 일곱 명이 한눈에 보여요.</span><button className="duel-button secondary compact" onClick={() => setRotateDismissed(true)}>이대로 할게요</button></div>
+    <div className={`duel-rotate ${rotateDismissed ? 'is-dismissed' : ''}`} role="status"><RotateCw size={34} /><strong>폰을 세로로 돌려 주세요</strong><span>세로 화면에서 게이샤 일곱 명이 한눈에 보여요. 가로로도 할 수 있어요.</span><button className="duel-button secondary compact" onClick={dismissRotate}>이대로 할게요</button></div>
     {!playing && !resultHidden && <ResultDialog room={room} meId={meId} client={client} onHide={() => setResultHidden(true)} />}
     {!playing && resultHidden && <button className="duel-button primary hm-show-result" onClick={() => setResultHidden(false)}>결과 다시 보기</button>}
     {showLog && <LogDialog log={view.log} meId={meId} names={names} onClose={() => setShowLog(false)} />}

@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { closeExtraPagesAfterEach } from './cleanup';
+import { expectButtonsFitLandscape } from './fit';
 
 closeExtraPagesAfterEach(test);
 
@@ -66,4 +67,15 @@ test('스쿼드로: 끝까지 두면 결과창에 귀환한 배와 되돌려 보
   }
   // 이긴 쪽 칸에는 귀환한 배 네 척이 모두 찬다.
   await expect(host.locator('.sq-result .is-lead .is-home')).toHaveCount(4);
+  // 가로로 눕힌 폰 높이(640×320)에서도 두 단추가 스크롤 없이 보인다(예전엔 '한 판 더 하기'가 반쯤 잘렸다).
+  await expectButtonsFitLandscape(host);
+  await expectButtonsFitLandscape(guest);
+  // 결과창을 닫아 판을 둘러본 뒤 '결과 다시 보기'로 다시 연다.
+  await guest.getByRole('dialog').getByRole('button', { name: '닫기', exact: true }).click();
+  await expect(guest.locator('.sq-result')).toHaveCount(0);
+  await guest.getByRole('button', { name: '결과 다시 보기' }).click();
+  await expect(guest.locator('.sq-result .duel-stats tbody tr')).toHaveCount(2);  // 상대가 한 판 더를 누르면 알림 한 줄이 더 붙어도 가로 폰에서 두 단추가 첫 화면에 있다.
+  await guest.getByRole('button', { name: '한 판 더 하기' }).click();
+  await expect(host.locator('.duel-ready-hint')).toBeVisible();
+  await expectButtonsFitLandscape(host, /좋아요, 한 판 더/u);
 });

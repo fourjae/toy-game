@@ -14,6 +14,7 @@ import {
   type DrawSource, type LCCard, type LCView, type Site,
 } from '../shared/lostCities';
 import type { LCClientState, LCRoomView } from '../server/types';
+import { useRotateDismissed } from './useRotateDismissed';
 
 const EMPTY_STATE: LCClientState = { me: null, rooms: [], room: null };
 const signed = (n: number) => (n > 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : '0');
@@ -236,7 +237,7 @@ function GameTable({ room, meId, client }: { room: LCRoomView; meId: string; cli
   const [showRules, setShowRules] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [inspect, setInspect] = useState<Site | null>(null);
-  const [rotateDismissed, setRotateDismissed] = useState(false);
+  const [rotateDismissed, dismissRotate] = useRotateDismissed('lost-cities');
   const [resultHidden, setResultHidden] = useState(false);
   const mine = view.currentPlayerId === meId && view.status === 'playing';
   const oppId = view.opponentId;
@@ -320,13 +321,13 @@ function GameTable({ room, meId, client }: { room: LCRoomView; meId: string; cli
         </button>
         <span className="lc-round">{view.rounds > 1 ? `${view.round} / ${view.rounds} 라운드` : '단판'}</span>
       </div>
-      <div className="lc-topbar-side lc-topbar-side--me">{status(meId, myName, true)}<button className="lc-icon-btn" onClick={() => setShowLog(true)} aria-label="지난 차례 기록"><History size={17} /></button><button className="lc-icon-btn" onClick={() => setShowRules(true)} aria-label="게임 방법"><HelpCircle size={17} /></button></div>
+      <div className="lc-topbar-side lc-topbar-side--me">{status(meId, myName, true)}<button className="lc-icon-btn lc-log-btn" onClick={() => setShowLog(true)} aria-label="지난 차례 기록"><History size={17} /></button><button className="lc-icon-btn" onClick={() => setShowRules(true)} aria-label="게임 방법"><HelpCircle size={17} /></button></div>
     </header>
     <section className="lc-board" aria-label="유적지 탐험 판">
       {SITES.map(site => <div key={site} className={`lc-col site-${site}`}>{half(oppId, false, site)}{discardCell(site)}{half(meId, true, site)}</div>)}
     </section>
     <section className={`lc-hand ${mine ? 'is-mine' : ''}`}>
-      <div className={`lc-status ${mine ? 'is-mine' : ''}`}><span className="lc-dot" /><strong>{view.status !== 'playing' ? '라운드 종료' : mine ? '내 차례' : '상대 차례'}</strong><span>{hint}</span></div>
+      <div className={`lc-status ${mine ? 'is-mine' : ''}`}><span className="lc-dot" /><strong>{view.status !== 'playing' ? '라운드 종료' : mine ? '내 차례' : '상대 차례'}</strong><span className="lc-status-hint">{hint}</span><button type="button" className="lc-status-log" onClick={() => setShowLog(true)} aria-label="지난 차례 기록"><History size={13} />기록</button></div>
       <div className="lc-hand-cards" role="group" aria-label={`내 손패 ${hand.length}/${HAND_SIZE}`}>
         {hand.map(c => <button key={c.id} type="button" className={`lc-hand-card ${selected === c.id ? 'selected' : ''} ${playing && !view.playable[c.id] ? 'is-dead' : ''}`}
           aria-pressed={selected === c.id} aria-label={`${SITE_INFO[c.site].name} ${c.value === 0 ? '악수 카드' : c.value}`} onClick={() => setSelected(selected === c.id ? null : c.id)} disabled={busy || view.status !== 'playing'}>
@@ -334,7 +335,7 @@ function GameTable({ room, meId, client }: { room: LCRoomView; meId: string; cli
         </button>)}
       </div>
     </section>
-    <div className={`lc-rotate ${rotateDismissed ? 'is-dismissed' : ''}`} role="status"><RotateCw size={34} /><strong>폰을 세로로 돌려 주세요</strong><span>토이 배틀처럼 세로 화면에서 카드가 가장 크게 보여요.</span><button className="lc-button secondary compact" onClick={() => setRotateDismissed(true)}>이대로 할게요</button></div>
+    <div className={`lc-rotate ${rotateDismissed ? 'is-dismissed' : ''}`} role="status"><RotateCw size={34} /><strong>폰을 세로로 돌려 주세요</strong><span>세로 화면에서 카드가 가장 크게 보여요. 가로로도 할 수 있어요.</span><button className="lc-button secondary compact" onClick={dismissRotate}>이대로 할게요</button></div>
     {finishedDialog && <ResultDialog room={room} view={view} meId={meId} client={client} onHide={() => setResultHidden(true)} />}
     {view.status !== 'playing' && resultHidden && <button className="lc-button primary lc-show-result" onClick={() => setResultHidden(false)}>결과 다시 보기</button>}
     {showLog && <Dialog title="지난 차례" onClose={() => setShowLog(false)}>
@@ -370,6 +371,11 @@ function ResultDialog({ room, view, meId, client, onHide }: { room: LCRoomView; 
   const oppVoted = room.readyVotes.includes(oppId);
   // 라운드 사이에 나가면 매치 전체가 끝나므로 한 번 더 묻는다.
   const [confirmLeave, setConfirmLeave] = useState(false);
+  useEffect(() => {
+    if (!confirmLeave) return;
+    const timer = setTimeout(() => setConfirmLeave(false), 4000);
+    return () => clearTimeout(timer);
+  }, [confirmLeave]);
   async function leave() {
     if (!finished && !confirmLeave) { setConfirmLeave(true); return; }
     if (await send('rooms:leave')) window.history.replaceState({}, '', window.location.pathname);

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { ArrowLeft, Award, Coins, HelpCircle, History, Layers, Minus, Plus, ShoppingBasket, Store, Users, X } from 'lucide-react';
 import Dialog from '../components/Dialog';
 import CountUp from '../duel/CountUp';
@@ -75,6 +75,8 @@ function Table({ room, meId, client }: Props) {
   const takenCards = view.market.filter(c => marketSel.includes(c.id));
   const givenCards = hand.filter(c => handSel.includes(c.id));
   const myHerd = view.herdCount[meId]!;
+  // 방금 '낙타 모두'를 한 사람의 무리 옆에 +N이 떠오르고 낙타가 한 번 뛰어든다.
+  const herdGain = (id: string) => view.lastAction?.type === 'camels' && view.lastAction.playerId === id ? view.lastAction.cards.length : 0;
   const freshIds = new Set(view.lastAction?.playerId !== meId ? view.lastAction?.gave.map(c => c.id) ?? [] : []);
 
   function tapMarket(card: JPCard) {
@@ -133,7 +135,7 @@ function Table({ room, meId, client }: Props) {
       <strong>{names[id] ?? '플레이어'}{own && <small>나</small>}</strong>
       <Seals n={view.seals[id]!} />
       <span className="jp-coins" title={own ? '내 루피 (보너스 포함)' : '상대 상품 토큰 합 (보너스는 비밀)'}><Coins size={12} />{own ? myCoins : oppCoins}{!own && view.opponentBonus.length > 0 && <em>+?×{view.opponentBonus.length}</em>}</span>
-      <span className="jp-herd-count" title="낙타 무리"><GoodGlyph kind="camel" size={15} />{view.herdCount[id]}</span>
+      <span className={`jp-herd-count ${herdGain(id) ? 'is-gaining' : ''}`} title="낙타 무리" key={herdGain(id) ? `gain-${view.revision}` : 'herd'}><GoodGlyph kind="camel" size={15} />{view.herdCount[id]}{herdGain(id) > 0 && <em className="jp-herd-gain" aria-hidden="true">+{herdGain(id)}</em>}</span>
     </div>;
   };
 
@@ -154,10 +156,10 @@ function Table({ room, meId, client }: Props) {
       <span className="jp-stall-label">{own ? '내 가판대' : '상대 가판대'}</span>
       {goods.length === 0 && bonus.length === 0
         ? <span className="jp-stall-empty">아직 판 물건이 없어요</span>
-        : <span className="jp-stall-coins">
+        : <StallCoins count={goods.length + bonus.length}>
           {goods.map((t, i) => <i key={`g${i}`} className={`jp-coin jp-${t.good} ${i >= goods.length - freshGoods ? 'is-fresh' : ''}`} title={`${GOOD_INFO[t.good].name} ${t.value}`}>{t.value}</i>)}
           {bonus.map((b, i) => <i key={`b${i}`} className={`jp-coin is-bonus ${i >= bonus.length - freshBonus ? 'is-fresh' : ''}`} title={`보너스(${b.size}장)${b.value === null ? '' : ` ${b.value}`}`}>{b.value ?? '?'}<small>{b.size}</small></i>)}
-        </span>}
+        </StallCoins>}
     </section>;
   };
 
@@ -202,7 +204,7 @@ function Table({ room, meId, client }: Props) {
 
     <section className="jp-me">
       {player(meId)}
-      <div className="jp-herd">
+      <div className={`jp-herd ${herdGain(meId) ? 'is-gaining' : ''}`} key={herdGain(meId) ? `gain-${view.revision}` : 'herd'}>
         <GoodGlyph kind="camel" size={22} />
         <span>낙타 {myHerd}</span>
         {mine && marketSel.length >= 2 && myHerd > 0 && <span className="jp-herd-give" role="group" aria-label="교환에 낼 낙타">
@@ -301,4 +303,14 @@ const theme: DuelTheme<JPView, Options> = {
 
 export default function Jaipur({ onHome }: { onHome: () => void }) {
   return <DuelShell theme={theme} onHome={onHome} />;
+}
+
+/** 가로 폰에선 가판대 토큰이 한 줄로 겹쳐 옆으로 넘친다. 새 토큰이 들어오면 오른쪽 끝(방금 판 것)이 보이게 민다. */
+function StallCoins({ count, children }: { count: number; children: ReactNode }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (el && el.scrollWidth > el.clientWidth) el.scrollLeft = el.scrollWidth;
+  }, [count]);
+  return <span ref={ref} className="jp-stall-coins">{children}</span>;
 }

@@ -1,8 +1,10 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useId, useRef, type ReactNode } from 'react';
 import { X } from 'lucide-react';
 
 export default function Dialog({ title, children, onClose, wide = false }: { title: string; children: ReactNode; onClose: () => void; wide?: boolean }) {
   const ref = useRef<HTMLDialogElement>(null);
+  // 화면 읽기 프로그램이 창을 열 때 제목을 함께 읽도록 제목과 이어 둔다.
+  const titleId = useId();
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
   useEffect(() => {
@@ -23,8 +25,8 @@ export default function Dialog({ title, children, onClose, wide = false }: { tit
       previous?.focus();
     };
   }, []);
-  return <dialog ref={ref} className={`dialog ${wide ? 'dialog-wide' : ''}`} onCancel={e => { e.preventDefault(); onClose(); }} onClick={e => { if (e.target === ref.current) { const r = ref.current.getBoundingClientRect(); if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) onClose(); } }}>
-    <div className="dialog-heading"><h2>{title}</h2><button className="icon-button" aria-label="닫기" onClick={onClose}><X size={21} /></button></div>
+  return <dialog ref={ref} aria-labelledby={titleId} className={`dialog ${wide ? 'dialog-wide' : ''}`} onCancel={e => { e.preventDefault(); onClose(); }} onClick={e => { if (e.target === ref.current) { const r = ref.current.getBoundingClientRect(); if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) onClose(); } }}>
+    <div className="dialog-heading"><h2 id={titleId}>{title}</h2><button className="icon-button" aria-label="닫기" onClick={onClose}><X size={21} /></button></div>
     {children}
   </dialog>;
 }

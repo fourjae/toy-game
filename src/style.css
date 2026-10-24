@@ -39,3 +39,51 @@
 
 @media(max-width:640px){.turn-time-control{padding:12px 13px 9px}.turn-time-heading{font-size:9px}.turn-time-heading>strong{font-size:10px}.turn-time-heading b{font-size:14px}.preview-bottom{align-items:flex-start}.preview-copy>small{font-size:8px}.troop-card.selected{transform:translateY(-11px) scale(1.025)}}
 .map-guide-number.theme-caribbean{background:#318cb7}.map-guide-number.theme-battlefield{background:#a8814f}.facedown-hand{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:18px}.facedown-card{display:flex;min-height:112px;align-items:center;justify-content:center;flex-direction:column;gap:6px;background:#dce3e7;border:2px solid #8499a7;border-radius:9px;color:#426175;box-shadow:0 3px 0 #b4c3c7}.facedown-card:hover:not(:disabled){background:#e9f0f2;transform:translateY(-2px)}.facedown-card strong{font-size:24px}.facedown-card small{font-size:9px}.troop-card.is-frozen{filter:grayscale(.8);opacity:.7}.troop-card.is-frozen::after{content:'이번 차례 배치 불가';position:absolute;inset:auto 2px 7px;background:#3b536deb;color:#fff;font-size:8px;font-weight:800;padding:5px 2px;border-radius:5px}@media(max-width:480px){.facedown-hand{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.empty-rooms-actions{display:flex;gap:18px;flex-wrap:wrap;justify-content:center}
+/* 손패가 넘칠 때 가려진 쪽 가장자리를 흐리게 해서 옆으로 밀어 볼 수 있다는 걸 알린다. */
+.hand-cards.more-right{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 44px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 44px),transparent)}
+.hand-cards.more-left{-webkit-mask-image:linear-gradient(to right,transparent,#000 44px);mask-image:linear-gradient(to right,transparent,#000 44px)}
+.hand-cards.more-left.more-right{-webkit-mask-image:linear-gradient(to right,transparent,#000 44px,#000 calc(100% - 44px),transparent);mask-image:linear-gradient(to right,transparent,#000 44px,#000 calc(100% - 44px),transparent)}
+
+/* 아주 좁은 폰(320~400px): 머리줄에 이름까지 넣으면 브랜드가 세로로 쪼개진다. 이름은 대기실 인사말에 이미 있으니 숨긴다. */
+@media(max-width:400px){.brand>span{white-space:nowrap}.header-player{display:none}}
+
+/* 창 안 한국어 문장이 좁은 폰에서 '…못했어 / 요'처럼 글자 단위로 꺾이지 않게 낱말 단위로 줄을 바꾸고, 제목은 줄 길이를 고르게. */
+.dialog{word-break:keep-all;overflow-wrap:break-word}.dialog h2,.dialog h3{text-wrap:balance}
+/* 가로로 눕힌 폰: 손패 독이 화면을 덮어 판이 안 보이므로 세로로 돌리라고 안내(이대로 할게요로 닫기). */
+.game-rotate{display:none;position:fixed;inset:0;z-index:60;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:24px;text-align:center;background:var(--paper);color:var(--ink)}
+.game-rotate svg{color:var(--blue);animation:game-tilt 2.2s ease-in-out infinite}
+.game-rotate strong{font-size:17px}
+.game-rotate span{font-size:12px;color:var(--muted)}
+.game-rotate .button{margin-top:6px}
+@keyframes game-tilt{0%,100%{transform:rotate(90deg)}50%{transform:rotate(0)}}
+@media(orientation:landscape) and (max-height:500px){.game-rotate{display:flex}.game-rotate.is-dismissed{display:none}}
+@media(prefers-reduced-motion:reduce){.game-rotate svg{animation:none}}
+/* 가로로 눕힌 폰(높이 320px 안팎): 창 여백·제목 간격이 커서 결산창 첫 화면에 표 머리만 보였다 → 여백을 줄여 내용이 더 들어오게. */
+@media(orientation:landscape) and (max-height:500px){
+  .dialog{padding:12px 18px;max-height:calc(100svh - 16px)}
+  .dialog-heading{margin-bottom:6px}
+  .dialog .duel-button.full{padding:9px 18px}
+}
+/* 가로 폰 토이 배틀 결과창: 훈장 그림·이름·점수가 세로로 쌓여 '한 판 더 하기'가 창을 내려야 보였다 → 왼쪽 그림·결과 문구, 오른쪽 점수·단추. */
+@media(orientation:landscape) and (max-height:500px){
+  .result-content{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-areas:"medal score" "title score" "reason main" ". leave";column-gap:28px;align-items:center}
+  .result-medal{grid-area:medal;width:64px;height:64px;margin:0 auto 6px}
+  .result-medal svg{width:36px;height:36px}
+  .result-content h3{grid-area:title;font-size:16px}
+  .result-content>p{grid-area:reason;margin-top:4px;line-height:1.5}
+  .result-score{grid-area:score;margin:0 0 10px;gap:30px}
+  .result-score strong{font-size:24px;margin-top:2px}
+  .result-content>.button{grid-area:main;padding-block:10px}
+  .result-leave{grid-area:leave;margin-top:6px;justify-self:center}
+}
+/* 토이 배틀 결과창 손맛: 훈장이 리본에 매달린 듯 흔들리며 내려오고, 점수 칸이 차례로 올라와 훈장 수가 차오른다. 이긴 쪽 칸엔 금빛 밑줄. */
+.result-medal{transform-origin:50% -40%;animation:result-medal-swing 1.1s cubic-bezier(.3,.7,.4,1) both}
+.result-medal.lost{animation:result-medal-fade .5s ease-out both}
+@keyframes result-medal-swing{0%{opacity:0;transform:translateY(-26px) rotate(-22deg)}35%{opacity:1;transform:translateY(0) rotate(14deg)}60%{transform:rotate(-7deg)}80%{transform:rotate(3deg)}100%{transform:none}}
+@keyframes result-medal-fade{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:none}}
+.result-reveal{animation:result-reveal .45s cubic-bezier(.2,.8,.3,1.2) both;animation-delay:calc(var(--i,0)*120ms + 250ms)}
+@keyframes result-reveal{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.result-score .is-winner strong{color:#9a7a2c;background:linear-gradient(#e8cf7a,#e8cf7a) bottom/100% 3px no-repeat;padding-bottom:2px}
+.result-count{font-variant-numeric:tabular-nums}
+@media(prefers-reduced-motion:reduce){.result-medal,.result-medal.lost,.result-reveal{animation:none}}

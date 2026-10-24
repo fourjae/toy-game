@@ -32,6 +32,9 @@ test('자이푸르: 시장의 낙타를 모두 데려오고 차례가 넘어간�
   await expect(other.locator('.jp-action.is-mine')).toBeVisible();
   await expect(mover.locator('.jp-herd span').first()).not.toHaveText(`낙타 ${herdBefore}`);
   await expect(mover.locator('.jp-slot')).toHaveCount(5);
+  // 데려온 쪽 무리가 반짝이고, 상대 화면의 그 사람 낙타 수 옆에 +N이 뜬다.
+  await expect(mover.locator('.jp-herd')).toHaveClass(/is-gaining/u);
+  await expect(other.locator('.jp-topbar .jp-herd-gain')).toHaveText(/^\+\d+$/u);
 });
 
 test('자이푸르: 한 라운드를 끝까지 하면 결산창에 점수와 인장이 나온다', async ({ browser }) => {
@@ -78,4 +81,9 @@ test('자이푸르: 한 라운드를 끝까지 하면 결산창에 점수와 인
     await expect(page.locator('.jp-result-table tbody tr')).toHaveCount(5);
     await expect(page.getByRole('button', { name: '2라운드 시작' })).toBeVisible();
   }
+  // 결산창을 닫아 시장을 들여다봐도 '결과 다시 보기'로 다시 연다.
+  await guest.getByRole('dialog').getByRole('button', { name: '닫기' }).click();
+  await expect(guest.locator('.jp-result')).toHaveCount(0);
+  await guest.getByRole('button', { name: '결과 다시 보기' }).click();
+  await expect(guest.locator('.jp-result-table tbody tr')).toHaveCount(5);
 });

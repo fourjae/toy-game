@@ -211,3 +211,20 @@
   .board-troop--drop, .board-troop--capture, .board-troop--smash, .board-impact *, .board-dust-cloud * { animation: none; }
   .board-impact, .board-dust-cloud { display: none; }
 }
+
+/* 320px 폰: 가로로 늘어선 확대 단추 묶음(약 145px)이 판 오른쪽 아래 칸을 가려서,
+   판 바깥 오른쪽 여백에 세로로 세운다. 위에서부터 확대 · 배율 · 축소 · 전체 보기. */
+@media (max-width: 400px) {
+  .board-controls { right: 6px; bottom: 10px; flex-direction: column; padding: 3px; border-radius: 10px; }
+  .board-controls button { width: 32px; height: 32px; min-height: 32px; }
+  .board-controls button[aria-label="게임판 확대"] { order: -2; }
+  .board-zoom-value { order: -1; min-width: 0; padding: 1px 0; font-size: 9px; }
+  .board-pan-hint { bottom: 12px; }
+}
+
+/* 좁은 폰: '드래그해서 둘러보기'가 판 그림 왼쪽 아래 모서리에 겹쳐 읽기 어려웠다. 옅은 알약 배경을 깔고, 5초 뒤 스르르 사라진다. */
+@media (max-width: 400px) {
+  .board-pan-hint { left: 8px; bottom: 8px; padding: 3px 8px; border-radius: 999px; background: #f7f8f0e6; box-shadow: 0 1px 3px #3038251a; animation: board-hint-out .6s ease 5s forwards; }
+}
+@keyframes board-hint-out { to { opacity: 0; visibility: hidden; } }
+@media (prefers-reduced-motion: reduce) { .board-pan-hint { animation: none; } }
