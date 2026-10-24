@@ -121,7 +121,10 @@ test('로스트 시티: 방을 만들고 들어와 1판을 끝까지 둔다', as
   await expect(host.locator('.lc-result-table tbody tr')).toHaveCount(6);
   await expect(host.getByRole('button', { name: '한 판 더 하기' })).toBeEnabled();
   // 폰을 눕혀도 결과표 아래 단추 둘이 창을 내리지 않고 보인다.
-  await expectButtonsFitLandscape(host);
+  await expectButtonsFitLandscape(host);  // 상대가 먼저 한 판 더를 누르면 알림 한 줄이 붙는데, 그래도 단추가 첫 화면에 남는다.
+  await guest.getByRole('button', { name: '한 판 더 하기' }).click();
+  await expect(host.locator('.lc-ready-hint')).toBeVisible();
+  await expectButtonsFitLandscape(host, /좋아요, 한 판 더/u);
 });
 
 test('로스트 시티: 카드를 내면 날아가서 내 탐험에 놓이고, 상대 화면에도 보인다', async ({ browser }) => {

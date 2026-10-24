@@ -74,5 +74,8 @@ test('스쿼드로: 끝까지 두면 결과창에 귀환한 배와 되돌려 보
   await guest.getByRole('dialog').getByRole('button', { name: '닫기', exact: true }).click();
   await expect(guest.locator('.sq-result')).toHaveCount(0);
   await guest.getByRole('button', { name: '결과 다시 보기' }).click();
-  await expect(guest.locator('.sq-result .duel-stats tbody tr')).toHaveCount(2);
+  await expect(guest.locator('.sq-result .duel-stats tbody tr')).toHaveCount(2);  // 상대가 한 판 더를 누르면 알림 한 줄이 더 붙어도 가로 폰에서 두 단추가 첫 화면에 있다.
+  await guest.getByRole('button', { name: '한 판 더 하기' }).click();
+  await expect(host.locator('.duel-ready-hint')).toBeVisible();
+  await expectButtonsFitLandscape(host, /좋아요, 한 판 더/u);
 });
