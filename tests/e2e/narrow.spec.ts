@@ -338,6 +338,9 @@ test('가로 폰 /jaipur: 한 라운드 내내 차례 칸과 이름줄이 겹치
     const action = (await mover.locator('.jp-action').boundingBox())!;
     const me = (await mover.locator('.jp-me').boundingBox())!;
     expect(action.y + action.height, `${i}번째 차례: 차례 칸 아래가 이름줄 위보다 위`).toBeLessThanOrEqual(me.y + 1);
+    // 토큰이 한 줄을 넘쳐도 방금 판 토큰(오른쪽 끝)이 보여야 한다.
+    const hidden = await mover.locator('.jp-stall-coins').evaluateAll(els => els.map(el => el.scrollWidth - el.clientWidth - el.scrollLeft));
+    for (const gap of hidden) expect(gap, `${i}번째 차례: 가판대 끝 토큰이 가려짐`).toBeLessThanOrEqual(2);
     const camels = mover.getByRole('button', { name: /낙타 \d+마리 모두/u });
     const hand = (await mover.locator('.jp-hand-card').evaluateAll(els => els.map(el => el.getAttribute('aria-label') ?? '')))
       .map(label => label.replace('손패 ', ''));

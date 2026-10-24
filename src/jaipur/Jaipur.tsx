@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { ArrowLeft, Award, Coins, HelpCircle, History, Layers, Minus, Plus, ShoppingBasket, Store, Users, X } from 'lucide-react';
 import Dialog from '../components/Dialog';
 import CountUp from '../duel/CountUp';
@@ -156,10 +156,10 @@ function Table({ room, meId, client }: Props) {
       <span className="jp-stall-label">{own ? '내 가판대' : '상대 가판대'}</span>
       {goods.length === 0 && bonus.length === 0
         ? <span className="jp-stall-empty">아직 판 물건이 없어요</span>
-        : <span className="jp-stall-coins">
+        : <StallCoins count={goods.length + bonus.length}>
           {goods.map((t, i) => <i key={`g${i}`} className={`jp-coin jp-${t.good} ${i >= goods.length - freshGoods ? 'is-fresh' : ''}`} title={`${GOOD_INFO[t.good].name} ${t.value}`}>{t.value}</i>)}
           {bonus.map((b, i) => <i key={`b${i}`} className={`jp-coin is-bonus ${i >= bonus.length - freshBonus ? 'is-fresh' : ''}`} title={`보너스(${b.size}장)${b.value === null ? '' : ` ${b.value}`}`}>{b.value ?? '?'}<small>{b.size}</small></i>)}
-        </span>}
+        </StallCoins>}
     </section>;
   };
 
@@ -303,4 +303,14 @@ const theme: DuelTheme<JPView, Options> = {
 
 export default function Jaipur({ onHome }: { onHome: () => void }) {
   return <DuelShell theme={theme} onHome={onHome} />;
+}
+
+/** 가로 폰에선 가판대 토큰이 한 줄로 겹쳐 옆으로 넘친다. 새 토큰이 들어오면 오른쪽 끝(방금 판 것)이 보이게 민다. */
+function StallCoins({ count, children }: { count: number; children: ReactNode }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (el && el.scrollWidth > el.clientWidth) el.scrollLeft = el.scrollWidth;
+  }, [count]);
+  return <span ref={ref} className="jp-stall-coins">{children}</span>;
 }
