@@ -183,3 +183,14 @@
   .jp-action{min-height:0;padding:5px 8px}
   .jp-show-result{bottom:16px}
 }
+/* 가로로 눕힌 폰 결산창: 한 줄로 쌓으면 창 높이(302px)의 1.6배라 인장 줄과 '다음 라운드' 단추가 스크롤 아래에 있었다.
+   왼쪽에 결과 문구와 단추, 오른쪽에 점수표를 두어 한 화면에 담는다. 마지막 1fr 줄이 점수표 높이를 받아 왼쪽 줄은 늘어나지 않는다. */
+@media(orientation:landscape) and (max-height:500px){
+  .dialog .jp-result{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.35fr);grid-template-rows:repeat(6,auto) 1fr;column-gap:18px;row-gap:6px;align-items:start}
+  .dialog .jp-result>*{grid-column:1}
+  .dialog .jp-result>.jp-result-table{grid-column:2;grid-row:1/8}
+  .dialog .jp-result>.duel-result-leave{justify-self:center;margin-top:0}
+  .dialog .jp-result h3{font-size:15px;line-height:1.35}
+  .dialog .jp-result-table th,.dialog .jp-result-table td{padding:5px 8px}
+  .dialog .jp-result-table tr.total td{font-size:16px}
+}

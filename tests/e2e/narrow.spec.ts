@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { expectButtonsFitLandscape } from './fit';
 
 // 320px 폭 폰(작은 안드로이드, 1세대 SE)에서도 첫 화면의 이름 입력 버튼과 대기실 머리줄이 화면 안에 들어와야 한다.
 // 예전엔 첫 화면 그림 칸이 1fr 격자를 밀어내 '입장' 버튼이 오른쪽으로 잘렸다.
@@ -361,6 +362,9 @@ test('가로 폰 /jaipur: 한 라운드 내내 차례 칸과 이름줄이 겹치
   }
   for (const page of [host, guest]) {
     await expect(page.locator('.jp-result')).toBeVisible();
+    // 결산창은 왼쪽 문구·단추, 오른쪽 점수표로 나뉘어 스크롤 없이 단추까지 보인다(예전엔 창 높이의 1.6배).
+    await expectButtonsFitLandscape(page, /2라운드 시작/u);
+    await expect(page.locator('.jp-result-table tr').last()).toBeInViewport({ ratio: 1 });
     await page.getByRole('button', { name: '2라운드 시작' }).click();
   }
   await expect(host.locator('.jp-result')).toHaveCount(0);
