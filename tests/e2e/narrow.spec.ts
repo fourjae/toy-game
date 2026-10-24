@@ -371,3 +371,71 @@ test('가로 폰 /jaipur: 한 라운드 내내 차례 칸과 이름줄이 겹치
   await host.context().close();
   await guest.context().close();
 });
+
+// 토이 배틀은 한 판이 길고 항복도 없어 e2e로 결과창까지 가는 길이 없었다. 서버가 보내는 'state' 패킷을 브라우저 쪽에서
+// '이번 판이 끝남'으로 바꿔 결과창만 띄워 보고, 320px 폰과 가로 폰에서 '한 판 더 하기'·'대기실로 나가기'가 화면 안인지 본다.
+/** Socket.IO 패킷 하나('42["state",{...}]', 네임스페이스·ack 번호가 붙을 수 있음)의 방 상태를 끝난 판으로 바꾼다. */
+function finishStatePacket(packet: string): string {
+  const match = /^42((?:\/[^,]*,)?\d*)(\[.*\])$/su.exec(packet);
+  if (!match) return packet;
+  const data = JSON.parse(match[2]!) as [string, { me?: { id: string }; room?: { game?: Record<string, unknown> } }];
+  const game = data[0] === 'state' ? data[1].room?.game : undefined;
+  if (!game || !data[1].me) return packet;
+  Object.assign(game, { status: 'finished', winnerId: data[1].me.id, winReason: 'medals', pending: null });
+  return `42${match[1]}${JSON.stringify(data)}`;
+}
+
+test('토이 배틀 결과창: 320px 폰과 가로 폰에서 두 단추가 화면 안에 있다', async ({ browser }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop', '크기를 직접 정하므로 한 번만 돌린다');
+  const opts = { viewport: { width: 320, height: 640 }, isMobile: true, hasTouch: true, reducedMotion: 'reduce' as const };
+  const host = await (await browser.newContext(opts)).newPage();
+  const guest = await (await browser.newContext(opts)).newPage();
+  let finish = false;
+  const patch = (text: string) => finish ? text.split('\x1e').map(finishStatePacket).join('\x1e') : text;
+  // 처음엔 롱 폴링, 곧 웹소켓으로 올라가므로 두 길 모두 고친다.
+  await host.route('**/socket.io/**', async route => {
+    if (route.request().method() !== 'GET') return route.continue();
+    const response = await route.fetch();
+    await route.fulfill({ response, body: patch(await response.text()) });
+  });
+  await host.routeWebSocket('**/socket.io/**', ws => {
+    const server = ws.connectToServer();
+    server.onMessage(message => ws.send(typeof message === 'string' ? patch(message) : message));
+  });
+  const enter = async (page: typeof host, name: string) => {
+    await page.goto('/toy-battle');
+    await page.getByLabel('어떤 이름으로 불러드릴까요?').fill(name);
+    await page.getByRole('button', { name: '놀러 가기' }).click();
+  };
+  await enter(host, '가나다라마바');
+  await enter(guest, '하나둘셋넷');
+  await host.getByRole('button', { name: '방 만들기' }).first().click();
+  await host.getByRole('dialog').getByRole('button', { name: '방 만들기' }).click();
+  const code = (await host.locator('.invite-box strong').innerText()).trim();
+  await guest.getByRole('button', { name: '코드로 입장' }).click();
+  await guest.getByLabel('초대 코드').fill(code);
+  await guest.getByRole('button', { name: '방 들어가기' }).click();
+  await host.getByRole('button', { name: '게임 시작' }).click();
+  await expect(host.locator('.turn-bar:visible')).toBeVisible();
+  finish = true;
+  // 상태를 한 번 더 받게 차례인 쪽이 병정을 뽑는다.
+  const mover = (await host.locator('.turn-bar:visible').innerText()).includes('내 차례') ? host : guest;
+  await mover.getByRole('button', { name: /병정 \d개 뽑기/u }).click();
+  const dialog = host.getByRole('dialog');
+  await expect(dialog.getByRole('heading', { name: '가나다라마바님의 승리' })).toBeVisible();
+  for (const name of [/한 판 더 하기/u, /대기실로 나가기/u]) {
+    const box = (await dialog.getByRole('button', { name }).boundingBox())!;
+    expect(box.x + box.width, `${name} 오른쪽`).toBeLessThanOrEqual(320);
+    expect(box.y + box.height, `${name} 아래`).toBeLessThanOrEqual(640);
+  }
+  // 가로로 눕히면 '세로로 돌려 주세요' 안내가 결과창을 덮지 않아야 한다(안내를 닫지 않아도 결과는 보여야 함).
+  await expectButtonsFitLandscape(host);
+  const leave = dialog.getByRole('button', { name: /대기실로 나가기/u });
+  const top = await leave.evaluate(button => {
+    const r = button.getBoundingClientRect();
+    return button.contains(document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2));
+  });
+  expect(top, '가로 폰에서 결과창 단추가 맨 위에 있어 눌린다').toBe(true);
+  await host.context().close();
+  await guest.context().close();
+});

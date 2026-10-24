@@ -65,3 +65,15 @@
   .dialog-heading{margin-bottom:6px}
   .dialog .duel-button.full{padding:9px 18px}
 }
+/* 가로 폰 토이 배틀 결과창: 훈장 그림·이름·점수가 세로로 쌓여 '한 판 더 하기'가 창을 내려야 보였다 → 왼쪽 그림·결과 문구, 오른쪽 점수·단추. */
+@media(orientation:landscape) and (max-height:500px){
+  .result-content{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-areas:"medal score" "title score" "reason main" ". leave";column-gap:28px;align-items:center}
+  .result-medal{grid-area:medal;width:64px;height:64px;margin:0 auto 6px}
+  .result-medal svg{width:36px;height:36px}
+  .result-content h3{grid-area:title;font-size:16px}
+  .result-content>p{grid-area:reason;margin-top:4px;line-height:1.5}
+  .result-score{grid-area:score;margin:0 0 10px;gap:30px}
+  .result-score strong{font-size:24px;margin-top:2px}
+  .result-content>.button{grid-area:main;padding-block:10px}
+  .result-leave{grid-area:leave;margin-top:6px;justify-self:center}
+}
