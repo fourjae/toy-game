@@ -213,3 +213,20 @@
 
 /* 아주 좁은 폰(320~400px): 머리줄 이름을 숨겨 게임 이름이 한 줄로 남게 한다(이름은 대기실 인사말에 있음). */
 @media(max-width:400px){.duel-brand>span{white-space:nowrap}.duel-header-player{display:none}}
+
+/* 가로로 눕힌 폰(높이 320px 안팎): 스쿼드로·산토리니 승리창은 트로피·기록표 아래 '한 판 더 하기'가 반쯤 잘리고 '대기실로 나가기'는 스크롤해야 보였다.
+   제목이 이미 승패를 말하므로 트로피는 접고, 간격과 표 줄 높이를 줄이고 두 단추를 한 줄에 놓아 첫 화면에 들어오게 한다. */
+@media(orientation:landscape) and (max-height:500px){
+  .dialog .sq-result,.dialog .st-result{gap:4px}
+  .dialog .sq-result .duel-trophy,.dialog .st-result .duel-trophy{display:none}
+  .dialog .sq-result h3,.dialog .st-result h3{font-size:16px}
+  .dialog .sq-result p,.dialog .st-result p{margin-bottom:0}
+  .dialog .duel-stats th,.dialog .duel-stats td{padding:4px 8px}
+  .dialog .duel-result-leave{margin-top:0}
+  /* 단추 둘은 한 줄에: 왼쪽 '한 판 더 하기', 오른쪽 '대기실로 나가기'. 나머지는 두 칸을 다 쓴다.
+     (게임별 css가 나중에 읽혀 같은 우선순위면 덮이므로 .dialog를 앞에 붙인다.) */
+  .dialog .sq-result,.dialog .st-result{display:grid;grid-template-columns:1fr auto;align-items:center;column-gap:14px}
+  .dialog .sq-result>*,.dialog .st-result>*{grid-column:1/-1}
+  .dialog .sq-result>.duel-button,.dialog .st-result>.duel-button{grid-column:1}
+  .dialog .sq-result>.duel-result-leave,.dialog .st-result>.duel-result-leave{grid-column:2}
+}

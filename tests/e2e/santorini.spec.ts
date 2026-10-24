@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { closeExtraPagesAfterEach } from './cleanup';
+import { expectButtonsFitLandscape } from './fit';
 
 closeExtraPagesAfterEach(test);
 
@@ -123,6 +124,11 @@ test('산토리니: 탑을 쌓아 3층에 오르면 두 사람 모두 결과창�
   await expect(winnerRows.nth(2).locator('td')).toHaveText(['3', '0']);
   await expect(winnerRows.nth(2).locator('td').first()).toHaveClass(/is-lead/);
   await expect(loseDialog.locator('.duel-stats tbody tr').nth(2).locator('td').last()).toHaveClass(/is-lead/);
+
+  // 가로로 눕힌 폰 높이(640×320)에서도 기록표 아래 두 단추가 스크롤 없이 보인다(예전엔 '한 판 더 하기'가 반쯤 잘렸다).
+  await expectButtonsFitLandscape(first);
+  await expectButtonsFitLandscape(second);
+  await first.setViewportSize({ width: 1280, height: 720 });
 
   // 결과창을 닫아도 '결과 다시 보기'로 다시 열 수 있다.
   await winDialog.getByRole('button', { name: /닫기/ }).first().click();
