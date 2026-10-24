@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { expectButtonsFitLandscape } from './fit';
 import { closeExtraPagesAfterEach } from './cleanup';
 
 closeExtraPagesAfterEach(test);
@@ -95,11 +96,12 @@ for (const size of ['normal', 'narrow', 'landscape'] as const) test(`하나미�
       const dialog = (await page.getByRole('dialog').boundingBox())!;
       expect(dialog.y, '결산창 위가 화면 밖').toBeGreaterThanOrEqual(0);
       expect(dialog.y + dialog.height, '결산창 아래가 화면 밖').toBeLessThanOrEqual(viewport.height + 1);
-      if (size === 'landscape') await leaveBtn.scrollIntoViewIfNeeded(); // 가로에선 창 안 스크롤로 닿으면 된다
       const box = (await leaveBtn.boundingBox())!;
       expect(box.y + box.height, '나가기 단추가 화면 아래로 숨음').toBeLessThanOrEqual(viewport.height);
       const rights = await page.locator('.hm-result-geisha').evaluateAll(els => els.map(el => el.getBoundingClientRect().right));
       expect(Math.max(...rights)).toBeLessThanOrEqual(viewport.width);
+      // 가로 폰에서도 창을 스크롤하지 않고 다음 라운드(또는 한 판 더)와 나가기 단추가 첫 화면에 보인다.
+      if (size === 'landscape') await expectButtonsFitLandscape(page, /2라운드 시작|한 판 더 하기|좋아요, 한 판 더/u);
     }
   }
   // 결산창을 닫아 판을 들여다봐도 '결과 다시 보기'로 다시 연다.

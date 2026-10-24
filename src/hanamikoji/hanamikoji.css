@@ -247,4 +247,16 @@ button.hm-token:not(:disabled):hover{transform:translateY(-1px)}
   .hm-result-geisha .hm-portrait{width:min(80%,34px)}
   .hm-result-table th,.hm-result-table td{padding:4px 8px}
   .hm-result-table td{font-size:14px}
+  /* 게이샤 줄 아래를 두 칸으로: 왼쪽 점수표·안내, 오른쪽 다음 라운드·나가기 단추. 창을 내리지 않아도 단추가 보인다.
+     (dense: 칸만 정한 항목이 위쪽 빈 줄부터 채워져 양쪽이 같은 줄에서 시작한다.) */
+  .dialog .hm-result{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);grid-auto-flow:row dense;column-gap:16px;row-gap:5px;align-items:start}
+  .dialog .hm-result>*{grid-column:1/-1}
+  .dialog .hm-result>.hm-result-table,.dialog .hm-result>.hm-result-note{grid-column:1}
+  .dialog .hm-result>.duel-ready-hint,.dialog .hm-result>.duel-button,.dialog .hm-result>.duel-result-leave{grid-column:2}
+  .dialog .hm-result>.duel-result-leave{justify-self:center;margin-top:0;grid-row:span 2}
+  .dialog .hm-result h3{font-size:14px}
+  .dialog .hm-result-geisha{font-size:9px;gap:0}
+  .dialog .hm-result-geisha .hm-portrait{width:min(70%,28px)}
+  .dialog .hm-result-table th,.dialog .hm-result-table td{padding:3px 6px}
+  .dialog .hm-result-note{font-size:11px;line-height:1.3;margin:0}
 }

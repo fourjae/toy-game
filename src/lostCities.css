@@ -485,4 +485,11 @@
   .lc-result-rounds,.lc-result-note{margin-top:6px}
   .lc-result .lc-button{margin-top:8px;padding:9px 18px}
   .lc-result-leave{margin-top:4px}
+  /* 그래도 표 아래 단추가 창 밖이라 두 칸으로: 왼쪽 결과표, 오른쪽 문구·라운드 기록·단추. */
+  .dialog .lc-result{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);grid-template-rows:repeat(6,auto) 1fr;column-gap:16px;align-items:start}
+  .dialog .lc-result>*{grid-column:2}
+  .dialog .lc-result>.lc-result-table{grid-column:1;grid-row:1/8}
+  .dialog .lc-result h3{margin:2px 0 0;line-height:1.35}
+  .dialog .lc-result-rounds,.dialog .lc-result-note{text-align:left}
+  .dialog .lc-result-leave{margin:4px auto 0}
 }
