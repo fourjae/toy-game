@@ -8,12 +8,13 @@ const Hanamikoji = lazy(() => import('./hanamikoji/Hanamikoji'));
 const Santorini = lazy(() => import('./santorini/Santorini'));
 const Squadro = lazy(() => import('./squadro/Squadro'));
 const Jaipur = lazy(() => import('./jaipur/Jaipur'));
+const Omok = lazy(() => import('./omok/Omok'));
 
-export type GameId = 'toy-battle' | 'lost-cities' | 'hanamikoji' | 'santorini' | 'squadro' | 'jaipur';
-const PATHS: Record<GameId, string> = { 'toy-battle': '/toy-battle', 'lost-cities': '/lost-cities', hanamikoji: '/hanamikoji', santorini: '/santorini', squadro: '/squadro', jaipur: '/jaipur' };
+export type GameId = 'toy-battle' | 'lost-cities' | 'hanamikoji' | 'santorini' | 'squadro' | 'jaipur' | 'omok';
+const PATHS: Record<GameId, string> = { 'toy-battle': '/toy-battle', 'lost-cities': '/lost-cities', hanamikoji: '/hanamikoji', santorini: '/santorini', squadro: '/squadro', jaipur: '/jaipur', omok: '/omok' };
 const LOADING: Record<GameId, string> = {
   'toy-battle': '성채 평원으로 가는 중…', 'lost-cities': '탐험 준비 중…', hanamikoji: '꽃길 골목으로 가는 중…',
-  santorini: '섬으로 가는 중…', squadro: '호수로 가는 중…', jaipur: '분홍 도시로 가는 중…',
+  santorini: '섬으로 가는 중…', squadro: '호수로 가는 중…', jaipur: '분홍 도시로 가는 중…', omok: '사랑방으로 가는 중…',
 };
 
 function routeFromLocation(): GameId | null {
@@ -33,6 +34,7 @@ function Screen({ game, onHome }: { game: GameId; onHome: () => void }) {
     case 'santorini': return <Santorini onHome={onHome} />;
     case 'squadro': return <Squadro onHome={onHome} />;
     case 'jaipur': return <Jaipur onHome={onHome} />;
+    case 'omok': return <Omok onHome={onHome} />;
   }
 }
 
