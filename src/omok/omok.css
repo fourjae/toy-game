@@ -1,0 +1,76 @@
+/* 오목: a moonlit hanok study, a kaya-wood board, black and white stones, plum blossoms drifting by. */
+.theme-om{
+  --d-bg:#f3e8d4;--d-ink:#2b2118;--d-soft:#7a6650;--d-line:#dcc9a6;--d-panel:#fbf5e8e6;--d-field:#fffaf0;
+  --d-accent:#a1402b;--d-accent2:#6e2616;--d-accent-ink:#fff;--d-chip:#efe0c3;--d-shadow:#6e261618;
+  background:radial-gradient(900px 520px at 85% 0%,#fbe9bd,transparent 65%),linear-gradient(180deg,#f6ecd9,#ead8b6 70%,#dcc293);
+}
+.om-backdrop .om-moon{position:absolute;right:9%;top:8%;width:92px;height:92px;border-radius:50%;background:radial-gradient(circle at 38% 35%,#fffbe8,#fbe39a 70%);box-shadow:0 0 70px 26px #fbe39a66}
+.om-backdrop .om-window{position:absolute;right:-18px;top:-18px;width:220px;height:220px;opacity:.35}
+.om-backdrop .om-branch{position:absolute;left:-10px;top:0;width:min(46vw,300px);opacity:.9}
+.om-petal{position:absolute;left:calc(8% + var(--i) * 15%);top:-20px;width:11px;height:14px;border-radius:70% 0 70% 0;background:#f6c3cf;opacity:0;animation:om-petal 11s linear calc(var(--i) * -1.9s) infinite}
+@keyframes om-petal{0%{opacity:0;transform:translate(0,0) rotate(0)}10%{opacity:.9}100%{opacity:0;transform:translate(90px,110vh) rotate(540deg)}}
+.om-backdrop.is-game{opacity:.55}
+@media(prefers-reduced-motion:reduce){.om-petal{animation:none;opacity:.35;top:calc(20% + var(--i) * 11%)}}
+
+.om-game{display:flex;flex-direction:column;align-items:center;gap:8px;height:100vh;height:100dvh;width:min(100%,640px);margin-inline:auto;padding:0 10px calc(10px + env(safe-area-inset-bottom))}
+.om-topbar{display:flex;align-items:center;gap:8px;width:100%;padding-top:calc(8px + env(safe-area-inset-top))}
+.om-topbar .duel-icon-btn{background:#fffaf0cc}
+.om-spacer{flex:1}
+.om-turn{display:flex;align-items:baseline;gap:3px;padding:4px 12px;border-radius:99px;background:#fffaf0cc;font-weight:900;font-size:16px}
+.om-turn small{font-size:10px;color:var(--d-soft)}
+.om-rule-chip{display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border-radius:99px;background:#a1402b1f;color:var(--d-accent2);font-size:11px;font-weight:800}
+.om-player{display:flex;align-items:center;gap:8px;width:100%;padding:8px 12px;border:1.5px solid transparent;border-radius:16px;background:#fffaf0cc;font-size:13px}
+.om-player strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.om-player small{color:var(--d-soft);font-size:10px}
+.om-player.is-turn{border-color:var(--d-accent);box-shadow:0 0 0 3px #a1402b26}
+.om-side{margin-left:auto;color:var(--d-soft);font-size:11px}
+.om-dot{flex:none;width:22px;height:22px;border-radius:50%}
+.om-dot.black,.om-stone.black{background:radial-gradient(circle at 35% 30%,#6a6a6a,#1a1a1a 55%,#000)}
+.om-dot.white,.om-stone.white{background:radial-gradient(circle at 35% 30%,#fff,#f1ecdf 55%,#cfc6b0)}
+.om-dot{box-shadow:0 2px 3px #0004}
+
+.om-board-wrap{flex:1;display:grid;place-items:center;width:100%;min-height:0;container-type:size}
+.om-board{--b:min(100cqw,100cqh);position:relative;width:var(--b);height:var(--b);border-radius:12px;
+  background:repeating-linear-gradient(92deg,#0000 0 11px,#a8742e18 11px 12px),linear-gradient(135deg,#ecc680,#dcab5c);
+  box-shadow:0 14px 30px #4a332040,inset 0 0 0 3px #b98a43,inset 0 0 22px #8a5a2c40}
+.om-lines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.om-grid{position:absolute;inset:0;display:grid;grid-template:repeat(15,1fr)/repeat(15,1fr)}
+.om-cell{position:relative;display:grid;place-items:center;padding:0;border:0;background:none;-webkit-tap-highlight-color:transparent}
+.om-cell:disabled{cursor:default;opacity:1}
+.om-cell.is-open{cursor:pointer}
+@media(hover:hover){.om-cell.is-open:hover::before{content:'';position:absolute;width:62%;height:62%;border-radius:50%;background:#4a332026}}
+.om-cell:focus-visible{outline:2px solid var(--d-accent);outline-offset:-2px;border-radius:6px}
+
+.om-stone{position:relative;width:88%;height:88%;border-radius:50%;box-shadow:1px 2px 3px #0000005c,inset 0 -2px 3px #0000002e}
+.om-stone.is-last{animation:om-drop .32s cubic-bezier(.2,.9,.3,1.3)}
+@keyframes om-drop{from{transform:scale(1.45);opacity:0}60%{opacity:1}}
+.om-stone.is-last::after{content:'';position:absolute;left:50%;top:50%;width:24%;height:24%;margin:-12%;border-radius:50%;background:#e0452d;box-shadow:0 0 0 1.5px #fff9}
+.om-stone.ghost{opacity:.55;animation:om-ghost 1.1s ease-in-out infinite}
+@keyframes om-ghost{50%{opacity:.8;transform:scale(.94)}}
+.om-stone.is-win::before{content:'';position:absolute;inset:-14%;border-radius:50%;border:2.5px solid #f2b632;box-shadow:0 0 10px 2px #f2b632aa;animation:om-win 1.2s ease-in-out infinite}
+@keyframes om-win{50%{transform:scale(1.18);opacity:.65}}
+.om-x{position:relative;width:56%;height:56%}
+.om-x::before,.om-x::after{content:'';position:absolute;left:0;right:0;top:calc(50% - 1.25px);height:2.5px;border-radius:2px;background:#d13a22}
+.om-x::before{transform:rotate(45deg)}.om-x::after{transform:rotate(-45deg)}
+
+.om-status{display:flex;align-items:center;gap:9px;width:100%;min-height:46px;padding:10px 14px;border-radius:16px;background:#fffaf0e6;font-size:12px;color:var(--d-soft)}
+.om-status strong{flex:none;color:var(--d-ink)}
+.om-status>span:not(.duel-dot){flex:1}
+.om-status.is-mine{box-shadow:0 0 0 2px var(--d-accent)}
+.om-status.is-mine strong{color:var(--d-accent)}
+.om-status .duel-icon-btn{width:30px;height:30px;flex:none}
+.om-status .duel-button{flex:none}
+.om-result{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
+.om-result svg{color:#e2a52c}
+.om-result h3{font-size:17px}
+.om-result p{color:#7a6650;font-size:13px;margin-bottom:6px}
+.om-result .duel-button{align-self:stretch}
+.om-show-result{position:fixed;left:50%;bottom:90px;transform:translateX(-50%)}
+@media(prefers-reduced-motion:reduce){.om-stone.ghost,.om-stone.is-win::before,.om-stone.is-last{animation:none}}
+
+/* Narrow screens: the content spans the full width, so keep the scenery out from behind the headline and brand. */
+@media(max-width:700px){
+  .om-backdrop .om-window{opacity:.18}
+  .om-backdrop .om-branch{top:auto;bottom:-6px;left:auto;right:-8px;width:min(52vw,230px);transform:scale(-1,-1);opacity:.75}
+  .om-backdrop .om-moon{top:5%;right:6%}
+}

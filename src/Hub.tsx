@@ -2,7 +2,7 @@ import { ArrowRight, Clock3, Lock, Users } from 'lucide-react';
 import ToyIcon from './components/ToyIcon';
 import type { GameId } from './Root';
 
-const EMPTY_SLOTS = 3;
+const EMPTY_SLOTS = 2;
 
 function LostCitiesArt() {
   return <svg viewBox="0 0 120 80" aria-hidden="true" className="hub-art-lc">
@@ -53,6 +53,18 @@ function JaipurArt() {
     {Array.from({ length: 4 }, (_, r) => Array.from({ length: 10 }, (_, c) => <path key={`${r}${c}`} d={`M${5 + c * 12} ${58 + r * 6}v-3a2.5 2.5 0 0 1 5 0v3z`} fill="#fbe1d4" opacity=".85" />))}
     <g transform="translate(26 18) rotate(-12)"><rect width="16" height="22" rx="3" fill="#d23f4a" stroke="#fff6e8" strokeWidth="1.5" /><path d="M4 9l2-3h4l2 3-4 6z" fill="#fff" /></g>
     <g transform="translate(78 14) rotate(12)"><rect width="16" height="22" rx="3" fill="#e7ac2a" stroke="#fff6e8" strokeWidth="1.5" /><path d="M3 15l2-4h6l2 4z" fill="#fff" /></g>
+  </svg>;
+}
+
+function OmokArt() {
+  return <svg viewBox="0 0 120 80" aria-hidden="true">
+    <rect x="16" y="6" width="88" height="68" rx="6" fill="#dcab5c" />
+    {[0, 1, 2, 3, 4].map(i => <line key={`h${i}`} x1="26" x2="94" y1={18 + i * 11} y2={18 + i * 11} stroke="#5a3f24" strokeWidth="1" />)}
+    {[0, 1, 2, 3, 4, 5].map(i => <line key={`v${i}`} y1="18" y2="62" x1={26 + i * 13.6} x2={26 + i * 13.6} stroke="#5a3f24" strokeWidth="1" />)}
+    {[[39.6, 29, 0], [53.2, 40, 1], [66.8, 40, 0], [53.2, 29, 0], [66.8, 51, 1], [80.4, 29, 1], [39.6, 51, 0]].map(([x, y, white], i) => <g key={i}>
+      <circle cx={x! + 1} cy={y! + 1.6} r="5.6" fill="#0003" />
+      <circle cx={x} cy={y} r="5.6" fill={white ? '#f6f1e4' : '#1c1a18'} stroke={white ? '#cfc6b0' : '#000'} strokeWidth=".6" />
+    </g>)}
   </svg>;
 }
 
@@ -119,6 +131,15 @@ export default function Hub({ onOpen }: { onOpen: (game: GameId) => void }) {
             <strong>자이푸르</strong>
             <small>분홍 도시 시장에서 사고팔아 인장 두 개를 모아요</small>
             <span className="hub-card-meta"><span><Users size={13} /> 2인</span><span><Clock3 size={13} /> 약 25분</span></span>
+          </span>
+          <ArrowRight className="hub-card-go" size={18} />
+        </button>
+        <button type="button" className="hub-card hub-card--omok" onClick={() => onOpen('omok')}>
+          <span className="hub-card-art"><OmokArt /></span>
+          <span className="hub-card-body">
+            <strong>오목</strong>
+            <small>흑과 백이 번갈아 두며 다섯 알을 먼저 이어요</small>
+            <span className="hub-card-meta"><span><Users size={13} /> 2인</span><span><Clock3 size={13} /> 약 10분</span></span>
           </span>
           <ArrowRight className="hub-card-go" size={18} />
         </button>
